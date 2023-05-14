@@ -1,9 +1,13 @@
-from entangled.tangle import read_markdown, tangle
+from entangled.markdown_reader import read_markdown
+from entangled.tangle import tangle_ref
+from entangled.utility import pushd
+from pathlib import Path
+import os
 
 
-def test_tangle(data):
-    refs, content = read_markdown(data / "hello-world.md")
-    tangled = tangle(refs, "hello_world.cc")
-    print(tangled)
-    with open(data / "hello_world.cc", "r") as f:
-        assert f.read() == tangled + "\n"
+def test_tangle_ref(data):
+    with pushd(data / "hello-world") as cwd:
+        refs, _ = read_markdown(cwd / "hello-world.md")
+        tangled = tangle_ref(refs, "hello_world.cc")
+        with open("hello_world.cc", "r") as f:
+            assert f.read() == tangled

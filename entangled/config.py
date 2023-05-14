@@ -26,7 +26,7 @@ class Version(Parsable):
 class AnnotationMethod(Enum):
     Standard = 1
     Naked = 2
-    Suplemented = 3
+    Supplemented = 3
 
 
 @dataclass
@@ -78,7 +78,7 @@ class Config:
         self.language_index = dict()
         for l in self.languages:
             for i in l.identifiers:
-                self.language_index[i] = i
+                self.language_index[i] = l
 
     def get_language(self, lang_name: str) -> Optional[Language]:
         return self.language_index.get(lang_name, None)
