@@ -11,6 +11,7 @@ from .utility import first
 from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText
 from .properties import read_properties, get_attribute, get_classes, get_id
 
+
 @dataclass
 class MarkdownError(Exception):
     location: TextLocation
@@ -25,9 +26,9 @@ class MarkdownReader(mawk.RuleSet):
     content. The contents of the code blocks get stored in `reference_map`.
     """
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, refs: Optional[ReferenceMap] = None):
         self.location = TextLocation(filename)
-        self.reference_map = ReferenceMap()
+        self.reference_map = refs or ReferenceMap()
         self.content: list[Content] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
@@ -80,6 +81,8 @@ class MarkdownReader(mawk.RuleSet):
                 "\n".join(self.current_content),
                 self.current_codeblock_location,
             )
+            if target_file is not None:
+                self.reference_map.targets.add(target_file)
             self.content.append(ref)
             self.current_content = []
         self.current_content.append(m[0])
@@ -102,4 +105,3 @@ def read_markdown(path: Path) -> tuple[ReferenceMap, list[Content]]:
         md = MarkdownReader(path_str)
         md.run(f.read())
     return md.reference_map, md.content
-

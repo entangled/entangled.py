@@ -99,7 +99,7 @@ languages = [
 ]
 
 default = Config(
-    Version.from_string("2.0"), languages, markers, ["README.md", "docs/**/*.md"]
+    Version.from_string("2.0"), languages, markers, ["**/*.md"]
 )
 
 config = default

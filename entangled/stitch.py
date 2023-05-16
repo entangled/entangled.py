@@ -8,9 +8,11 @@ import re
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 
+
 class Parser(Protocol[T_co]):
     def read(self, inp: str) -> Optional[tuple[T_co, str]]:
         ...
+
 
 @dataclass
 class Id:
@@ -22,7 +24,7 @@ class Id:
     @staticmethod
     def read(inp: str) -> Optional[tuple[Id, str]]:
         if m := re.match("#([^ {}]+)", inp):
-            return Id(m[1]), inp[m.end():]
+            return Id(m[1]), inp[m.end() :]
         return None
 
 
@@ -36,7 +38,7 @@ class Class:
     @staticmethod
     def read(inp: str) -> Optional[tuple[Class, str]]:
         if m := re.match("\\.([^ {}]+)", inp):
-            return Class(m[1]), inp[m.end():]
+            return Class(m[1]), inp[m.end() :]
         return None
 
 
@@ -46,18 +48,19 @@ class Attribute:
     value: str
 
     def __str__(self):
-        return f"{self.key}=\"{self.value}\""
-    
+        return f'{self.key}="{self.value}"'
+
     @staticmethod
     def read(inp: str) -> Optional[tuple[Attribute, str]]:
-        if m := re.match("([^ {}]+) *= *([^ {}\"]+)", inp):
-            return Attribute(m[1], m[2]), inp[m.end():]
-        if m := re.match("([^ {}]+) *= *\"([^\"]*)\"", inp):
-            return Attribute(m[1], m[2]), inp[m.end():]
+        if m := re.match('([^ {}]+) *= *([^ {}"]+)', inp):
+            return Attribute(m[1], m[2]), inp[m.end() :]
+        if m := re.match('([^ {}]+) *= *"([^"]*)"', inp):
+            return Attribute(m[1], m[2]), inp[m.end() :]
         return None
 
 
 Property = Union[Attribute, Class, Id]
+
 
 @dataclass
 class Choice(Generic[T]):
@@ -95,7 +98,7 @@ class Skip:
 
     def read(self, inp: str) -> Optional[tuple[None, str]]:
         if m := re.match(self.what, inp):
-            return None, inp[m.end():]
+            return None, inp[m.end() :]
         return None
 
 
@@ -120,5 +123,5 @@ def tokenize(p: Parser[T]) -> Parser[T]:
 def read_properties(inp: str) -> list[Property]:
     # Explicit typing is needed to convince MyPy of correctness
     parsers: list[Parser[Property]] = [Id, Class, Attribute]
-    result, _ = Many(tokenize(Choice(parsers))).read(inp) 
+    result, _ = Many(tokenize(Choice(parsers))).read(inp)
     return result

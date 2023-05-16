@@ -3,10 +3,11 @@ from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
 from itertools import chain
+from pathlib import Path
 import mawk
 
 from .config import Language, AnnotationMethod, config
-from .properties import Property
+from .properties import Property, get_attribute
 from .error import InternalError, CyclicReference
 
 
@@ -53,6 +54,7 @@ class ReferenceMap:
     index: defaultdict[str, list[ReferenceId]] = field(
         default_factory=lambda: defaultdict(list)
     )
+    targets: set[str] = field(default_factory=set)
 
     def names(self) -> Iterable[str]:
         return self.index.keys()
