@@ -1,23 +1,20 @@
 from typing import Optional, TypeVar
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from itertools import chain
-from functools import singledispatch
-from copy import copy
 from pathlib import Path
 from textwrap import indent
+
 import re
 import mawk
-import click
+import argh
+import logging
 
-
-from .document import (
-    ReferenceMap,
-)
-from .properties import read_properties, get_id, get_attribute, get_classes
-from .config import Language, config, AnnotationMethod
-from .error import CyclicReference
-from .markdown_reader import read_markdown, MarkdownReader
-from .transaction import transaction
+from ..document import ReferenceMap
+from ..config import config, AnnotationMethod
+from ..error import CyclicReference
+from ..markdown_reader import MarkdownReader
+from ..transaction import transaction, TransactionMode
+from ..filedb import file_db
 
 
 T = TypeVar("T")
@@ -51,17 +48,31 @@ def tangle_ref(
     return result, deps
 
 
-@click.command()
-@click.option("-a", "--annotate", default=None)
-def tangle(annotate: Optional[AnnotationMethod]):
+@argh.arg("-a", "--annotate", choices=[m.name.lower() for m in AnnotationMethod], help="annotation method")
+@argh.arg("--force", help="force overwrite on conflict")
+@argh.arg("-s", "--show", help="only show, don't act")
+def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
+    if annotate is not None:
+        config.annotation = AnnotationMethod[annotate.upper()]
+
     input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
     refs = ReferenceMap()
-    for path in input_file_list:
-        with open(path, "r") as f:
-            MarkdownReader(str(path), refs).run(f.read())
 
-    with transaction() as t:
+    if show:
+        mode = TransactionMode.SHOW
+    elif force:
+        mode = TransactionMode.FORCE
+    else:
+        mode = TransactionMode.FAIL
+
+    with transaction(mode) as t:
+        for path in input_file_list:
+            logging.debug("reading `%s`", path)
+            t.db.update(path)
+            with open(path, "r") as f:
+                MarkdownReader(str(path), refs).run(f.read())
+
         for tgt in refs.targets:
             result, deps = tangle_ref(refs, tgt)
-            t.write(Path(tgt), result, map(Path, deps))
-
+            t.write(Path(tgt), result, list(map(Path, deps)))
+        t.clear_orphans()

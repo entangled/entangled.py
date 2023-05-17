@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from contextlib import contextmanager
@@ -8,6 +8,7 @@ from pathlib import Path
 import hashlib
 import json
 import os
+import logging
 
 from filelock import FileLock
 
@@ -23,7 +24,7 @@ class FileStat:
     hexdigest: str
 
     @staticmethod
-    def from_path(path: Path, deps: list[Path]):
+    def from_path(path: Path, deps: Optional[list[Path]]):
         stat = os.stat(path)
         with open(path, "rb") as f:
             hash = hashlib.sha256(f.read())
@@ -58,7 +59,7 @@ class FileStat:
 def stat(path: Path, deps: Optional[list[Path]] = None) -> FileStat:
     path = normal_relative(path)
     deps = None if deps is None else [normal_relative(d) for d in deps]
-    return FileStat.from_path(path, deps or [])
+    return FileStat.from_path(path, deps)
 
 
 @dataclass
@@ -79,10 +80,11 @@ class FileDB:
 
     @staticmethod
     def path():
-        return Path.cwd() / ".entangled" / "filedb.json"
+        return Path(".") / ".entangled" / "filedb.json"
 
     @staticmethod
     def read() -> FileDB:
+        logging.debug("Reading FileDB")
         raw = json.load(open(FileDB.path()))
         return FileDB(
             {stat.path: stat for stat in (FileStat.from_json(r) for r in raw["files"])},
@@ -95,21 +97,27 @@ class FileDB:
         return self._target
 
     def write(self):
+        logging.debug("Writing FileDB")
         raw = {
             "version": __version__,
             "files": [stat.to_json() for stat in self._files.values()],
             "source": list(map(str, self._source)),
             "target": list(map(str, self._target)),
         }
-        json.dump(raw, open(FileDB.path(), "w"))
+        json.dump(raw, open(FileDB.path(), "w"), indent=2)
 
     def changed(self) -> list[Path]:
         """List all target files that have changed w.r.t. the database."""
         return [p for p, s in self._files.items() if s != stat(p)]
 
+    def has_changed(self, path: Path) -> bool:
+        return stat(path) != self[path]
+    
     def update(self, path: Path, deps: Optional[list[Path]] = None):
         """Update the given path to a new stat."""
         path = normal_relative(path)
+        if path in self.managed and deps is None:
+            deps = self[path].deps
         self._files[path] = stat(path, deps)
 
     def __contains__(self, path: Path) -> bool:
@@ -119,7 +127,11 @@ class FileDB:
         return self._files[path]
     
     def __delitem__(self, path: Path):
-        del self._files[path] 
+        del self._files[path]
+
+    @property
+    def files(self) -> Iterable[Path]:
+        return self._files.keys()
 
     def check(self, path: Path, content: str) -> bool:
         return (
@@ -127,20 +139,25 @@ class FileDB:
         )
 
     @staticmethod
-    def initialize():
+    def initialize() -> FileDB:
         if FileDB.path().exists():
-            return
+            db = FileDB.read()
+            undead = list(filter(lambda p: not p.exists(), db.files))
+            for path in undead:
+                logging.warn("File `%s` in DB doesn't exist. Removing entry from DB.", path)
+                del db[path]
+            return db
 
         FileDB.path().parent.mkdir(parents=True, exist_ok=True)
         data = {"version": __version__, "files": [], "source": [], "target": []}
         json.dump(data, open(FileDB.path(), "w"))
+        return FileDB.read()
 
 
 @contextmanager
 def file_db():
     lock = FileLock(ensure_parent(Path.cwd() / ".entangled" / "filedb.lock"))
     with lock:
-        FileDB.initialize()
-        db = FileDB.read()
+        db = FileDB.initialize()
         yield db
         db.write()

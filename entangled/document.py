@@ -101,11 +101,11 @@ class ReferenceMap:
         )
         end = f"{cb.language.comment.open} ~/~ end{close_comment}"
         match config.annotation:
-            case AnnotationMethod.Standard:
+            case AnnotationMethod.STANDARD:
                 return [start + close_comment, cb.source, end]
-            case AnnotationMethod.Naked:
+            case AnnotationMethod.NAKED:
                 return [cb.source]
-            case AnnotationMethod.Supplemented:
+            case AnnotationMethod.SUPPLEMENTED:
                 if config.annotation_format is None:
                     return [start + close_comment, cb.source, end]
 
@@ -124,13 +124,3 @@ class ReferenceMap:
             self.get_decorated(ref) for ref in self.index[ref_name]
         )
 
-
-def retrieve_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
-    def get(item: Content):
-        match item:
-            case PlainText(s):
-                return s
-            case ReferenceId():
-                return reference_map[item].source
-
-    return "\n".join(get(i) for i in content) + "\n"

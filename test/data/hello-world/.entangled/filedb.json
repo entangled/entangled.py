@@ -1,1 +1,23 @@
-{"version": "2.0.0-alpha-1", "files": [{"path": "hello_world.cc", "deps": [], "modified": "2023-05-16T22:14:22.815043", "hexdigest": "79ed601a214b9e776aef389fc27a744b34f0c7b12288a6448350ab03face854b"}], "source": [], "target": ["hello_world.cc"]}
+{
+  "version": "2.0.0-alpha-1",
+  "files": [
+    {
+      "path": "hello_world.cc",
+      "deps": [
+        "hello-world.md"
+      ],
+      "modified": "2023-05-17T17:53:40.436414",
+      "hexdigest": "79ed601a214b9e776aef389fc27a744b34f0c7b12288a6448350ab03face854b"
+    },
+    {
+      "path": "hello-world.md",
+      "deps": null,
+      "modified": "2023-05-17T17:53:38.572413",
+      "hexdigest": "6081432c17e3bd63bae9991befdec89b859f735c76788a3dd403f6618b60f59e"
+    }
+  ],
+  "source": [],
+  "target": [
+    "hello_world.cc"
+  ]
+}

@@ -24,9 +24,9 @@ class Version(Parsable):
 
 
 class AnnotationMethod(Enum):
-    Standard = 1
-    Naked = 2
-    Supplemented = 3
+    STANDARD = 1
+    NAKED = 2
+    SUPPLEMENTED = 3
 
 
 @dataclass
@@ -71,7 +71,7 @@ class Config:
     markers: Markers
     watch_list: list[str]
     annotation_format: Optional[str] = None
-    annotation: AnnotationMethod = AnnotationMethod.Standard
+    annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
 
     def __post_init__(self):

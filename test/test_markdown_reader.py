@@ -1,5 +1,5 @@
 from entangled.markdown_reader import MarkdownReader
-from entangled.document import retrieve_markdown
+from entangled.commands.stitch import stitch_markdown
 
 
 def test_retrieve_same_content(data):
@@ -8,4 +8,4 @@ def test_retrieve_same_content(data):
         md = MarkdownReader(str(file))
         markdown = f.read()
         md.run(markdown)
-        assert retrieve_markdown(md.reference_map, md.content) == markdown
+        assert stitch_markdown(md.reference_map, md.content) == markdown

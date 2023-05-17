@@ -4,6 +4,13 @@ from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
 
+import logging
+try:
+    import rich
+    WITH_RICH = True
+except ImportError:
+    WITH_RICH = False
+
 from .utility import cat_maybes
 from .filedb import FileDB, stat, file_db
 from .error import InternalError
@@ -38,7 +45,7 @@ class Create(Action):
     def run(self, db: FileDB):
         with open(self.target, "w") as f:
             f.write(self.content)
-        db.update(self.target)
+        db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
 
@@ -55,17 +62,18 @@ class Write(Action):
         st = stat(self.target)
         if st != db[self.target]:
             return (
-                f"{self.target} seems to have changed outside the control of Entangled"
+                f"`{self.target}` seems to have changed outside the control of Entangled"
             )
-        newest_src = max(stat(s) for s in self.sources)
-        if st > newest_src:
-            return f"inconsistent modification times: {self.target} seems to be newer than {newest_src.path}"
+        if self.sources:
+            newest_src = max(stat(s) for s in self.sources)
+            if st > newest_src:
+                return f"`{self.target}` seems to be newer than `{newest_src.path}`"
         return None
 
     def run(self, db: FileDB):
         with open(self.target, "w") as f:
             f.write(self.content)
-        db.update(self.target)
+        db.update(self.target, self.sources)
 
     def __str__(self):
         return f"write `{self.target}`"
@@ -104,12 +112,20 @@ class Transaction:
             raise InternalError("Path is being written to twice", [path])
         self.passed.add(path)
         if path not in self.db:
+            logging.debug("creating target `%s`", path)
             self.actions.append(Create(path, content, sources))
         elif not self.db.check(path, content):
+            logging.debug("target `%s` changed", path)
             self.actions.append(Write(path, content, sources))
+        else:
+            logging.debug("target `%s` unchanged", path)
 
     def clear_orphans(self):
         orphans = self.db.managed - self.passed
+        if not orphans:
+            return
+        
+        logging.info("orphans found: `%s`", ", ".join(map(str, orphans)))
         for p in orphans:
             self.actions.append(Delete(p))
 
@@ -120,10 +136,12 @@ class Transaction:
         return all(a.conflict(self.db) is None for a in self.actions)
 
     def print_plan(self):
+        if not self.actions:
+            logging.info("Nothing to be done.")
         for a in self.actions:
-            print(a)
+            logging.info(str(a))
         for c in self.check_conflicts():
-            print(c)
+            logging.warning(str(c))
 
     def run(self):
         for a in self.actions:
@@ -142,16 +160,18 @@ def transaction(mode: TransactionMode = TransactionMode.FAIL):
     with file_db() as db:
         tr = Transaction(db)
 
+        logging.debug("Open transaction")
         yield tr
 
         tr.print_plan()
 
         match mode:
             case TransactionMode.SHOW:
+                logging.info("nothing is done")
                 return
             case TransactionMode.FAIL:
                 if not tr.all_ok():
-                    print("conflicts found, breaking off")
+                    logging.error("conflicts found, breaking off (use `--force` to run anyway)")
                     return
             case TransactionMode.CONFIRM:
                 if not tr.all_ok():
@@ -159,6 +179,7 @@ def transaction(mode: TransactionMode = TransactionMode.FAIL):
                     if not (reply == "y" or reply == "yes"):
                         return
             case TransactionMode.FORCE:
-                print("conflicts found, but continuing anyway")
+                logging.warning("conflicts found, but continuing anyway")
 
+        logging.debug("Executing transaction")
         tr.run()
