@@ -36,8 +36,7 @@ class Tangler(mawk.RuleSet):
 
 
 def tangle_ref(
-    refs: ReferenceMap, ref_name: str,
-    _visited: Optional[set[str]] = None
+    refs: ReferenceMap, ref_name: str, _visited: Optional[set[str]] = None
 ) -> tuple[str, set[str]]:
     visited = _visited or set()
     visited.add(ref_name)
@@ -48,7 +47,12 @@ def tangle_ref(
     return result, deps
 
 
-@argh.arg("-a", "--annotate", choices=[m.name.lower() for m in AnnotationMethod], help="annotation method")
+@argh.arg(
+    "-a",
+    "--annotate",
+    choices=[m.name.lower() for m in AnnotationMethod],
+    help="annotation method",
+)
 @argh.arg("--force", help="force overwrite on conflict")
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):

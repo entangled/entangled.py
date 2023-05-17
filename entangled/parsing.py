@@ -1,3 +1,7 @@
+"""Monadic recursive descent parser combinator. This is used to custom 
+light weight parsing within Entangled, mainly parsing the class, id and
+attribute properties of code blocks in markdown."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
@@ -6,7 +10,6 @@ from typing import (
     TypeVar,
     TypeVarTuple,
     Generic,
-    Sequence,
     Callable,
     Union,
     Any,
@@ -68,8 +71,11 @@ class ChoiceFailure(Expected):
 
 
 class Parser(Generic[T], ABC):
+    """Base class for parsers."""
+
     @abstractmethod
     def read(self, inp: str) -> tuple[T, str]:
+        """Read a string and return an object the remainder of the string."""
         ...
 
     def __rshift__(self, f: Callable[[T], Parser[U]]) -> Parser[U]:
@@ -89,6 +95,11 @@ class ParserMeta(Generic[T], Parser[T], type):
 
 
 class Parsable(Generic[T], metaclass=ParserMeta):
+    """Base class for Parsable objects. Parsables need to define a
+    `__parser__()` method that should return a `Parser[Self]`. That
+    way a Parsable class is also a `Parser` object for itself.
+    This allows for nicely expressive grammars."""
+
     pass
 
 

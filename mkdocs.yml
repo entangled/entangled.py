@@ -1,1 +1,7 @@
 site_name: My Docs
+
+plugins:
+  - mkdocstrings
+
+theme:
+  name: material

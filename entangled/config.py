@@ -1,3 +1,7 @@
+"""Configuration. The variable `config` should be automatically populated with
+defaults and config loaded from `entangled.toml` in the work directory.
+"""
+
 from __future__ import annotations
 
 from typing import Optional, ClassVar, TypeVar
@@ -8,6 +12,8 @@ from .parsing import Parser, Parsable, fullmatch, fmap
 
 @dataclass
 class Version(Parsable):
+    """Dataclass that manages version strings."""
+
     numbers: tuple[int, ...]
     _pattern: ClassVar[Parser] = fullmatch(r"[0-9]+(\.[0-9]+)*")
 
@@ -24,6 +30,16 @@ class Version(Parsable):
 
 
 class AnnotationMethod(Enum):
+    """Annotation methods.
+
+    - `STANDARD` is the default. Comments tell where a piece of code
+       came from in enough detail to reconstruct the markdown if some
+       of the code is changed.
+    - `NAKED` adds no comments to the tangled files. Stitching is not
+       possible with this setting.
+    - `SUPPLEMENTED` adds extra information to the comment lines.
+    """
+
     STANDARD = 1
     NAKED = 2
     SUPPLEMENTED = 3
@@ -31,12 +47,21 @@ class AnnotationMethod(Enum):
 
 @dataclass
 class Comment:
+    """Comment method for a language. For example: `Comment("/*", "*/")` works
+    for C/C++ etc, `Comment("#")` works for Python, and so on.
+    """
+
     open: str
     close: Optional[str] = None
 
 
 @dataclass
 class Language:
+    """Language information. Given a language we may have any number of short-hands
+    to indicate a code block is written in that language. If a language supports
+    line directives this can be used to redirect compiler messages directly to the
+    markdown files."""
+
     name: str
     identifiers: list[str]
     comment: Comment
@@ -48,6 +73,8 @@ T = TypeVar("T")
 
 @dataclass
 class Markers:
+    """Markers can be used to configure the Markdown dialect. Currently not used."""
+
     open: str
     close: str
     class_: str
@@ -66,6 +93,8 @@ markers = Markers(
 
 @dataclass
 class Config:
+    """Main config class."""
+
     version: Version
     languages: list[Language]
     markers: Markers
@@ -98,8 +127,8 @@ languages = [
     Language("Lua", ["lua"], Comment("--")),
 ]
 
-default = Config(
-    Version.from_string("2.0"), languages, markers, ["**/*.md"]
-)
+default = Config(Version.from_string("2.0"), languages, markers, ["**/*.md"])
 
 config = default
+"""The `config.config` variable is changed when the `config` module is loaded.
+Config is read from `entangled.toml` file."""

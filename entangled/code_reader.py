@@ -34,6 +34,8 @@ class Frame:
 
 
 class CodeReader(mawk.RuleSet):
+    """Reads an annotated code file."""
+
     def __init__(self, path: str, refs: ReferenceMap):
         self.location = TextLocation(path, 0)
         self.stack: list[Frame] = [Frame(ReferenceId("root", "", -1), "")]
@@ -42,12 +44,14 @@ class CodeReader(mawk.RuleSet):
     @property
     def current(self) -> Frame:
         return self.stack[-1]
-    
+
     @mawk.always
     def increase_line_number(self, _):
         self.location.line_number += 1
-    
-    @mawk.on_match(r"^(?P<indent>\s*).* ~/~ begin <<(?P<source>[^#<>]+)#(?P<ref_name>[^#<>]+)>>\[(?P<ref_count>init|\d+)\]")
+
+    @mawk.on_match(
+        r"^(?P<indent>\s*).* ~/~ begin <<(?P<source>[^#<>]+)#(?P<ref_name>[^#<>]+)>>\[(?P<ref_count>init|\d+)\]"
+    )
     def on_block_begin(self, m: re.Match):
         ref_name = m["ref_name"]
         if m["ref_count"] == "init":
@@ -59,7 +63,9 @@ class CodeReader(mawk.RuleSet):
         else:
             ref_count = int(m["ref_count"])
 
-        self.stack.append(Frame(ReferenceId(m["ref_name"], m["source"], ref_count), m["indent"]))
+        self.stack.append(
+            Frame(ReferenceId(m["ref_name"], m["source"], ref_count), m["indent"])
+        )
         return []
 
     @mawk.on_match(r"^(?P<indent>\s*).* ~/~ end")
@@ -69,7 +75,7 @@ class CodeReader(mawk.RuleSet):
         self.refs[self.current.ref].source = "\n".join(self.current.content)
         self.stack.pop()
         return []
-    
+
     @mawk.always
     def otherwise(self, line: str):
         if not line.startswith(self.current.indent):

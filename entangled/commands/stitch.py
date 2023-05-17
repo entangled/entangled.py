@@ -37,7 +37,7 @@ def stitch(*, force: bool = False, show: bool = False):
     refs = ReferenceMap()
     content: dict[Path, list[Content]] = {}
     for path in input_file_list:
-        logging.debug("reading `%s`", path) 
+        logging.debug("reading `%s`", path)
         with open(path, "r") as f:
             mr = MarkdownReader(str(path), refs)
             mr.run(f.read())

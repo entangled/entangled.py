@@ -5,6 +5,7 @@ import logging
 try:
     from rich.logging import RichHandler
     from rich.highlighter import RegexHighlighter
+
     WITH_RICH = True
 except ImportError:
     WITH_RICH = False
@@ -14,6 +15,7 @@ from .commands import tangle, stitch
 
 
 if WITH_RICH:
+
     class BackTickHighlighter(RegexHighlighter):
         highlights = [r"`(?P<bold>[^`]*)`"]
 
@@ -27,7 +29,10 @@ def configure(debug=False):
     if WITH_RICH:
         FORMAT = "%(message)s"
         logging.basicConfig(
-            level=level, format=FORMAT, datefmt="[%X]", handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())]
+            level=level,
+            format=FORMAT,
+            datefmt="[%X]",
+            handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
         )
         logging.debug("Rich logging enabled")
     else:
@@ -39,8 +44,11 @@ def configure(debug=False):
 
 def cli():
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--debug", action="store_true", help="enable debug messages")
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="enable debug messages"
+    )
     argh.add_commands(parser, [tangle, stitch])
     args = parser.parse_args()
     configure(args.debug)
@@ -48,4 +56,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    cli()    
+    cli()

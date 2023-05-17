@@ -5,8 +5,10 @@ from contextlib import contextmanager
 from enum import Enum
 
 import logging
+
 try:
     import rich
+
     WITH_RICH = True
 except ImportError:
     WITH_RICH = False
@@ -61,9 +63,7 @@ class Write(Action):
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
         if st != db[self.target]:
-            return (
-                f"`{self.target}` seems to have changed outside the control of Entangled"
-            )
+            return f"`{self.target}` seems to have changed outside the control of Entangled"
         if self.sources:
             newest_src = max(stat(s) for s in self.sources)
             if st > newest_src:
@@ -124,7 +124,7 @@ class Transaction:
         orphans = self.db.managed - self.passed
         if not orphans:
             return
-        
+
         logging.info("orphans found: `%s`", ", ".join(map(str, orphans)))
         for p in orphans:
             self.actions.append(Delete(p))
@@ -171,7 +171,9 @@ def transaction(mode: TransactionMode = TransactionMode.FAIL):
                 return
             case TransactionMode.FAIL:
                 if not tr.all_ok():
-                    logging.error("conflicts found, breaking off (use `--force` to run anyway)")
+                    logging.error(
+                        "conflicts found, breaking off (use `--force` to run anyway)"
+                    )
                     return
             case TransactionMode.CONFIRM:
                 if not tr.all_ok():

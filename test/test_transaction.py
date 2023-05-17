@@ -16,7 +16,7 @@ def test_transaction(tmp_path: Path):
             t.run()
             assert Path("a").exists()
             assert Path("b").exists()
-        
+
         with open(Path("a"), "w") as f:
             f.write("ciao")
 
@@ -41,4 +41,3 @@ def test_transaction(tmp_path: Path):
             assert isinstance(t.actions[1], Delete)
             t.run()
             assert not Path("b").exists()
-

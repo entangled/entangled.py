@@ -123,4 +123,3 @@ class ReferenceMap:
         return chain.from_iterable(
             self.get_decorated(ref) for ref in self.index[ref_name]
         )
-

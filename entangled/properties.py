@@ -1,3 +1,6 @@
+"""Properties of code blocks. These properties are the same as CSS selector
+properties: id, class and attribute."""
+
 from __future__ import annotations
 
 from typing import Optional, Union, ClassVar, Iterable
@@ -55,6 +58,11 @@ Property = Union[Attribute, Class, Id]
 
 
 def read_properties(inp: str) -> list[Property]:
+    """Read properties from a string. Example:
+
+    >>> read_properties(".python #foo file=bar.py")
+    [Id("python"), Class("foo"), Attribute("file", "bar.py")]
+    """
     # Explicit typing is needed to convince MyPy of correctness
     # parsers: list[Parser[Property]] = [Id, Class, Attribute]
     result, _ = many(tokenize(choice(Id, Class, Attribute))).read(inp)
@@ -62,6 +70,7 @@ def read_properties(inp: str) -> list[Property]:
 
 
 def get_id(props: list[Property]) -> Optional[str]:
+    """Get the first given Id in a property list."""
     try:
         return next(p.value for p in props if isinstance(p, Id))
     except StopIteration:
@@ -69,10 +78,12 @@ def get_id(props: list[Property]) -> Optional[str]:
 
 
 def get_classes(props: list[Property]) -> Iterable[str]:
+    """Get all given Classes in a property list."""
     return (p.value for p in props if isinstance(p, Class))
 
 
 def get_attribute(props: list[Property], key: str) -> Optional[str]:
+    """Get the value of an Attribute in a property list."""
     try:
         return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)
     except StopIteration:

@@ -112,7 +112,7 @@ class FileDB:
 
     def has_changed(self, path: Path) -> bool:
         return stat(path) != self[path]
-    
+
     def update(self, path: Path, deps: Optional[list[Path]] = None):
         """Update the given path to a new stat."""
         path = normal_relative(path)
@@ -125,7 +125,7 @@ class FileDB:
 
     def __getitem__(self, path: Path) -> FileStat:
         return self._files[path]
-    
+
     def __delitem__(self, path: Path):
         del self._files[path]
 
@@ -144,7 +144,9 @@ class FileDB:
             db = FileDB.read()
             undead = list(filter(lambda p: not p.exists(), db.files))
             for path in undead:
-                logging.warn("File `%s` in DB doesn't exist. Removing entry from DB.", path)
+                logging.warn(
+                    "File `%s` in DB doesn't exist. Removing entry from DB.", path
+                )
                 del db[path]
             return db
 
