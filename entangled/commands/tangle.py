@@ -6,7 +6,7 @@ from textwrap import indent
 
 import re
 import mawk
-import argh
+import argh  # type: ignore
 import logging
 
 from ..document import ReferenceMap
@@ -56,6 +56,7 @@ def tangle_ref(
 @argh.arg("--force", help="force overwrite on conflict")
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
+    """Tangle codes from Markdown"""
     if annotate is not None:
         config.annotation = AnnotationMethod[annotate.upper()]
 

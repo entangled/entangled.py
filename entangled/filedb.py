@@ -157,9 +157,10 @@ class FileDB:
 
 
 @contextmanager
-def file_db():
+def file_db(readonly=False):
     lock = FileLock(ensure_parent(Path.cwd() / ".entangled" / "filedb.lock"))
     with lock:
         db = FileDB.initialize()
         yield db
-        db.write()
+        if not readonly:
+            db.write()

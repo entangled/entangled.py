@@ -2,7 +2,7 @@ from itertools import chain
 from pathlib import Path
 
 import logging
-import argh
+import argh  # type: ignore
 
 from ..config import config
 from ..code_reader import CodeReader
@@ -10,6 +10,7 @@ from ..markdown_reader import MarkdownReader
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
 
+from .tangle import tangle
 
 def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
     def get(item: Content):
@@ -25,6 +26,7 @@ def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
 @argh.arg("--force", help="force overwrite on conflict")
 @argh.arg("-s", "--show", help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):
+    """Stitch code changes back into the Markdown"""
     input_file_list = list(chain.from_iterable(map(Path(".").glob, config.watch_list)))
 
     if show:

@@ -1,5 +1,4 @@
-# import click
-import argh
+import argh  # type: ignore
 import logging
 
 try:
@@ -11,7 +10,7 @@ except ImportError:
     WITH_RICH = False
 
 
-from .commands import tangle, stitch
+from .commands import tangle, stitch, sync, watch
 
 
 if WITH_RICH:
@@ -49,7 +48,7 @@ def cli():
     parser.add_argument(
         "-d", "--debug", action="store_true", help="enable debug messages"
     )
-    argh.add_commands(parser, [tangle, stitch])
+    argh.add_commands(parser, [tangle, stitch, sync, watch])
     args = parser.parse_args()
     configure(args.debug)
     argh.dispatch(parser)
