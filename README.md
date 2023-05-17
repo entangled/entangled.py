@@ -10,13 +10,13 @@ Literate programming was introduced by Donald Knuth in 1984 and has since then f
 To install Entangled, all you need is a Python installation. If you use [`poetry`](https://python-poetry.org),
 
 ```
-poetry add entangled-cli
+poetry add entangled-cli[rich]
 ```
 
 Or, if you prefer `pip`,
 
 ```
-pip install entangled-cli
+pip install entangled-cli[rich]
 ```
 
 ## Use
@@ -78,6 +78,9 @@ These blocks of code can be *tangled* into source files.
 
 ## History
 This is a rewrite of Entangled in Python. Older versions were written in Haskell. The rewrite in Python was motivated by ease of installation, larger community and quite frankly, a fit of mental derangement.
+
+## Contributing
+If you have an idea for improving Entangled, please file an issue before creating a pull request. Code in this repository is formatted using `black` and type checked using `mypy`.
 
 ## License
 Copyright 2023 Netherlands eScience Center, written by Johan Hidding, licensed under the Apache 2 license, see LICENSE.

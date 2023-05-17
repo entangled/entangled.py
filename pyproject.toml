@@ -1,14 +1,17 @@
 [tool.poetry]
-name = "entangled"
+name = "entangled-cli"
 version = "2.0.0-alpha-1"
 description = "Python port of Entangled"
 authors = ["Johan Hidding <j.hidding@esciencecenter.nl>"]
 license = "Apache 2"
 readme = "README.md"
+packages = [
+    { include = "entangled" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"          # we need tomllib support
-mawk = {path = "../mawk"} # use mawk as line parsing engine
+mawk = "^0.1.3"           # use mawk as line parsing engine
 watchdog = "^3.0.0"       # file watching
 filelock = "^3.12.0"      # file lock for json db
 argh = "^0.28.1"
@@ -22,6 +25,7 @@ pytest-cov = "^4.0.0"
 mkdocs = "^1.4.3"
 mkdocs-material = "^9.1.13"
 mkdocstrings = {extras = ["python"], version = "^0.21.2"}
+twine = "^4.0.2"
 
 
 [tool.poetry.group.rich.dependencies]
