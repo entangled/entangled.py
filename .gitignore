@@ -2,3 +2,5 @@ __pycache__
 .vscode
 .coverage
 coverage.*
+dist
+
