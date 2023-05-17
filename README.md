@@ -21,9 +21,7 @@ pip install entangled-cli
 
 ## Use
 
-:::warning
-This version of Entangled is still in alpha. Configuration is not yet implemented.
-:::
+> :warning: **This version of Entangled is still in alpha. Configuration is not yet implemented.**
 
 Run the `entangled watch` daemon in the root of your project folder. By default all Markdown files are monitored for fenced code blocks like so:
 
