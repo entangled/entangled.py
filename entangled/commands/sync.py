@@ -23,22 +23,23 @@ def sync_action() -> Optional[Callable[[], None]]:
 
         if not all(f in db for f in input_file_list):
             return tangle
-        
+
         if not changed:
             logging.info("Nothing to be done")
             return None
-        
+
         if changed.isdisjoint(db.managed):
             logging.info("Tangling")
             return tangle
-        
+
         if changed.issubset(db.managed):
             logging.info("Stitching")
             return _stitch_then_tangle
 
         logging.error("changed: %s", [str(p) for p in changed])
-        logging.error("Both markdown and code seem to have changed. "
-                        "Don't know what to do now.")
+        logging.error(
+            "Both markdown and code seem to have changed. " "Don't know what to do now."
+        )
         return None
 
 
@@ -47,4 +48,3 @@ def sync():
     action = sync_action()
     if action is not None:
         action()
-

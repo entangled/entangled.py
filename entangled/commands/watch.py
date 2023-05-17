@@ -20,12 +20,12 @@ class EventHandler(FileSystemEventHandler):
 
     def on_any_event(self, event: FileSystemEvent):
         if event.event_type == "opened":
-            return 
+            return
         path = Path(event.src_path)
         if path.is_relative_to(Path("./.entangled")):
             return
         if any(path.is_relative_to(p) for p in self.watched):
-            sync() 
+            sync()
 
 
 def watch():
