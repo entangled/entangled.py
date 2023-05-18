@@ -25,7 +25,6 @@ def sync_action() -> Optional[Callable[[], None]]:
             return tangle
 
         if not changed:
-            logging.info("Nothing to be done")
             return None
 
         if changed.isdisjoint(db.managed):

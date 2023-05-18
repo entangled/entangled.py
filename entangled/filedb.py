@@ -127,6 +127,8 @@ class FileDB:
         return self._files[path]
 
     def __delitem__(self, path: Path):
+        if path in self._target:
+            self._target.remove(path)
         del self._files[path]
 
     @property

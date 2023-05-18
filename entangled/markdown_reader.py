@@ -55,6 +55,9 @@ class MarkdownReader(mawk.RuleSet):
 
     @mawk.on_match(r"^(?P<indent>\s*)```\s*$")
     def on_close_codeblock(self, m: re.Match):
+        if not self.inside_codeblock:
+            return
+        
         if len(m["indent"]) < len(self.current_codeblock_indent):
             raise MarkdownError(self.location, "indentation error")
 
