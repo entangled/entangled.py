@@ -1,5 +1,7 @@
 import argh  # type: ignore
 import logging
+import sys
+
 
 try:
     from rich.logging import RichHandler
@@ -44,15 +46,20 @@ def configure(debug=False):
 def cli():
     import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-d", "--debug", action="store_true", help="enable debug messages"
-    )
-    argh.add_commands(parser, [tangle, stitch, sync, watch])
-    args = parser.parse_args()
-    configure(args.debug)
-    argh.dispatch(parser)
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-d", "--debug", action="store_true", help="enable debug messages"
+        )
+        argh.add_commands(parser, [tangle, stitch, sync, watch])
+        args = parser.parse_args()
+        configure(args.debug)
+        argh.dispatch(parser)
+    except KeyboardInterrupt:
+        logging.info("Goodbye")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    cli()
+        cli()
+
