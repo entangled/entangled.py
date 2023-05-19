@@ -41,7 +41,7 @@ class MarkdownReader(mawk.RuleSet):
     def on_next_line(self, _):
         self.location.line_number += 1
 
-    @mawk.on_match(r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$")
+    @mawk.on_match(config.markers.open)
     def on_open_codeblock(self, m: re.Match) -> Optional[list[str]]:
         if self.inside_codeblock:
             return None
@@ -53,7 +53,7 @@ class MarkdownReader(mawk.RuleSet):
         self.inside_codeblock = True
         return []
 
-    @mawk.on_match(r"^(?P<indent>\s*)```\s*$")
+    @mawk.on_match(config.markers.close)
     def on_close_codeblock(self, m: re.Match):
         if not self.inside_codeblock:
             return

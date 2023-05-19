@@ -1,7 +1,11 @@
-from typing import Iterable, Optional, TypeVar, TypeGuard
+from typing import Iterable, Optional, TypeVar, TypeGuard, Union
+from dataclasses import is_dataclass
 from contextlib import contextmanager
 import os
 from pathlib import Path
+
+import typing
+import types
 
 
 T = TypeVar("T")
@@ -36,3 +40,5 @@ def cat_maybes(it: Iterable[Optional[T]]) -> Iterable[T]:
         return x is not None
 
     return filter(pred, it)
+
+

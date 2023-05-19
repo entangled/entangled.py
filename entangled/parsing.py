@@ -70,13 +70,11 @@ class ChoiceFailure(Expected):
         return " | ".join(str(f) for f in self.failures)
 
 
-class Parser(Generic[T], ABC):
+class Parser(Generic[T]):
     """Base class for parsers."""
-
-    @abstractmethod
     def read(self, inp: str) -> tuple[T, str]:
         """Read a string and return an object the remainder of the string."""
-        ...
+        raise NotImplementedError()
 
     def __rshift__(self, f: Callable[[T], Parser[U]]) -> Parser[U]:
         return bind(self, f)
