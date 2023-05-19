@@ -58,6 +58,7 @@ class Config:
     annotation_format: Optional[str] = None
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
+    hooks: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.languages = languages + self.languages
@@ -79,7 +80,8 @@ default = Config(Version.from_string("2.0"))
 def read_config():
     if not Path("./entangled.toml").exists():
         return default
-    json = tomllib.load("./entangled.toml")
+    with open(Path("./entangled.toml"), "rb") as f:
+        json = tomllib.load(f)
     return construct(Config, json)
 
 

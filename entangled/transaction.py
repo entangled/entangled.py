@@ -45,6 +45,7 @@ class Create(Action):
         return None
 
     def run(self, db: FileDB):
+        self.target.parent.mkdir(parents=True, exist_ok=True)
         with open(self.target, "w") as f:
             f.write(self.content)
         db.update(self.target, self.sources)

@@ -37,4 +37,5 @@ languages = [
     Language("Java", ["java"], Comment("//")),
     Language("CSS", ["css"], Comment("/*", "*/")),
     Language("Lua", ["lua"], Comment("--")),
+    Language("Make", ["make", "makefile"], Comment("#"))
 ]

@@ -10,8 +10,6 @@ from ..markdown_reader import MarkdownReader
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
 
-from .tangle import tangle
-
 
 def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
     def get(item: Content):
