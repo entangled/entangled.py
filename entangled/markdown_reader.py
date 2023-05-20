@@ -33,6 +33,7 @@ class MarkdownReader(mawk.RuleSet):
         self.content: list[Content] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
+        self.ignore = False
         self.hooks = hooks or []
 
     def flush_plain_text(self):
@@ -43,8 +44,18 @@ class MarkdownReader(mawk.RuleSet):
     def on_next_line(self, _):
         self.location.line_number += 1
 
+    @mawk.on_match(config.markers.begin_ignore)
+    def on_begin_ignore(self, _):
+        self.ignore = True
+
+    @mawk.on_match(config.markers.end_ignore)
+    def on_end_ignore(self, _):
+        self.ignore = False
+
     @mawk.on_match(config.markers.open)
     def on_open_codeblock(self, m: re.Match) -> Optional[list[str]]:
+        if self.ignore:
+            return None
         if self.inside_codeblock:
             return None
         self.current_codeblock_indent = m["indent"]
@@ -57,6 +68,8 @@ class MarkdownReader(mawk.RuleSet):
 
     @mawk.on_match(config.markers.close)
     def on_close_codeblock(self, m: re.Match):
+        if self.ignore:
+            return
         if not self.inside_codeblock:
             return
         

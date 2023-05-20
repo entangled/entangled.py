@@ -39,11 +39,15 @@ class Markers:
 
     open: str
     close: str
+    begin_ignore: str
+    end_ignore: str
 
 
 markers = Markers(
     r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
-    r"^(?P<indent>\s*)```\s*$"
+    r"^(?P<indent>\s*)```\s*$",
+    r"^~~~markdown.*$",
+    r"^~~~.*$"
 )
 
 

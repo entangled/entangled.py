@@ -117,7 +117,8 @@ class ReferenceMap:
                     cb.source,
                     end,
                 ]
-
+        raise InternalError("End of exhaustive match reached")
+    
     @get_decorated.register
     def _(self, ref_name: str) -> Iterable[str]:
         return chain.from_iterable(
