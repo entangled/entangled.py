@@ -12,8 +12,13 @@ class InternalError(Exception):
         return f"Internal error: {self.msg}"
 
 
+class UserError(Exception):
+    def __str__(self):
+        return "Unknown user error."
+
+
 @dataclass
-class CyclicReference(Exception):
+class CyclicReference(UserError):
     ref_name: str
 
     def __str__(self):

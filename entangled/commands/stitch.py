@@ -1,5 +1,6 @@
 from itertools import chain
 from pathlib import Path
+from textwrap import indent
 
 import logging
 import argh  # type: ignore
@@ -17,7 +18,7 @@ def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
             case PlainText(s):
                 return s
             case ReferenceId():
-                return reference_map[item].source
+                return indent(reference_map[item].source, reference_map[item].indent)
 
     return "\n".join(get(i) for i in content) + "\n"
 

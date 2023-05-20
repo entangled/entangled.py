@@ -11,6 +11,7 @@ from ..markdown_reader import MarkdownReader
 from ..transaction import transaction, TransactionMode
 from ..tangle import tangle_ref
 from ..hooks import get_hooks
+from ..error import UserError
 
 
 @argh.arg(
@@ -23,31 +24,35 @@ from ..hooks import get_hooks
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
     """Tangle codes from Markdown"""
-    if annotate is not None:
-        config.annotation = AnnotationMethod[annotate.upper()]
+    try:
+        if annotate is not None:
+            config.annotation = AnnotationMethod[annotate.upper()]
 
-    input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-    refs = ReferenceMap()
-    hooks = get_hooks()
+        input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+        refs = ReferenceMap()
+        hooks = get_hooks()
 
-    if show:
-        mode = TransactionMode.SHOW
-    elif force:
-        mode = TransactionMode.FORCE
-    else:
-        mode = TransactionMode.FAIL
+        if show:
+            mode = TransactionMode.SHOW
+        elif force:
+            mode = TransactionMode.FORCE
+        else:
+            mode = TransactionMode.FAIL
 
-    with transaction(mode) as t:
-        for path in input_file_list:
-            logging.debug("reading `%s`", path)
-            t.db.update(path)
-            with open(path, "r") as f:
-                MarkdownReader(str(path), refs, hooks).run(f.read())
+        with transaction(mode) as t:
+            for path in input_file_list:
+                logging.debug("reading `%s`", path)
+                t.db.update(path)
+                with open(path, "r") as f:
+                    MarkdownReader(str(path), refs, hooks).run(f.read())
 
-        for tgt in refs.targets:
-            result, deps = tangle_ref(refs, tgt)
-            t.write(Path(tgt), result, list(map(Path, deps)))
-        t.clear_orphans()
+            for tgt in refs.targets:
+                result, deps = tangle_ref(refs, tgt)
+                t.write(Path(tgt), result, list(map(Path, deps)))
+            t.clear_orphans()
 
-    for h in hooks:
-        h.post_tangle(refs)
+        for h in hooks:
+            h.post_tangle(refs)
+
+    except UserError as e:
+        logging.error(str(e))

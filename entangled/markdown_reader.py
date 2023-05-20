@@ -5,6 +5,7 @@ from pathlib import Path
 
 import re
 import mawk
+import logging
 
 from .config import config
 from .utility import first
@@ -47,10 +48,13 @@ class MarkdownReader(mawk.RuleSet):
     @mawk.on_match(config.markers.begin_ignore)
     def on_begin_ignore(self, _):
         self.ignore = True
+        logging.debug("ignoring markdown block %s", self.location)
+
 
     @mawk.on_match(config.markers.end_ignore)
     def on_end_ignore(self, _):
         self.ignore = False
+        logging.debug("end of ignore")
 
     @mawk.on_match(config.markers.open)
     def on_open_codeblock(self, m: re.Match) -> Optional[list[str]]:
@@ -96,9 +100,10 @@ class MarkdownReader(mawk.RuleSet):
                 language,
                 self.current_codeblock_properties,
                 self.current_codeblock_indent,
-                "\n".join(self.current_content),
+                "\n".join(line.removeprefix(self.current_codeblock_indent) for line in self.current_content),
                 self.current_codeblock_location,
             )
+            logging.debug(repr(code))
             self.reference_map[ref] = code
             if target_file is not None:
                 self.reference_map.targets.add(target_file)

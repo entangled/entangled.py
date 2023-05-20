@@ -46,8 +46,8 @@ class Markers:
 markers = Markers(
     r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
     r"^(?P<indent>\s*)```\s*$",
-    r"^~~~markdown.*$",
-    r"^~~~.*$"
+    r"^\s*\~\~\~markdown\s*$",
+    r"^\s*\~\~\~\s*$"
 )
 
 
