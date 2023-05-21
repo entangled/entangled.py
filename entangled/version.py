@@ -1,1 +1,3 @@
-__version__ = "2.0.0-alpha-3"
+import importlib.metadata
+
+__version__ = importlib.metadata.version("entangled-cli")

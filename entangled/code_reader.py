@@ -78,6 +78,9 @@ class CodeReader(mawk.RuleSet):
 
     @mawk.always
     def otherwise(self, line: str):
+        if line.strip() == "":
+            self.current.content.append("")
+            return []
         if not line.startswith(self.current.indent):
             raise IndentationError(self.location)
         self.current.content.append(line.removeprefix(self.current.indent))
