@@ -11,7 +11,7 @@ from ..markdown_reader import MarkdownReader
 from ..transaction import transaction, TransactionMode
 from ..tangle import tangle_ref
 from ..hooks import get_hooks
-from ..error import UserError
+from ..errors.user import UserError
 
 
 @argh.arg(
@@ -24,21 +24,21 @@ from ..error import UserError
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
     """Tangle codes from Markdown"""
+    if annotate is not None:
+        config.annotation = AnnotationMethod[annotate.upper()]
+
+    input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+    refs = ReferenceMap()
+    hooks = get_hooks()
+
+    if show:
+        mode = TransactionMode.SHOW
+    elif force:
+        mode = TransactionMode.FORCE
+    else:
+        mode = TransactionMode.FAIL
+
     try:
-        if annotate is not None:
-            config.annotation = AnnotationMethod[annotate.upper()]
-
-        input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-        refs = ReferenceMap()
-        hooks = get_hooks()
-
-        if show:
-            mode = TransactionMode.SHOW
-        elif force:
-            mode = TransactionMode.FORCE
-        else:
-            mode = TransactionMode.FAIL
-
         with transaction(mode) as t:
             for path in input_file_list:
                 logging.debug("reading `%s`", path)

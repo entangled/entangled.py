@@ -15,7 +15,7 @@ except ImportError:
 
 from .utility import cat_maybes
 from .filedb import FileDB, stat, file_db
-from .error import InternalError
+from .errors.internal import InternalError
 
 
 @dataclass

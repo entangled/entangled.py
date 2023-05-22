@@ -10,6 +10,7 @@ from ..code_reader import CodeReader
 from ..markdown_reader import MarkdownReader
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
+from ..errors.user import UserError
 
 
 def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
@@ -38,19 +39,23 @@ def stitch(*, force: bool = False, show: bool = False):
 
     refs = ReferenceMap()
     content: dict[Path, list[Content]] = {}
-    for path in input_file_list:
-        logging.debug("reading `%s`", path)
-        with open(path, "r") as f:
-            mr = MarkdownReader(str(path), refs)
-            mr.run(f.read())
-            content[path] = mr.content
-
-    with transaction(mode) as t:
-        for path in t.db.managed:
-            logging.debug("reading `%s`", path)
-            t.db.update(path)
-            with open(path, "r") as f:
-                CodeReader(str(path), refs).run(f.read())
-
+    try:
         for path in input_file_list:
-            t.write(path, stitch_markdown(refs, content[path]), [])
+            logging.debug("reading `%s`", path)
+            with open(path, "r") as f:
+                mr = MarkdownReader(str(path), refs)
+                mr.run(f.read())
+                content[path] = mr.content
+
+        with transaction(mode) as t:
+            for path in t.db.managed:
+                logging.debug("reading `%s`", path)
+                t.db.update(path)
+                with open(path, "r") as f:
+                    CodeReader(str(path), refs).run(f.read())
+
+            for path in input_file_list:
+                t.write(path, stitch_markdown(refs, content[path]), [])
+                
+    except UserError as e:
+        logging.error(str(e))

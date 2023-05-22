@@ -1,14 +1,12 @@
-from typing import Union, Optional, Iterable, Any
+from typing import Union, Iterable, Any
 from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
 from itertools import chain
-from pathlib import Path
-import mawk
 
 from .config import Language, AnnotationMethod, config
 from .properties import Property, get_attribute
-from .error import InternalError, CyclicReference
+from .errors.internal import InternalError
 
 
 def length(iter: Iterable[Any]) -> int:

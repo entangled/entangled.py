@@ -1,20 +1,11 @@
-from typing import Optional
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import mawk
 import re
-import logging
 
 from .document import ReferenceId, TextLocation, ReferenceMap
-
-
-@dataclass
-class IndentationError(Exception):
-    location: TextLocation
-
-    def __str__(self):
-        return f"indentation error at `{self.location}`"
+from .errors.user import IndentationError
 
 
 @dataclass

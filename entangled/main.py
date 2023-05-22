@@ -13,6 +13,9 @@ except ImportError:
 
 
 from .commands import tangle, stitch, sync, watch
+from .errors.internal import bug_contact
+from .errors.user import UserError
+from .version import __version__
 
 
 if WITH_RICH:
@@ -40,7 +43,7 @@ def configure(debug=False):
         logging.basicConfig(level=level)
         logging.debug("Plain logging enabled")
 
-    logging.info("Welcome to Entangled (https://entangled.github.io/)")
+    logging.info(f"Entangled {__version__} (https://entangled.github.io/)")
 
 
 def cli():
@@ -58,6 +61,13 @@ def cli():
     except KeyboardInterrupt:
         logging.info("Goodbye")
         sys.exit(0)
+    except UserError as e:
+        logging.info(str(e))
+        sys.exit(0)
+    except Exception as e:
+        logging.error(str(e))
+        bug_contact(e)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
