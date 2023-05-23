@@ -4,7 +4,6 @@ attribute properties of code blocks in markdown."""
 
 from __future__ import annotations
 
-from abc import ABC, abstractclassmethod, abstractmethod
 from dataclasses import dataclass
 from typing import (
     TypeVar,

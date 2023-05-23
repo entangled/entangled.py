@@ -36,6 +36,9 @@ class TextLocation:
     filename: str
     line_number: int = 0
 
+    def __str__(self):
+        return f"{self.filename}:{self.line_number}"
+
 
 @dataclass
 class CodeBlock:
@@ -87,7 +90,7 @@ class ReferenceMap:
         raise NotImplementedError(f"Invalid key: {type(ref)}")
 
     @get_decorated.register
-    def _(self, ref: ReferenceId) -> list[str]:
+    def _(self, ref: ReferenceId, annotation=config.annotation) -> list[str]:
         init = ref == self.index[ref.name][0]
         count = "init" if init else str(ref.ref_count)
         cb = self.map[ref]
@@ -98,7 +101,7 @@ class ReferenceMap:
             f"{cb.language.comment.open} ~/~ begin <<{ref.file}#{ref.name}>>[{count}]"
         )
         end = f"{cb.language.comment.open} ~/~ end{close_comment}"
-        match config.annotation:
+        match annotation:
             case AnnotationMethod.STANDARD:
                 return [start + close_comment, cb.source, end]
             case AnnotationMethod.NAKED:
@@ -118,7 +121,7 @@ class ReferenceMap:
         raise InternalError("End of exhaustive match reached")
     
     @get_decorated.register
-    def _(self, ref_name: str) -> Iterable[str]:
+    def _(self, ref_name: str, annotation=config.annotation) -> Iterable[str]:
         return chain.from_iterable(
-            self.get_decorated(ref) for ref in self.index[ref_name]
+            self.get_decorated(ref, annotation) for ref in self.index[ref_name]
         )

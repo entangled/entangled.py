@@ -1,5 +1,4 @@
 from typing import Optional
-from dataclasses import dataclass
 from copy import copy
 from pathlib import Path
 
@@ -12,15 +11,8 @@ from .utility import first
 from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText
 from .properties import read_properties, get_attribute, get_classes, get_id
 from .hooks.base import HookBase
-
-
-@dataclass
-class MarkdownError(Exception):
-    location: TextLocation
-    what: str
-
-    def __str__(self):
-        return self.what
+from .errors.user import ParseError
+from . import parsing
 
 
 class MarkdownReader(mawk.RuleSet):
@@ -64,10 +56,14 @@ class MarkdownReader(mawk.RuleSet):
             return None
         self.current_codeblock_indent = m["indent"]
         self.current_codeblock_location = copy(self.location)
-        self.current_codeblock_properties = read_properties(m["properties"])
         self.current_content.append(m[0])
-        self.flush_plain_text()
-        self.inside_codeblock = True
+        try:
+            self.current_codeblock_properties = read_properties(m["properties"])
+            self.flush_plain_text()
+            self.inside_codeblock = True
+        except parsing.Failure as f:
+            logging.error("Parsing error at %s: %s", self.location, f)
+            logging.error("Continuing parsing rest of document.")
         return []
 
     @mawk.on_match(config.markers.close)
@@ -78,7 +74,7 @@ class MarkdownReader(mawk.RuleSet):
             return
         
         if len(m["indent"]) < len(self.current_codeblock_indent):
-            raise MarkdownError(self.location, "indentation error")
+            raise IndentationError(self.location)
 
         if m["indent"] != self.current_codeblock_indent:
             return  # treat this as code-block content

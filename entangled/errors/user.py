@@ -18,6 +18,15 @@ class IndentationError(UserError):
 
 
 @dataclass
+class ParseError(UserError):
+    location: TextLocation
+    msg: str
+
+    def __str__(self):
+        return f"parse error at {self.location}: {self.msg}"
+
+
+@dataclass
 class CyclicReference(UserError):
     ref_name: str
     cycle: list[str]

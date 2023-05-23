@@ -1,6 +1,7 @@
 from pathlib import Path
 from itertools import chain
 import logging
+from threading import Event
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
@@ -28,8 +29,10 @@ class EventHandler(FileSystemEventHandler):
             sync()
 
 
-def watch():
-    """Keep a loop running, watching for changes."""
+def _watch(_stop_event: Event):
+    """Keep a loop running, watching for changes. This interface is separated
+    from the CLI one, so that it can be tested using threading instead of
+    subprocess."""
     sync()
 
     event_handler = EventHandler()
@@ -38,8 +41,13 @@ def watch():
     observer.start()
 
     try:
-        while observer.is_alive():
-            observer.join(1.0)
+        while observer.is_alive() and not _stop_event.is_set():
+            observer.join(0.1)
     finally:
         observer.stop()
         observer.join()
+
+
+def watch():
+    """Keep a loop running, watching for changes."""
+    _watch()
