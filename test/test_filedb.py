@@ -11,7 +11,7 @@ def example_files(tmp_path_factory: pytest.TempPathFactory):
     tmp_path = tmp_path_factory.mktemp("test-filedb")
     with open(tmp_path / "a", "w") as f:
         f.write("hello")
-    sleep(0.001)
+    sleep(0.01)
     with open(tmp_path / "b", "w") as f:
         f.write("hello")
     with open(tmp_path / "c", "w") as f:

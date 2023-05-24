@@ -1,10 +1,19 @@
 # Entangled
+[![Upload Python Package](https://github.com/entangled/entangled.py/actions/workflows/deploy.yml/badge.svg)](https://github.com/entangled/entangled.py/actions/workflows/deploy.yml)
+[![Python package](https://github.com/entangled/entangled.py/actions/workflows/python-package.yml/badge.svg)](https://github.com/entangled/entangled.py/actions/workflows/python-package.yml)
+
 Entangled is a solution for Literate Programming, a technique in which the programmer writes a human narrative first, then implementing the program in code blocks.
 Literate programming was introduced by Donald Knuth in 1984 and has since then found several surges in popularity. One thing holding back the popularity of literate programming is the lack of maintainability under increasing program complexity. Entangled solves this issue by offering a two-way synchronisation mechanism. You can edit and debug your code as normal in your favourite IDE or text editor. Entangled will make sure that your Markdown files stay up-to-date with your code and vice-versa. Because Entangled works with Markdown, you can use it with most static document generators. To summarise, you keep using:
 
 - your favourite **editor**: Entangled runs as a daemon in the background, keeping your text files synchronised.
 - your favourite **programming language**: Entangled is agnostic to programming languages.
 - your favourite **document generator**: Entangled is configurable to any dialect of Markdown.
+
+We’re trying to increase the visibility of Entangled. If you like Entangled, please consider adding this badge [![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/) to the appropriate location in your project:
+
+```markdown
+[![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/)
+```
 
 ## Get started
 To install Entangled, all you need is a Python installation. If you use [`poetry`](https://python-poetry.org),
