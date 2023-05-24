@@ -40,5 +40,3 @@ def cat_maybes(it: Iterable[Optional[T]]) -> Iterable[T]:
         return x is not None
 
     return filter(pred, it)
-
-

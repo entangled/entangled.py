@@ -119,7 +119,7 @@ class ReferenceMap:
                     end,
                 ]
         raise InternalError("End of exhaustive match reached")
-    
+
     @get_decorated.register
     def _(self, ref_name: str, annotation=config.annotation) -> Iterable[str]:
         return chain.from_iterable(

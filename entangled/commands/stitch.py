@@ -56,6 +56,6 @@ def stitch(*, force: bool = False, show: bool = False):
 
             for path in input_file_list:
                 t.write(path, stitch_markdown(refs, content[path]), [])
-                
+
     except UserError as e:
         logging.error(str(e))

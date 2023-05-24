@@ -9,8 +9,7 @@ from .parsing import Parser
 
 
 def isgeneric(annot):
-    return hasattr(annot, "__origin__") \
-        and hasattr(annot, "__args__")
+    return hasattr(annot, "__origin__") and hasattr(annot, "__args__")
 
 
 def construct(annot, json):
@@ -32,8 +31,11 @@ def construct(annot, json):
     if isgeneric(annot) and typing.get_origin(annot) is list:
         assert isinstance(json, list)
         return [construct(typing.get_args(annot)[0], item) for item in json]
-    if isgeneric(annot) and typing.get_origin(annot) is Union \
-        and typing.get_args(annot)[1] is types.NoneType:
+    if (
+        isgeneric(annot)
+        and typing.get_origin(annot) is Union
+        and typing.get_args(annot)[1] is types.NoneType
+    ):
         if json is None:
             return None
         else:
@@ -42,8 +44,7 @@ def construct(annot, json):
         assert isinstance(json, dict)
         arg_annot = typing.get_type_hints(annot)
         # assert all(k in json for k in arg_annot)
-        args = { k: construct(arg_annot[k], json[k])
-                 for k in json }
+        args = {k: construct(arg_annot[k], json[k]) for k in json}
         return annot(**args)
     if isinstance(json, str) and issubclass(annot, Enum):
         options = {opt.name.lower(): opt for opt in annot}

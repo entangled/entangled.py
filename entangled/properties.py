@@ -7,7 +7,16 @@ from typing import Optional, Union, ClassVar, Iterable
 from dataclasses import dataclass
 import re
 
-from .parsing import Parser, many, choice, tokenize, matching, Parsable, starmap, Failure
+from .parsing import (
+    Parser,
+    many,
+    choice,
+    tokenize,
+    matching,
+    Parsable,
+    starmap,
+    Failure,
+)
 
 
 @dataclass

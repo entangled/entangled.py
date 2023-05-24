@@ -1,7 +1,6 @@
 from typing import Optional
 from pathlib import Path
 from itertools import chain
-import logging
 from threading import Event
 
 from watchdog.observers import Observer
@@ -37,7 +36,7 @@ def _watch(_stop_event: Optional[Event] = None):
 
     def stop() -> bool:
         return _stop_event is not None and _stop_event.is_set()
-    
+
     sync()
 
     event_handler = EventHandler()

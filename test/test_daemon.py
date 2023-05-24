@@ -16,15 +16,14 @@ def test_daemon(tmp_path: Path):
             t = threading.Thread(target=_watch, args=(stop,))
             t.start()
             Path("main.md").write_text(
-                "``` {.scheme file=hello.scm}\n"
-                "(display \"hello\") (newline)\n"
-                "```\n")
+                "``` {.scheme file=hello.scm}\n" '(display "hello") (newline)\n' "```\n"
+            )
             time.sleep(0.1)
             md_stat1 = stat(Path("main.md"))
             assert Path("hello.scm").exists()
 
             lines = Path("hello.scm").read_text().splitlines()
-            goodbye = "(display \"goodbye\") (newline)"
+            goodbye = '(display "goodbye") (newline)'
             lines.insert(2, goodbye)
             Path("hello.scm").write_text("\n".join(lines))
             time.sleep(0.1)

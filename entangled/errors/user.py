@@ -34,4 +34,3 @@ class CyclicReference(UserError):
     def __str__(self):
         cycle_str = " -> ".join(self.cycle)
         return f"Cyclic reference in <<{self.ref_name}>>: {cycle_str}"
-

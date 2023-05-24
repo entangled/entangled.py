@@ -32,21 +32,20 @@ class BuildHook(HookBase):
             raise PrerequisitesFailed("GNU Make needs to be installed")
 
     def condition(self, props: list[Property]):
-        return get_id(props) == "build" and \
-            get_attribute(props, "target") is not None
-    
+        return get_id(props) == "build" and get_attribute(props, "target") is not None
+
     def on_read(self, _, code: CodeBlock):
         target = get_attribute(code.properties, "target")
         if target is None:
             return
         self.targets.append(target)
-    
+
     def post_tangle(self, refs: ReferenceMap):
         logging.info("Building artifacts with `make`.")
         with TemporaryDirectory() as _pwd:
             pwd = Path(_pwd)
             script = preamble.format(
-                targets=" ".join(self.targets),
-                rules=tangle_ref(refs, "build")[0])
+                targets=" ".join(self.targets), rules=tangle_ref(refs, "build")[0]
+            )
             (pwd / "Makefile").write_text(script)
             run(["make", "-f", str(pwd / "Makefile")], stdout=DEVNULL)

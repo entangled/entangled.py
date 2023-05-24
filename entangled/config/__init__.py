@@ -47,7 +47,7 @@ markers = Markers(
     r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
     r"^(?P<indent>\s*)```\s*$",
     r"^\s*\~\~\~markdown\s*$",
-    r"^\s*\~\~\~\s*$"
+    r"^\s*\~\~\~\s*$",
 )
 
 

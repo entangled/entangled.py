@@ -39,5 +39,5 @@ languages = [
     Language("CSS", ["css"], Comment("/*", "*/")),
     Language("Lua", ["lua"], Comment("--")),
     Language("Make", ["make", "makefile"], Comment("#")),
-    Language("Gnuplot", ["gnuplot"], Comment("#"))
+    Language("Gnuplot", ["gnuplot"], Comment("#")),
 ]

@@ -20,7 +20,12 @@ class MarkdownReader(mawk.RuleSet):
     content. The contents of the code blocks get stored in `reference_map`.
     """
 
-    def __init__(self, filename: str, refs: Optional[ReferenceMap] = None, hooks: Optional[list[HookBase]] = None):
+    def __init__(
+        self,
+        filename: str,
+        refs: Optional[ReferenceMap] = None,
+        hooks: Optional[list[HookBase]] = None,
+    ):
         self.location = TextLocation(filename)
         self.reference_map = refs or ReferenceMap()
         self.content: list[Content] = []
@@ -41,7 +46,6 @@ class MarkdownReader(mawk.RuleSet):
     def on_begin_ignore(self, _):
         self.ignore = True
         logging.debug("ignoring markdown block %s", self.location)
-
 
     @mawk.on_match(config.markers.end_ignore)
     def on_end_ignore(self, _):
@@ -72,7 +76,7 @@ class MarkdownReader(mawk.RuleSet):
             return
         if not self.inside_codeblock:
             return
-        
+
         if len(m["indent"]) < len(self.current_codeblock_indent):
             raise IndentationError(self.location)
 
@@ -96,7 +100,10 @@ class MarkdownReader(mawk.RuleSet):
                 language,
                 self.current_codeblock_properties,
                 self.current_codeblock_indent,
-                "\n".join(line.removeprefix(self.current_codeblock_indent) for line in self.current_content),
+                "\n".join(
+                    line.removeprefix(self.current_codeblock_indent)
+                    for line in self.current_content
+                ),
                 self.current_codeblock_location,
             )
             logging.debug(repr(code))
@@ -109,7 +116,7 @@ class MarkdownReader(mawk.RuleSet):
             for h in self.hooks:
                 if h.condition(self.current_codeblock_properties):
                     h.on_read(ref, code)
-            
+
         self.current_content.append(m[0])
         self.inside_codeblock = False
         return []

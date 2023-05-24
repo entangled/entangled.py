@@ -4,9 +4,7 @@ from .build import BuildHook, PrerequisitesFailed
 from ..config import config
 
 
-hooks: dict[str, type[HookBase]] = {
-    "build": BuildHook
-}
+hooks: dict[str, type[HookBase]] = {"build": BuildHook}
 
 
 def get_hooks() -> list[HookBase]:

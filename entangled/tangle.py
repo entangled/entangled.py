@@ -20,7 +20,7 @@ class Visitor(Generic[T]):
 
     def in_order(self) -> list[T]:
         return [k for k, v in sorted(self._visited.items(), key=lambda kv: kv[1])]
-    
+
     @contextmanager
     def visit(self, x: T):
         if x in self._visited:
@@ -39,15 +39,18 @@ class Tangler(mawk.RuleSet):
 
     @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
     def on_noweb(self, m: re.Match):
-        result, deps = tangle_ref(self.reference_map, m["refname"], self.annotation, self.visited)
+        result, deps = tangle_ref(
+            self.reference_map, m["refname"], self.annotation, self.visited
+        )
         self.deps.update(deps)
         return [indent(result, m["indent"])]
 
 
 def tangle_ref(
-    refs: ReferenceMap, ref_name: str, 
+    refs: ReferenceMap,
+    ref_name: str,
     annotation: AnnotationMethod = config.annotation,
-    _visited: Optional[Visitor[str]] = None
+    _visited: Optional[Visitor[str]] = None,
 ) -> tuple[str, set[str]]:
     v = _visited or Visitor()
     with v.visit(ref_name):
@@ -56,4 +59,3 @@ def tangle_ref(
         t = Tangler(refs, v, deps, annotation)
         result = t.run(source)
     return result, deps
-

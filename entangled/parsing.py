@@ -71,6 +71,7 @@ class ChoiceFailure(Expected):
 
 class Parser(Generic[T]):
     """Base class for parsers."""
+
     def read(self, inp: str) -> tuple[T, str]:
         """Read a string and return an object the remainder of the string."""
         raise NotImplementedError()

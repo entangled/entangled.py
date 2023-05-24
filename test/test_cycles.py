@@ -6,6 +6,7 @@ from entangled.markdown_reader import read_markdown
 from entangled.errors.user import CyclicReference
 from entangled.document import AnnotationMethod
 
+
 def test_cycles():
     refs, _ = read_markdown(Path(__file__).parent / "data" / "cyclic.md")
 
