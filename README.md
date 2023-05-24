@@ -126,6 +126,65 @@ Once you have the code in place to generate figures and markdown tables, you can
 
 In the case of tables or other rich content, Standard Markdown (or CommonMark) has no syntax for including other Markdown files, so you'll have to check with your own document generator how to do that. In MkDocs, you could use `mkdocs-macro-plugin`, Pandoc has `pandoc-include`, etc.
 
+#### Ideas for other hooks
+
+> A: Did you hack it together?
+
+> B: No, its hooked into the system.
+
+> A: That's clever!
+
+In principle, you could do a lot of things with the `build` hook, supposing that you're well versed in the secrets of GNU Make. However, I also want to make things easier to use. As a principle I would like Entangled to be as much independent of choice of document generator as possible. That means that some of the features you may want are actually best implemented as plugins for these document generators. One obvious example of an add-on that doesn't belong in the core of Entangled would be support for Jupyter. If your work is anything serious, meaning your computations take somewhat longer, you'll be much happier with a build system anyway :smile:!
+
+That being said, candidates for hooks could be: 
+
+- Code meta data. Some code could use more meta data than just a name and language. One way to include metadata is by having a header that is separated with a three hyphen line `---` from the actual code content. A hook could change the way the code is tangled, possibly injecting the metadata as a docstring, or leaving it out of the tangled code and have the document generator use it for other purposes.
+- She-bang lines. When you're coding scripts, it may be desirable to have `#!/bin/bash` equivalent line at the top. This is currently not supported in the Python port of Entangled.
+- Integration with package managers like `cargo`, `cabal`, `poetry` etc. These are usually configured in a separate file. A hook could be used to specify dependencies. That way you could also document why a certain dependency is needed, or why it needs to have the version you specify.
+
+## Support for Document Generators
+Entangled has been used successfully with the following document generators. Note that some of these examples were built using older versions of Entangled, but they should work just the same.
+
+### Pandoc
+[Pandoc](https://pandoc.org/) is a very versatile tool for converting documents in any format. It specifically has very wide support for different forms of Markdown syntax out in the wild, including a filter system that lets you extend the workings of Pandoc. Those filters can be written in any language through an API, for instance Python filters can be written using `panflute`, but there is also native support for Lua.
+
+To work with Entangled style literate documents, there is a set of [Pandoc filters](https://github.com/entangled/filters) available. The major downside of Pandoc, is that it offers no help in making your output HTML look beautiful. One option is to use the [Bootstrap template](https://github.com/entangled/bootstrap), but you may wan't to try out others as well, or design your own. These days a lot can be done with a single well designed CSS file.
+
+- :heavy_plus_sign: dynamic
+- :heavy_plus_sign: supports most Markdown syntax out of the box
+- :heavy_plus_sign: excellent for science: citation, numbered figures, tables and equations
+- :heavy_plus_sign: support for LaTeX
+- :heavy_minus_sign: harder to setup
+- :heavy_minus_sign: takes work to make look good
+
+Example: [Hello World in C++](https://entangled.github.io/examples/hello-world.html)
+
+### MkDocs
+[MkDocs](https://www.mkdocs.org/) is specifically taylored towards converting Markdown into good looking, easy to navigate HTML, especially when used in combination with the [`mkdocs-material`](https://squidfunk.github.io/mkdocs-material/) theme. To use Entangled style code blocks with MkDocs, you'll need to install the [`mkdocs-entangled-plugin`](https://github.com/entangled/mkdocs-plugin) as well.
+
+- :heavy_plus_sign: specifically designed for Markdown to HTML, i.e. software documentation
+- :heavy_plus_sign: pretty output, out of the box
+- :heavy_plus_sign: easy to install
+- :heavy_minus_sign: not intended for scientific use: numbering and referencing equations, figures and tables is hard to setup
+- :heavy_minus_sign: documentation is on par with most Python projects: Ok for most things, but really hard if you want specifics
+
+Example: TBD
+
+### Documenter.jl
+[Documenter.jl]() is the standard tool to write Julia documention in. It has internal support for evaluating code block contents.
+
+Example: [Intro to code generation in Julia](https://jhidding.github.io/MacroExercises.jl/dev/)
+
+### PDoc
+[PDoc]() is a tool for documenting smaller Python projects. It grabs all documentation from the doc-strings in your Python library and generates a page from that. To have it include its own literate source, I had to use some very ugly hacks.
+
+Example: [check-deps, a Universal dependency checker in Python](https://jhidding.github.io/check-deps/checkdeps.html)
+
+### Docsify
+[Docsify](https://docsify.js.org/#/) serves the markdown files and does the conversion to HTML in a Javascript library (in browser).
+
+Example: [Guide to C++ on the web through WASM](https://nlesc-jcer.github.io/cpp2wasm/#/)
+
 ## History
 This is a rewrite of Entangled in Python. Older versions were written in Haskell. The rewrite in Python was motivated by ease of installation, larger community and quite frankly, a fit of mental derangement.
 
