@@ -1,3 +1,4 @@
+from typing import Optional
 from pathlib import Path
 from itertools import chain
 import logging
@@ -29,10 +30,14 @@ class EventHandler(FileSystemEventHandler):
             sync()
 
 
-def _watch(_stop_event: Event):
+def _watch(_stop_event: Optional[Event] = None):
     """Keep a loop running, watching for changes. This interface is separated
     from the CLI one, so that it can be tested using threading instead of
     subprocess."""
+
+    def stop() -> bool:
+        return _stop_event is not None and _stop_event.is_set()
+    
     sync()
 
     event_handler = EventHandler()
@@ -41,7 +46,7 @@ def _watch(_stop_event: Event):
     observer.start()
 
     try:
-        while observer.is_alive() and not _stop_event.is_set():
+        while observer.is_alive() and not stop():
             observer.join(0.1)
     finally:
         observer.stop()

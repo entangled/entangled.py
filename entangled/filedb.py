@@ -146,7 +146,7 @@ class FileDB:
             db = FileDB.read()
             undead = list(filter(lambda p: not p.exists(), db.files))
             for path in undead:
-                logging.warn(
+                logging.warning(
                     "File `%s` in DB doesn't exist. Removing entry from DB.", path
                 )
                 del db[path]

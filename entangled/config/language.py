@@ -35,6 +35,7 @@ languages = [
     ),
     Language("Julia", ["julia"], Comment("#")),
     Language("Java", ["java"], Comment("//")),
+    Language("PureScritp", ["pure", "purs", "purescript"], Comment("--")),
     Language("CSS", ["css"], Comment("/*", "*/")),
     Language("Lua", ["lua"], Comment("--")),
     Language("Make", ["make", "makefile"], Comment("#")),
