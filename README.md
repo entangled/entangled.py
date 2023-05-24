@@ -85,6 +85,47 @@ return EXIT_SUCCESS;
 
 These blocks of code can be *tangled* into source files.
 
+### Using the `build` hook
+Entangled has a system of *hooks*, of which there exists currently only one: `build`. You can enable this hook in `entangled.toml`:
+
+```toml
+version = "2.0"
+watch_list = "docs/**/*.md"
+hooks = ["build"]
+```
+
+Then in your Markdown, you may enter Make code tagged with the `#build` id.
+
+~~~markdown
+``` {.make #build target=docs/fig/plot.svg}
+docs/fig/plot.svg: src/plot.gnuplot
+> gnuplot $< > $@
+```
+~~~
+
+Here, `$<` is the Make variable for the first dependency, and `$@` is the Make variable for the target. So, running this through `make` will create `plot.svg` if it doesn't exist yet or if it is older than `plot.gnuplot`.
+
+Entangled adds a preamble to `#build`,
+
+```make
+.RECIPEPREFIX = >
+.PHONY = all
+
+all: {targets}
+
+{rules}
+```
+
+changing the prefix from `TAB` to `>` (you really want this), and collecting all `target=...` attributes into the `all` target.
+
+Once you have the code in place to generate figures and markdown tables, you can use the syntax at your disposal to include those into your Markdown. In this example that would be
+
+~~~markdown
+![My awesome plot](fig/plot.svg)
+~~~
+
+In the case of tables or other rich content, Standard Markdown (or CommonMark) has no syntax for including other Markdown files, so you'll have to check with your own document generator how to do that. In MkDocs, you could use `mkdocs-macro-plugin`, Pandoc has `pandoc-include`, etc.
+
 ## History
 This is a rewrite of Entangled in Python. Older versions were written in Haskell. The rewrite in Python was motivated by ease of installation, larger community and quite frankly, a fit of mental derangement.
 
