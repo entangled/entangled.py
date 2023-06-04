@@ -1,6 +1,7 @@
 from pathlib import Path
 import time
 import os
+from entangled.config import config
 from entangled.utility import pushd
 from entangled.filedb import stat
 import threading
@@ -9,6 +10,7 @@ from entangled.main import configure
 
 
 def test_daemon(tmp_path: Path):
+    config.read()
     with pushd(tmp_path):
         try:
             configure(debug=True)

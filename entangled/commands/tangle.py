@@ -47,7 +47,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
                     MarkdownReader(str(path), refs, hooks).run(f.read())
 
             for tgt in refs.targets:
-                result, deps = tangle_ref(refs, tgt)
+                result, deps = tangle_ref(refs, tgt, config.annotation)
                 t.write(Path(tgt), result, list(map(Path, deps)))
             t.clear_orphans()
 

@@ -71,23 +71,11 @@ class Config(threading.local):
         self.languages = languages + self.languages
         self.make_language_index()
 
-    @contextmanager
-    def __call__(self, **kwargs):
-        backup = { k: getattr(self, k) for k in kwargs }
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        yield
-        for k in kwargs.keys():
-            setattr(self, k, backup[k])
-
     def make_language_index(self):
         self.language_index = dict()
         for l in self.languages:
             for i in l.identifiers:
                 self.language_index[i] = l
-
-    def get_language(self, lang_name: str) -> Optional[Language]:
-        return self.language_index.get(lang_name, None)
 
 
 default = Config(Version.from_string("2.0"))
@@ -101,6 +89,29 @@ def read_config():
     return construct(Config, json)
 
 
-config = read_config()
+class ConfigWrapper:
+    def __init__(self, config):
+        self.config = config
+    
+    def read(self):
+        self.config = read_config()
+
+    def __getattr__(self, attr):
+        return getattr(self.config, attr)
+
+    @contextmanager
+    def __call__(self, **kwargs):
+        backup = { k: getattr(self.config, k) for k in kwargs }
+        for k, v in kwargs.items():
+            setattr(self.config, k, v)
+        yield
+        for k in kwargs.keys():
+            setattr(self.config, k, backup[k])
+
+    def get_language(self, lang_name: str) -> Optional[Language]:
+        return self.config.language_index.get(lang_name, None)
+
+
+config = ConfigWrapper(read_config())
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""
