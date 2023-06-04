@@ -6,6 +6,8 @@ from uuid import uuid4
 from time import sleep
 from pathlib import Path
 
+import os
+
 md_input = """
 Create a file:
 
@@ -27,7 +29,12 @@ def test_build(tmp_path):
             f.write(md_input.format(message=message))
 
         with config(hooks=["build"]):
+            # normally, build hooks are disabled in CI,
+            # here we need to make an exception
+            if "CI" in os.environ:
+                del os.environ["CI"]
             tangle()
+            os.environ["CI"] = True
 
         sleep(0.1)
         tgt = Path("test.dat")
