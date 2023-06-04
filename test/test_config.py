@@ -49,3 +49,32 @@ def test_new_language(tmp_path):
         sleep(0.1)
         assert Path("test.fish").exists()
         assert Path("test.fish").read_text() == "echo hello world"
+
+
+config_with_more = """
+# required: the minimum version of Entangled
+version = "2.0"            
+
+# default watch_list is ["**/*.md"]
+watch_list = ["docs/**/*.md"]
+
+[[languages]]
+name = "Custom Java"
+identifiers = ["java"]
+comment = { open = "//" }
+
+[[languages]]
+name = "XML"
+identifiers = ["xml", "html", "svg"]
+comment = { open = "<!--", close = "-->" }
+"""
+
+
+def test_more_language(tmp_path):
+    with pushd(tmp_path):
+        Path("entangled.toml").write_text(config_with_more)
+        sleep(0.1)
+        config.read()
+
+        assert config.get_language("html").name == "XML"
+        assert config.get_language("java").name == "Custom Java"

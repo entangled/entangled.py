@@ -85,12 +85,53 @@ return EXIT_SUCCESS;
 
 These blocks of code can be *tangled* into source files.
 
+### Configuring
+Entangled is configured by putting a `entangled.toml` in the root of your project.
+
+```toml
+# required: the minimum version of Entangled
+version = "2.0"            
+
+# default watch_list is ["**/*.md"]
+watch_list = ["docs/**/*.md"]
+```
+
+You may add languages as follows:
+
+```toml
+[[languages]]
+name = "Java"
+identifiers = ["java"]
+comment = { open = "//" }
+
+# Some languages have comments that are not terminated by
+# newlines, like XML or CSS.
+[[languages]]
+name = "XML"
+identifiers = ["xml", "html", "svg"]
+comment = { open = "<!--", close = "-->" }
+```
+
+The `identifiers` are the tags that you may use in your code block header to identify the language. Using the above config, you should be able to write:
+
+~~~markdown
+``` {.html file=index.html}
+<!DOCTYPE html>
+<html lang="en">
+    <<header>>
+    <<body>>
+</html>
+```
+
+And so on...
+~~~
+
 ### Using the `build` hook
 Entangled has a system of *hooks*, of which there exists currently only one: `build`. You can enable this hook in `entangled.toml`:
 
 ```toml
 version = "2.0"
-watch_list = "docs/**/*.md"
+watch_list = ["docs/**/*.md"]
 hooks = ["build"]
 ```
 
