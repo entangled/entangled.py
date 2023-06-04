@@ -3,6 +3,7 @@ from entangled.commands import tangle
 from entangled.utility import pushd
 
 from uuid import uuid4
+from time import sleep
 from pathlib import Path
 
 md_input = """
@@ -27,6 +28,7 @@ def test_build(tmp_path):
         with config(hooks = ["build"]):
             tangle()
         
+        sleep(0.1)
         tgt = Path("test.dat")
         assert tgt.exists()
         contents = open(tgt, "r").read()
