@@ -17,6 +17,7 @@ from .language import Language, languages
 
 import threading
 import tomllib
+import logging
 
 
 class AnnotationMethod(Enum):
@@ -84,9 +85,13 @@ default = Config(Version.from_string("2.0"))
 def read_config():
     if not Path("./entangled.toml").exists():
         return default
-    with open(Path("./entangled.toml"), "rb") as f:
-        json = tomllib.load(f)
-    return construct(Config, json)
+    try:
+        with open(Path("./entangled.toml"), "rb") as f:
+            json = tomllib.load(f)
+        return construct(Config, json)
+    except ValueError as e:
+        logging.error("Could not read config: %s", e)
+        return default
 
 
 class ConfigWrapper:
