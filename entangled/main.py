@@ -54,8 +54,16 @@ def cli():
         parser.add_argument(
             "-d", "--debug", action="store_true", help="enable debug messages"
         )
+        parser.add_argument(
+            "-v", "--version", action="store_true", help="show version number"
+        )
         argh.add_commands(parser, [tangle, stitch, sync, watch])
         args = parser.parse_args()
+
+        if args.version:
+            print(f"Entangled {__version__}")
+            sys.exit(0)
+
         configure(args.debug)
         argh.dispatch(parser)
     except KeyboardInterrupt:
