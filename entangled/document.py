@@ -75,7 +75,7 @@ class ReferenceMap:
 
     def __contains__(self, key: str) -> bool:
         return key in self.index
-    
+
     @singledispatchmethod
     def __getitem__(self, key):
         raise NotImplementedError(f"Invalid key: {type(key)}")

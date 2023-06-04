@@ -7,7 +7,13 @@ from copy import copy
 import re
 import mawk
 
-from .document import ReferenceMap, AnnotationMethod, TextLocation, ReferenceId, CodeBlock
+from .document import (
+    ReferenceMap,
+    AnnotationMethod,
+    TextLocation,
+    ReferenceId,
+    CodeBlock,
+)
 from .errors.user import CyclicReference, MissingReference
 from .config import config
 
@@ -45,7 +51,7 @@ class Tangler(mawk.RuleSet):
         self.cb = self.refs[self.ref]
         self.location = copy(self.cb.origin)
         self.deps = set((self.cb.origin.filename,))
- 
+
     @mawk.always
     def lineno(self, _):
         self.location.line_number += 1
@@ -53,13 +59,11 @@ class Tangler(mawk.RuleSet):
     @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
     def on_noweb(self, m: re.Match):
         try:
-            result, deps = tangle_ref(
-                self.refs, m["refname"], type(self), self.visited
-            )
+            result, deps = tangle_ref(self.refs, m["refname"], type(self), self.visited)
 
         except KeyError:
             raise MissingReference(m["refname"], self.location)
-        
+
         self.deps.update(deps)
         return [indent(result, m["indent"])]
 
@@ -74,7 +78,9 @@ class AnnotatedTangler(Tangler):
     def __post_init__(self):
         super().__post_init__()
         self.close_comment = (
-            "" if self.cb.language.comment.close is None else f" {self.cb.language.comment.close}"
+            ""
+            if self.cb.language.comment.close is None
+            else f" {self.cb.language.comment.close}"
         )
 
     def on_begin(self):
@@ -84,15 +90,13 @@ class AnnotatedTangler(Tangler):
         ]
 
     def on_eof(self):
-        return [
-            f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"
-        ]
+        return [f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"]
 
 
 tanglers = {
     AnnotationMethod.NAKED: Tangler,
     AnnotationMethod.STANDARD: AnnotatedTangler,
-    AnnotationMethod.SUPPLEMENTED: AnnotatedTangler
+    AnnotationMethod.SUPPLEMENTED: AnnotatedTangler,
 }
 
 

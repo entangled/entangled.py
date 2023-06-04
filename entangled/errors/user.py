@@ -35,6 +35,7 @@ class CyclicReference(UserError):
         cycle_str = " -> ".join(self.cycle)
         return f"Cyclic reference in <<{self.ref_name}>>: {cycle_str}"
 
+
 @dataclass
 class MissingReference(UserError):
     ref_name: str

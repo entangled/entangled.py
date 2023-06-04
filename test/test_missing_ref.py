@@ -12,6 +12,7 @@ md_source = """
 ```
 """
 
+
 def test_missing_ref(tmp_path):
     with pytest.raises(MissingReference):
         mr = MarkdownReader("-")

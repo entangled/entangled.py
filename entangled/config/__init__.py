@@ -92,7 +92,7 @@ def read_config():
 class ConfigWrapper:
     def __init__(self, config):
         self.config = config
-    
+
     def read(self):
         self.config = read_config()
 
@@ -101,7 +101,7 @@ class ConfigWrapper:
 
     @contextmanager
     def __call__(self, **kwargs):
-        backup = { k: getattr(self.config, k) for k in kwargs }
+        backup = {k: getattr(self.config, k) for k in kwargs}
         for k, v in kwargs.items():
             setattr(self.config, k, v)
         yield

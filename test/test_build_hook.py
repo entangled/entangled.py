@@ -19,15 +19,16 @@ test.dat: script.py
 ```
 """
 
+
 def test_build(tmp_path):
     message = uuid4().hex
     with pushd(tmp_path):
         with open("test.md", "w") as f:
             f.write(md_input.format(message=message))
 
-        with config(hooks = ["build"]):
+        with config(hooks=["build"]):
             tangle()
-        
+
         sleep(0.1)
         tgt = Path("test.dat")
         assert tgt.exists()

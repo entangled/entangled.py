@@ -83,6 +83,7 @@ scm_changed3 = """; ~/~ begin <<test.md#hello.scm>>[init]
 )
 ; ~/~ end"""
 
+
 def test_code_indentation(tmp_path):
     with pushd(tmp_path):
         src = Path("test.md")
@@ -106,11 +107,13 @@ def test_code_indentation(tmp_path):
             with pytest.raises(IndentationError):
                 CodeReader("-", refs).run(errs)
 
+
 md_source_error = """
   ``` {.scheme file=hello.scm}
 (display "hello") (newline)
 ```
 """
+
 
 def test_md_indentation():
     with pytest.raises(IndentationError):

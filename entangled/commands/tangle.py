@@ -24,8 +24,10 @@ from ..errors.user import UserError
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
     """Tangle codes from Markdown"""
-    if annotate is not None:
-        config.annotation = AnnotationMethod[annotate.upper()]
+    if annotate is None:
+        annotation_method = config.annotation
+    else:
+        annotation_method = AnnotationMethod[annotate.upper()]
 
     input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
     refs = ReferenceMap()
@@ -47,7 +49,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
                     MarkdownReader(str(path), refs, hooks).run(f.read())
 
             for tgt in refs.targets:
-                result, deps = tangle_ref(refs, tgt, config.annotation)
+                result, deps = tangle_ref(refs, tgt, annotation_method)
                 t.write(Path(tgt), result, list(map(Path, deps)))
             t.clear_orphans()
 

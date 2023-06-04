@@ -8,6 +8,7 @@ from entangled.utility import pushd
 from time import sleep
 from pathlib import Path
 
+
 def test_config_constructable():
     assert construct(Version, "1.2.3") == Version((1, 2, 3))
     assert construct(
@@ -36,6 +37,7 @@ echo hello world
 ```
 """
 
+
 def test_new_language(tmp_path):
     with pushd(tmp_path):
         Path("entangled.toml").write_text(config_with_language)
@@ -47,4 +49,3 @@ def test_new_language(tmp_path):
         sleep(0.1)
         assert Path("test.fish").exists()
         assert Path("test.fish").read_text() == "echo hello world"
-
