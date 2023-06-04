@@ -9,11 +9,13 @@ from enum import Enum
 from dataclasses import dataclass, field
 from copy import copy
 from pathlib import Path
+from contextlib import contextmanager
 
 from ..construct import construct
 from .version import Version
 from .language import Language, languages
 
+import threading
 import tomllib
 
 
@@ -52,8 +54,9 @@ markers = Markers(
 
 
 @dataclass
-class Config:
-    """Main config class."""
+class Config(threading.local):
+    """Main config class. This class is made thread-local to make
+    it possible to test in parallel."""
 
     version: Version
     languages: list[Language] = field(default_factory=list)
@@ -67,6 +70,15 @@ class Config:
     def __post_init__(self):
         self.languages = languages + self.languages
         self.make_language_index()
+
+    @contextmanager
+    def __call__(self, **kwargs):
+        backup = { k: getattr(self, k) for k in kwargs }
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        yield
+        for k in kwargs.keys():
+            setattr(self, k, backup[k])
 
     def make_language_index(self):
         self.language_index = dict()

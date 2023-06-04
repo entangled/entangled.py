@@ -138,9 +138,9 @@ In principle, you could do a lot of things with the `build` hook, supposing that
 
 That being said, candidates for hooks could be: 
 
-- Code meta data. Some code could use more meta data than just a name and language. One way to include metadata is by having a header that is separated with a three hyphen line `---` from the actual code content. A hook could change the way the code is tangled, possibly injecting the metadata as a docstring, or leaving it out of the tangled code and have the document generator use it for other purposes.
-- She-bang lines. When you're coding scripts, it may be desirable to have `#!/bin/bash` equivalent line at the top. This is currently not supported in the Python port of Entangled.
-- Integration with package managers like `cargo`, `cabal`, `poetry` etc. These are usually configured in a separate file. A hook could be used to specify dependencies. That way you could also document why a certain dependency is needed, or why it needs to have the version you specify.
+- *Code metadata*. Some code could use more meta data than just a name and language. One way to include metadata is by having a header that is separated with a three hyphen line `---` from the actual code content. A hook could change the way the code is tangled, possibly injecting the metadata as a docstring, or leaving it out of the tangled code and have the document generator use it for other purposes.
+- *She-bang lines*. When you're coding scripts, it may be desirable to have `#!/bin/bash` equivalent line at the top. This is currently not supported in the Python port of Entangled.
+- *Integration with package managers* like `cargo`, `cabal`, `poetry` etc. These are usually configured in a separate file. A hook could be used to specify dependencies. That way you could also document why a certain dependency is needed, or why it needs to have the version you specify.
 
 ## Support for Document Generators
 Entangled has been used successfully with the following document generators. Note that some of these examples were built using older versions of Entangled, but they should work just the same.

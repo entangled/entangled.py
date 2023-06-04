@@ -11,7 +11,7 @@ from .utility import first
 from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText
 from .properties import read_properties, get_attribute, get_classes, get_id
 from .hooks.base import HookBase
-from .errors.user import ParseError
+from .errors.user import ParseError, IndentationError
 from . import parsing
 
 

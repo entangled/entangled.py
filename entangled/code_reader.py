@@ -9,15 +9,6 @@ from .errors.user import IndentationError
 
 
 @dataclass
-class StitchError(Exception):
-    path: Path
-    msg: str
-
-    def __str__(self):
-        return f"indentation error in `{self.path}`"
-
-
-@dataclass
 class Frame:
     ref: ReferenceId
     indent: str

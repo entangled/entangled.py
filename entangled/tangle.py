@@ -1,13 +1,14 @@
-from typing import Optional, TypeVar, Generic
+from typing import Optional, TypeVar, Generic, Union
 from dataclasses import dataclass, field
 from textwrap import indent
 from contextlib import contextmanager
+from copy import copy
 
 import re
 import mawk
 
-from .document import ReferenceMap, AnnotationMethod
-from .errors.user import CyclicReference
+from .document import ReferenceMap, AnnotationMethod, TextLocation, ReferenceId, CodeBlock
+from .errors.user import CyclicReference, MissingReference
 from .config import config
 
 
@@ -32,30 +33,92 @@ class Visitor(Generic[T]):
 
 @dataclass
 class Tangler(mawk.RuleSet):
-    reference_map: ReferenceMap
+    refs: ReferenceMap
+    ref: ReferenceId
+    init: bool
     visited: Visitor[str]
-    deps: set[str]
-    annotation: AnnotationMethod
+    deps: set[str] = field(init=False)
+    cb: CodeBlock = field(init=False)
+    location: TextLocation = field(init=False)
+
+    def __post_init__(self):
+        self.cb = self.refs[self.ref]
+        self.location = copy(self.cb.origin)
+        self.deps = set((self.cb.origin.filename,))
+ 
+    @mawk.always
+    def lineno(self, _):
+        self.location.line_number += 1
 
     @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
     def on_noweb(self, m: re.Match):
-        result, deps = tangle_ref(
-            self.reference_map, m["refname"], self.annotation, self.visited
-        )
+        try:
+            result, deps = tangle_ref(
+                self.refs, m["refname"], type(self), self.visited
+            )
+
+        except KeyError:
+            raise MissingReference(m["refname"], self.location)
+        
         self.deps.update(deps)
         return [indent(result, m["indent"])]
+
+    def run(self):
+        return super().run(self.cb.source)
+
+
+@dataclass
+class AnnotatedTangler(Tangler):
+    close_comment: str = field(init=False)
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.close_comment = (
+            "" if self.cb.language.comment.close is None else f" {self.cb.language.comment.close}"
+        )
+
+    def on_begin(self):
+        count = "init" if self.init else str(self.ref.ref_count)
+        return [
+            f"{self.cb.language.comment.open} ~/~ begin <<{self.ref.file}#{self.ref.name}>>[{count}]{self.close_comment}"
+        ]
+
+    def on_eof(self):
+        return [
+            f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"
+        ]
+
+
+tanglers = {
+    AnnotationMethod.NAKED: Tangler,
+    AnnotationMethod.STANDARD: AnnotatedTangler,
+    AnnotationMethod.SUPPLEMENTED: AnnotatedTangler
+}
 
 
 def tangle_ref(
     refs: ReferenceMap,
     ref_name: str,
-    annotation: AnnotationMethod = config.annotation,
+    annotation: Union[type[Tangler], AnnotationMethod] = config.annotation,
     _visited: Optional[Visitor[str]] = None,
 ) -> tuple[str, set[str]]:
+    if ref_name not in refs:
+        raise KeyError(ref_name)
     v = _visited or Visitor()
+
+    if isinstance(annotation, AnnotationMethod):
+        tangler = tanglers[annotation]
+    else:
+        tangler = annotation
+
     with v.visit(ref_name):
-        deps = set(cb.origin.filename for cb in refs.by_name(ref_name))
-        source = "\n".join(refs.get_decorated(ref_name, annotation))
-        t = Tangler(refs, v, deps, annotation)
-        result = t.run(source)
-    return result, deps
+        init = True
+        result = []
+        deps = set()
+        for ref in refs.index[ref_name]:
+            t = tangler(refs, ref, init, v)
+            result.append(t.run())
+            deps.update(t.deps)
+            init = False
+
+    return "\n".join(result), deps

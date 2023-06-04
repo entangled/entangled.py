@@ -73,6 +73,9 @@ class ReferenceMap:
         self.map[key] = value
         self.index[key.name].append(key)
 
+    def __contains__(self, key: str) -> bool:
+        return key in self.index
+    
     @singledispatchmethod
     def __getitem__(self, key):
         raise NotImplementedError(f"Invalid key: {type(key)}")
@@ -84,44 +87,3 @@ class ReferenceMap:
     @__getitem__.register
     def _(self, key: str) -> Iterable[CodeBlock]:
         return self.by_name(key)
-
-    @singledispatchmethod
-    def get_decorated(self, ref):
-        raise NotImplementedError(f"Invalid key: {type(ref)}")
-
-    @get_decorated.register
-    def _(self, ref: ReferenceId, annotation=config.annotation) -> list[str]:
-        init = ref == self.index[ref.name][0]
-        count = "init" if init else str(ref.ref_count)
-        cb = self.map[ref]
-        close_comment = (
-            "" if cb.language.comment.close is None else f" {cb.language.comment.close}"
-        )
-        start = (
-            f"{cb.language.comment.open} ~/~ begin <<{ref.file}#{ref.name}>>[{count}]"
-        )
-        end = f"{cb.language.comment.open} ~/~ end{close_comment}"
-        match annotation:
-            case AnnotationMethod.STANDARD:
-                return [start + close_comment, cb.source, end]
-            case AnnotationMethod.NAKED:
-                return [cb.source]
-            case AnnotationMethod.SUPPLEMENTED:
-                if config.annotation_format is None:
-                    return [start + close_comment, cb.source, end]
-
-                supplement = config.annotation_format.format(
-                    file=cb.origin.filename, linenumber=cb.origin.line_number
-                )
-                return [
-                    start + " " + supplement + close_comment,
-                    cb.source,
-                    end,
-                ]
-        raise InternalError("End of exhaustive match reached")
-
-    @get_decorated.register
-    def _(self, ref_name: str, annotation=config.annotation) -> Iterable[str]:
-        return chain.from_iterable(
-            self.get_decorated(ref, annotation) for ref in self.index[ref_name]
-        )

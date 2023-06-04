@@ -34,3 +34,11 @@ class CyclicReference(UserError):
     def __str__(self):
         cycle_str = " -> ".join(self.cycle)
         return f"Cyclic reference in <<{self.ref_name}>>: {cycle_str}"
+
+@dataclass
+class MissingReference(UserError):
+    ref_name: str
+    location: TextLocation
+
+    def __str__(self):
+        return f"Missing reference `{self.ref_name}` at `{self.location}`"
