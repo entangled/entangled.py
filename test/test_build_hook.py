@@ -33,8 +33,10 @@ def test_build(tmp_path):
             # here we need to make an exception
             if "CI" in os.environ:
                 del os.environ["CI"]
-            tangle()
-            os.environ["CI"] = True
+                tangle()
+                os.environ["CI"] = "true"
+            else:
+                tangle()
 
         sleep(0.1)
         tgt = Path("test.dat")
