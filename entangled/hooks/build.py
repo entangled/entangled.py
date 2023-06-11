@@ -13,7 +13,7 @@ import logging
 import os
 
 from ..properties import Property, get_id, get_attribute
-from ..tangle import tangle_ref
+from ..tangle import tangle_ref, Tangler
 from ..document import ReferenceMap, CodeBlock
 
 from .base import HookBase, PrerequisitesFailed
@@ -63,11 +63,15 @@ class BuildHook(HookBase):
             logging.info("CI run detected, skipping `build` hook.")
             return
 
+        try:
+            rules = tangle_ref(refs, "build", Tangler)[0]
+        except KeyError:
+            logging.warning("No targets specified, skipping `build` hook.")
+            return
+
         logging.info("Building artifacts with `make`.")
         with TemporaryDirectory() as _pwd:
             pwd = Path(_pwd)
-            script = preamble.format(
-                targets=" ".join(self.targets), rules=tangle_ref(refs, "build")[0]
-            )
+            script = preamble.format(targets=" ".join(self.targets), rules=rules)
             (pwd / "Makefile").write_text(script)
             run(["make", "-f", str(pwd / "Makefile")], stdout=DEVNULL)

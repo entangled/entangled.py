@@ -106,7 +106,7 @@ class MarkdownReader(mawk.RuleSet):
                 ),
                 self.current_codeblock_location,
             )
-            logging.debug(repr(code))
+            # logging.debug(repr(code))
             self.reference_map[ref] = code
             if target_file is not None:
                 self.reference_map.targets.add(target_file)

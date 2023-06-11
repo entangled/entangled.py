@@ -105,8 +105,12 @@ class Delete(Action):
 @dataclass
 class Transaction:
     db: FileDB
+    updates: list[Path] = field(default_factory=list)
     actions: list[Action] = field(default_factory=list)
     passed: set[Path] = field(default_factory=set)
+
+    def update(self, path: Path):
+        self.updates.append(path)
 
     def write(self, path: Path, content: str, sources: list[Path]):
         if path in self.passed:
@@ -147,6 +151,8 @@ class Transaction:
     def run(self):
         for a in self.actions:
             a.run(self.db)
+        for f in self.updates:
+            self.db.update(f)
 
 
 class TransactionMode(Enum):

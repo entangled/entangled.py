@@ -28,7 +28,7 @@ def test_daemon(tmp_path: Path):
             goodbye = '(display "goodbye") (newline)'
             lines.insert(2, goodbye)
             Path("hello.scm").write_text("\n".join(lines))
-            time.sleep(0.1)
+            time.sleep(0.2)
             md_stat2 = stat(Path("main.md"))
             assert md_stat1 != md_stat2
             assert md_stat1 < md_stat2

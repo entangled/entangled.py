@@ -13,6 +13,9 @@ from ..filedb import file_db
 
 class EventHandler(FileSystemEventHandler):
     def __init__(self):
+        self.update_watched()
+
+    def update_watched(self):
         input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
         markdown_dirs = set(p.parent for p in input_file_list)
         with file_db(readonly=True) as db:
@@ -22,11 +25,13 @@ class EventHandler(FileSystemEventHandler):
     def on_any_event(self, event: FileSystemEvent):
         if event.event_type == "opened":
             return
+        config.read()
         path = Path(event.src_path)
         if path.is_relative_to(Path("./.entangled")):
             return
         if any(path.is_relative_to(p) for p in self.watched):
             sync()
+        self.update_watched()
 
 
 def _watch(_stop_event: Optional[Event] = None):

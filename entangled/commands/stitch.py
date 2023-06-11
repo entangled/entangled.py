@@ -50,7 +50,7 @@ def stitch(*, force: bool = False, show: bool = False):
         with transaction(mode) as t:
             for path in t.db.managed:
                 logging.debug("reading `%s`", path)
-                t.db.update(path)
+                t.update(path)
                 with open(path, "r") as f:
                     CodeReader(str(path), refs).run(f.read())
 

@@ -4,4 +4,4 @@ plugins:
   - mkdocstrings
 
 theme:
-  name: material
+  name: readthedocs

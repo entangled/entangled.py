@@ -44,7 +44,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
         with transaction(mode) as t:
             for path in input_file_list:
                 logging.debug("reading `%s`", path)
-                t.db.update(path)
+                t.update(path)
                 with open(path, "r") as f:
                     MarkdownReader(str(path), refs, hooks).run(f.read())
 
