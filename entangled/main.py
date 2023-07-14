@@ -12,7 +12,7 @@ except ImportError:
     WITH_RICH = False
 
 
-from .commands import tangle, stitch, sync, watch
+from .commands import tangle, stitch, sync, watch, status
 from .errors.internal import bug_contact
 from .errors.user import UserError
 from .version import __version__
@@ -57,7 +57,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [tangle, stitch, sync, watch])
+        argh.add_commands(parser, [tangle, stitch, sync, watch, status])
         args = parser.parse_args()
 
         if args.version:

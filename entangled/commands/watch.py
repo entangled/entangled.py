@@ -8,7 +8,7 @@ from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
 from .sync import sync
 from ..config import config
-from ..filedb import file_db
+from ..status import find_watch_dirs
 
 
 class EventHandler(FileSystemEventHandler):
@@ -16,11 +16,7 @@ class EventHandler(FileSystemEventHandler):
         self.update_watched()
 
     def update_watched(self):
-        input_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-        markdown_dirs = set(p.parent for p in input_file_list)
-        with file_db(readonly=True) as db:
-            code_dirs = set(p.parent for p in db.managed)
-        self.watched = code_dirs.union(markdown_dirs)
+        self.watched = find_watch_dirs()
 
     def on_any_event(self, event: FileSystemEvent):
         if event.event_type == "opened":

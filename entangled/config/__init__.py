@@ -120,3 +120,4 @@ class ConfigWrapper:
 config = ConfigWrapper(read_config())
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""
+
