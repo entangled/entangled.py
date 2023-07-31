@@ -82,16 +82,43 @@ class Config(threading.local):
 default = Config(Version.from_string("2.0"))
 
 
-def read_config():
-    if not Path("./entangled.toml").exists():
-        return default
+def read_config_from_toml(path: Path, section: Optional[str] = None) -> Optional[Config]:
+    """Read a config from given `path` in given `section`. The path should refer to
+    a TOML file that should decode to a `Config` object. If `section` is given, only
+    that section is decoded to a `Config` object. The `section` string may contain
+    periods to indicate deeper nesting.
+
+    Example:
+
+    ```python
+    read_config_from_toml(Path("./pyproject.toml"), "tool.entangled")
+    ```
+    """
+    if not path.exists():
+        return None
     try:
-        with open(Path("./entangled.toml"), "rb") as f:
+        with open(path, "rb") as f:
             json = tomllib.load(f)
-        return construct(Config, json)
+            print(json)
+            if section is not None:
+                for s in section.split("."):
+                    json = json[s]
+            return construct(Config, json)
     except ValueError as e:
         logging.error("Could not read config: %s", e)
-        return default
+        return None
+    except KeyError as e:
+        logging.debug("%s", e)
+        logging.debug("The config file %s should contain a section %s", path, section)
+        return None
+
+
+def read_config():
+    if Path("./entangled.toml").exists():
+        return read_config_from_toml(Path("./entangled.toml")) or default
+    if Path("./pyproject.toml").exists():
+        return read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or default
+    return default
 
 
 class ConfigWrapper:

@@ -1,6 +1,6 @@
 from entangled.config.version import Version
 from entangled.config.language import Language, Comment
-from entangled.config import config, Config, AnnotationMethod
+from entangled.config import config, Config, AnnotationMethod, default
 from entangled.commands import tangle
 from entangled.construct import construct
 from entangled.utility import pushd
@@ -78,3 +78,25 @@ def test_more_language(tmp_path):
 
         assert config.get_language("html").name == "XML"
         assert config.get_language("java").name == "Custom Java"
+
+
+config_in_pyproject = """
+[tool.entangled]
+version = "2.0"
+watch_list = ["docs/*.md"]
+"""
+
+
+def test_pyproject_toml(tmp_path):
+    with pushd(tmp_path):
+        Path("pyproject.toml").write_text("answer=42")
+        sleep(0.1)
+        config.read()
+
+        assert config.config == default
+
+        Path("pyproject.toml").write_text(config_in_pyproject)
+        sleep(0.1)
+        config.read()
+
+        assert config.watch_list == ["docs/*.md"]

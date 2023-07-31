@@ -18,11 +18,11 @@ except ImportError:
 def tree_from_files(files):
     tree = Tree(label=".")
     dirs = { Path("."): tree }
-    for f in files:
+    for f in sorted(files):
         for p in f.parents[::-1]:
             if p not in dirs:
-                dirs[p] = dirs[p.parent].add(str(p))
-        dirs[f.parent].add(str(f))
+                dirs[p] = dirs[p.parent].add(p.name)
+        dirs[f.parent].add(f.name)
     return tree
 
 
