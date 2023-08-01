@@ -1,6 +1,6 @@
 from entangled.config import config
 from entangled.status import find_watch_dirs, list_input_files
-from entangled.utility import pushd
+from contextlib import chdir
 from entangled.commands.tangle import tangle
 from pathlib import Path
 
@@ -30,7 +30,7 @@ Don't tangle me!
 """
 
 def test_watch_dirs(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("./docs").mkdir()
         Path("./data").mkdir()
         Path("./docs/index.md").write_text(index_md_1)

@@ -1,6 +1,7 @@
+from contextlib import chdir
+
 from entangled.config import config
 from entangled.commands import tangle
-from entangled.utility import pushd
 
 from uuid import uuid4
 from time import sleep
@@ -24,7 +25,7 @@ test.dat: script.py
 
 def test_build(tmp_path):
     message = uuid4().hex
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         with open("test.md", "w") as f:
             f.write(md_input.format(message=message))
 

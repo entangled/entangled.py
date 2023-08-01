@@ -11,12 +11,6 @@ import types
 T = TypeVar("T")
 
 
-@contextmanager
-def pushd(wd: Path):
-    olddir = os.getcwd()
-    os.chdir(wd)
-    yield wd
-    os.chdir(olddir)
 
 
 def first(it: Iterable[T]) -> Optional[T]:

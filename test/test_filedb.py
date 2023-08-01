@@ -2,9 +2,7 @@ from entangled.filedb import file_db, stat
 from time import sleep
 from pathlib import Path
 import pytest
-
-from entangled.utility import pushd
-
+from contextlib import chdir
 
 @pytest.fixture(scope="session")
 def example_files(tmp_path_factory: pytest.TempPathFactory):
@@ -22,7 +20,7 @@ def example_files(tmp_path_factory: pytest.TempPathFactory):
 
 
 def test_stat(example_files: Path):
-    with pushd(example_files):
+    with chdir(example_files):
         stat_a = stat(example_files / "a")
         stat_b = stat(example_files / "b")
         stat_c = stat(example_files / "c")
@@ -32,7 +30,7 @@ def test_stat(example_files: Path):
 
 
 def test_filedb(example_files: Path):
-    with pushd(example_files):
+    with chdir(example_files):
         with file_db() as db:
             for n in "abcd":
                 db.update(Path(n))

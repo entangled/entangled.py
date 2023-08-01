@@ -1,12 +1,12 @@
+from contextlib import chdir
 from pathlib import Path
 
 from entangled.transaction import Transaction, Create, Write, Delete
 from entangled.filedb import file_db
-from entangled.utility import pushd
 
 
 def test_transaction(tmp_path: Path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         with file_db() as db:
             t = Transaction(db)
             t.write(Path("a"), "hello", [])
