@@ -1,9 +1,9 @@
 from entangled.commands import tangle, stitch
 from entangled.markdown_reader import MarkdownReader, read_markdown
 from entangled.code_reader import CodeReader
-from entangled.utility import pushd
 from entangled.errors.user import IndentationError
 
+from contextlib import chdir
 from pathlib import Path
 from time import sleep
 
@@ -85,7 +85,7 @@ scm_changed3 = """; ~/~ begin <<test.md#hello.scm>>[init]
 
 
 def test_code_indentation(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         src = Path("test.md")
         src.write_text(md_source)
         sleep(0.1)

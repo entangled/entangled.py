@@ -1,5 +1,5 @@
+from contextlib import chdir
 from entangled.commands import tangle, stitch
-from entangled.utility import pushd
 from entangled.config import config
 from entangled.filedb import stat
 from entangled.errors.user import UserError
@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def test_modes(tmp_path: Path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         (tmp_path / "entangled.toml").write_text(
             'version = "2.0"\n' 'watch_list = ["docs/**/*.md"]\n'
         )

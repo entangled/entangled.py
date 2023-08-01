@@ -1,8 +1,7 @@
 from entangled.main import cli
 from entangled.version import __version__
-from entangled.utility import pushd
 
-from contextlib import contextmanager
+from contextlib import contextmanager, chdir
 import sys
 import pytest
 from pathlib import Path
@@ -26,7 +25,7 @@ def test_version(capsys):
 
 
 def test_watch(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("./entangled.toml").write_text("\n".join(['version="2.0"']))
         Path("./test.md").write_text(
             "\n".join(["``` {.python file=test.py}", 'print("hello")', "```"])

@@ -3,8 +3,8 @@ from entangled.config.language import Language, Comment
 from entangled.config import config, Config, AnnotationMethod, default
 from entangled.commands import tangle
 from entangled.construct import construct
-from entangled.utility import pushd
 
+from contextlib import chdir
 from time import sleep
 from pathlib import Path
 
@@ -39,7 +39,7 @@ echo hello world
 
 
 def test_new_language(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("entangled.toml").write_text(config_with_language)
         Path("test.md").write_text(md_source)
         sleep(0.1)
@@ -71,7 +71,7 @@ comment = { open = "<!--", close = "-->" }
 
 
 def test_more_language(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("entangled.toml").write_text(config_with_more)
         sleep(0.1)
         config.read()
@@ -88,7 +88,7 @@ watch_list = ["docs/*.md"]
 
 
 def test_pyproject_toml(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("pyproject.toml").write_text("answer=42")
         sleep(0.1)
         config.read()
