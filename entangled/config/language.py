@@ -41,4 +41,5 @@ languages = [
     Language("Lua", ["lua"], Comment("--")),
     Language("Make", ["make", "makefile"], Comment("#")),
     Language("Gnuplot", ["gnuplot"], Comment("#")),
+    Language("TOML", ["toml"], Comment("#")),
 ]
