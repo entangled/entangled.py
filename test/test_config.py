@@ -88,7 +88,7 @@ watch_list = ["docs/*.md"]
 
 
 def test_pyproject_toml(tmp_path):
-    with pushd(tmp_path):
+    with chdir(tmp_path):
         Path("pyproject.toml").write_text("answer=42")
         sleep(0.1)
         config.read()
