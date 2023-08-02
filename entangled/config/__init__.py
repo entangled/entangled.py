@@ -99,7 +99,6 @@ def read_config_from_toml(path: Path, section: Optional[str] = None) -> Optional
     try:
         with open(path, "rb") as f:
             json = tomllib.load(f)
-            print(json)
             if section is not None:
                 for s in section.split("."):
                     json = json[s]
