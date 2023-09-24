@@ -88,7 +88,8 @@ class BuildHook(HookBase):
 
     def post_tangle(self, _: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
-        targets = [r.target for r in self.recipes]
+        targets = " ".join([r.target for r in self.recipes])
         makefile = preamble.format(targets=targets, rules="\n\n".join(str(r) for r in self.recipes))
-        Path("./entangled/build/Makefile").write_text(makefile)
+        Path(".entangled/build").mkdir(exist_ok=True, parents=True)
+        Path(".entangled/build/Makefile").write_text(makefile)
 
