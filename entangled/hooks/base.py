@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from ..properties import Property
 from ..document import ReferenceMap, ReferenceId, CodeBlock
@@ -13,8 +14,12 @@ class PrerequisitesFailed(Exception):
 
 
 class HookBase:
-    @staticmethod
-    def check_prerequisites():
+    Config = None
+
+    def __init__(self, config: Any):
+        pass
+
+    def check_prerequisites(self):
         """When prerequisites aren't met, raise PrerequisitesFailed."""
         return
 

@@ -32,6 +32,10 @@ def test_build(tmp_path):
             tangle()
 
         sleep(0.1)
+        with open(".entangled/build/Makefile", "r") as f_in:
+            for l in f_in.readlines():
+                print(l, end="")
+
         subprocess.call(["make", "-f", ".entangled/build/Makefile"])
         sleep(0.1)
 

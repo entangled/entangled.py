@@ -4,7 +4,7 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-from typing import Optional, ClassVar, TypeVar
+from typing import Any, Optional, ClassVar, TypeVar
 from enum import Enum
 from dataclasses import dataclass, field
 from copy import copy
@@ -67,6 +67,7 @@ class Config(threading.local):
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=list)
+    hook: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         self.languages = languages + self.languages

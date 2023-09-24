@@ -5,7 +5,7 @@ together into a temporary Makefile that is run from the current working
 directory.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from subprocess import run, SubprocessError, DEVNULL
 
@@ -32,12 +32,22 @@ all: {targets}
 {rules}
 """
 
-# TODO: make these configurable
 EXEC_CMDS = {
     "Python": "python {script}",
     "Bash": "bash {script}",
     "Julia": "julia -O0 --project=. {script}",
 }
+
+
+@dataclass
+class Config:
+    runners: dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self):
+        for k, v in EXEC_CMDS.items():
+            if k not in self.runners:
+                self.runners[k] = v
+
 
 @dataclass
 class Recipe:
@@ -46,19 +56,21 @@ class Recipe:
     language: Language
     scriptfile: str
 
-    def __str__(self):
+    def to_makefile(self, config: Config):
         dep_str = " ".join(self.dependencies)
-        exec_cmd = EXEC_CMDS[self.language.name].format(script=self.scriptfile)
-        return f"{self.target}: {dep_str}\n" \
+        exec_cmd = config.runners[self.language.name].format(script=self.scriptfile)
+        return f"{self.target}: {self.scriptfile} {dep_str}\n" \
                f"> {exec_cmd}"
 
 
-class BuildHook(HookBase):
-    def __init__(self):
-        self.recipes: list[Recipe] = []
+class Hook(HookBase):
+    Config = Config
 
-    @staticmethod
-    def check_prerequisites():
+    def __init__(self, config: Config):
+        self.recipes: list[Recipe] = []
+        self.config = config
+
+    def check_prerequisites(self):
         """Check that `make` is installed."""
         try:
             run(["make", "--version"], stdout=DEVNULL)
@@ -79,7 +91,7 @@ class BuildHook(HookBase):
 
         script_file_name = get_attribute(cb.properties, "file")
         if script_file_name is None:
-            script_file_name = f".entangled/build/{ref.name}"
+            script_file_name = f".entangled/build/{ref.name}".replace(":", "_")
             refs.index[script_file_name].append(ref)
             refs.targets.add(script_file_name)
 
@@ -89,7 +101,7 @@ class BuildHook(HookBase):
     def post_tangle(self, _: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
         targets = " ".join([r.target for r in self.recipes])
-        makefile = preamble.format(targets=targets, rules="\n\n".join(str(r) for r in self.recipes))
+        makefile = preamble.format(targets=targets, rules="\n\n".join(r.to_makefile(self.config) for r in self.recipes))
         Path(".entangled/build").mkdir(exist_ok=True, parents=True)
         Path(".entangled/build/Makefile").write_text(makefile)
 
