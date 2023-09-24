@@ -21,8 +21,11 @@ class HookBase:
     def condition(self, props: list[Property]):
         raise NotImplementedError()
 
-    def on_read(self, refs: ReferenceId, code: CodeBlock):
+    def on_read(self, refs: ReferenceMap, ref: ReferenceId, code: CodeBlock):
         raise NotImplementedError()
+
+    def pre_tangle(self, refs: ReferenceMap):
+        pass
 
     def post_tangle(self, refs: ReferenceMap):
         pass

@@ -26,7 +26,7 @@ class Language:
 
 
 languages = [
-    Language("Shell", ["sh", "bash", "fish", "zsh"], Comment("#")),
+    Language("Bash", ["sh", "bash"], Comment("#")),
     Language("C", ["c", "cpp", "c++"], Comment("/*", "*/")),
     Language("Python", ["python"], Comment("#")),
     Language("Rust", ["rust"], Comment("//")),
