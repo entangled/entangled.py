@@ -14,9 +14,10 @@ class PrerequisitesFailed(Exception):
 
 
 class HookBase:
-    Config = None
+    class Config:
+        pass
 
-    def __init__(self, config: Any):
+    def __init__(self, config: Config):
         pass
 
     def check_prerequisites(self):

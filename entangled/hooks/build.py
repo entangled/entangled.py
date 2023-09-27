@@ -5,6 +5,7 @@ together into a temporary Makefile that is run from the current working
 directory.
 """
 
+from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from subprocess import run, SubprocessError, DEVNULL
@@ -39,35 +40,31 @@ EXEC_CMDS = {
 }
 
 
-@dataclass
-class Config:
-    runners: dict[str, str] = field(default_factory=dict)
-
-    def __post_init__(self):
-        for k, v in EXEC_CMDS.items():
-            if k not in self.runners:
-                self.runners[k] = v
-
-
-@dataclass
-class Recipe:
-    target: str
-    dependencies: list[str]
-    language: Language
-    scriptfile: str
-
-    def to_makefile(self, config: Config):
-        dep_str = " ".join(self.dependencies)
-        exec_cmd = config.runners[self.language.name].format(script=self.scriptfile)
-        return f"{self.target}: {self.scriptfile} {dep_str}\n" \
-               f"> {exec_cmd}"
-
-
 class Hook(HookBase):
-    Config = Config
+    @dataclass
+    class Config(HookBase.Config):
+        runners: dict[str, str] = field(default_factory=dict)
 
-    def __init__(self, config: Config):
-        self.recipes: list[Recipe] = []
+        def __post_init__(self):
+            for k, v in EXEC_CMDS.items():
+                if k not in self.runners:
+                    self.runners[k] = v
+
+    @dataclass
+    class Recipe:
+        target: str
+        dependencies: list[str]
+        language: Language
+        scriptfile: str
+
+        def to_makefile(self, config: Hook.Config):
+            dep_str = " ".join(self.dependencies)
+            exec_cmd = config.runners[self.language.name].format(script=self.scriptfile)
+            return f"{self.target}: {self.scriptfile} {dep_str}\n" \
+                   f"> {exec_cmd}"
+
+    def __init__(self, config: Hook.Config):
+        self.recipes: list[Hook.Recipe] = []
         self.config = config
 
     def check_prerequisites(self):
@@ -96,7 +93,7 @@ class Hook(HookBase):
             refs.targets.add(script_file_name)
 
         deps = (get_attribute(cb.properties, "deps") or "").split()
-        self.recipes.append(Recipe(target, deps, cb.language, script_file_name))
+        self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
 
     def post_tangle(self, _: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
