@@ -67,7 +67,7 @@ class Config(threading.local):
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=list)
-    hook: dict[str, Any] = field(default_factory=dict)
+    hook: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.languages = languages + self.languages

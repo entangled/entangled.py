@@ -28,6 +28,9 @@ def construct(annot, json):
     if isinstance(json, str) and isinstance(annot, Parser):
         result, _ = annot.read(json)
         return result
+    if annot is dict or isgeneric(annot) and typing.get_origin(annot) is dict:
+        assert isinstance(json, dict)
+        return json
     if isgeneric(annot) and typing.get_origin(annot) is list:
         assert isinstance(json, list)
         return [construct(typing.get_args(annot)[0], item) for item in json]

@@ -11,6 +11,7 @@ hooks: dict[str, type[HookBase]] = {"build": build.Hook}
 
 def get_hooks() -> list[HookBase]:
     active_hooks = []
+    print(config.hook)
     for h in config.hooks:
         if h in hooks:
             try:
