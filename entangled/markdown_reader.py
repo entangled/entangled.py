@@ -87,10 +87,17 @@ class MarkdownReader(mawk.RuleSet):
         language_class = first(get_classes(self.current_codeblock_properties))
         block_id = get_id(self.current_codeblock_properties)
         target_file = get_attribute(self.current_codeblock_properties, "file")
-        ref_name = block_id or target_file
         language = config.get_language(language_class) if language_class else None
 
-        if ref_name is None or language is None:
+        content = "\n".join(
+            line.removeprefix(self.current_codeblock_indent)
+            for line in self.current_content)
+            
+        ref_name = block_id or target_file
+        if ref_name is None:
+            ref_name = f"unnamed-{self.location}"
+
+        if language is None:
             self.flush_plain_text()
         else:
             ref = self.reference_map.new_id(
@@ -100,10 +107,7 @@ class MarkdownReader(mawk.RuleSet):
                 language,
                 self.current_codeblock_properties,
                 self.current_codeblock_indent,
-                "\n".join(
-                    line.removeprefix(self.current_codeblock_indent)
-                    for line in self.current_content
-                ),
+                content,
                 self.current_codeblock_location,
             )
             # logging.debug(repr(code))
@@ -115,7 +119,7 @@ class MarkdownReader(mawk.RuleSet):
 
             for h in self.hooks:
                 if h.condition(self.current_codeblock_properties):
-                    h.on_read(ref, code)
+                    h.on_read(self.reference_map, ref, code)
 
         self.current_content.append(m[0])
         self.inside_codeblock = False

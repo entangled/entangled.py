@@ -1,10 +1,12 @@
 import logging
-from .base import HookBase
-from .build import BuildHook, PrerequisitesFailed
+from typing import Any
+from .base import HookBase, PrerequisitesFailed
+from . import build
 from ..config import config
+from ..construct import construct
 
 
-hooks: dict[str, type[HookBase]] = {"build": BuildHook}
+hooks: dict[str, type[HookBase]] = {"build": build.Hook}
 
 
 def get_hooks() -> list[HookBase]:
@@ -12,8 +14,10 @@ def get_hooks() -> list[HookBase]:
     for h in config.hooks:
         if h in hooks:
             try:
-                hooks[h].check_prerequisites()
-                active_hooks.append(hooks[h]())
+                hook_cfg = construct(hooks[h].Config, config.hook.get(h, {}))
+                hook_instance = hooks[h](hook_cfg)
+                hook_instance.check_prerequisites()
+                active_hooks.append(hook_instance)
             except PrerequisitesFailed as e:
                 logging.error("hook `%s`: %s", h, str(e))
         else:

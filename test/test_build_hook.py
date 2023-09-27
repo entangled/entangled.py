@@ -1,4 +1,5 @@
 from contextlib import chdir
+import subprocess
 
 from entangled.config import config
 from entangled.commands import tangle
@@ -7,7 +8,6 @@ from uuid import uuid4
 from time import sleep
 from pathlib import Path
 
-import os
 
 md_input = """
 Create a file:
@@ -16,9 +16,8 @@ Create a file:
 print("{message}", end="")
 ```
 
-``` {{.makefile #build target=test.dat}}
-test.dat: script.py
-> python $< > $@
+``` {{.bash .build target="test.dat" deps="script.py"}}
+python script.py > test.dat
 ```
 """
 
@@ -30,16 +29,16 @@ def test_build(tmp_path):
             f.write(md_input.format(message=message))
 
         with config(hooks=["build"]):
-            # normally, build hooks are disabled in CI,
-            # here we need to make an exception
-            if "CI" in os.environ:
-                del os.environ["CI"]
-                tangle()
-                os.environ["CI"] = "true"
-            else:
-                tangle()
+            tangle()
 
         sleep(0.1)
+        with open(".entangled/build/Makefile", "r") as f_in:
+            for l in f_in.readlines():
+                print(l, end="")
+
+        subprocess.call(["make", "-f", ".entangled/build/Makefile"])
+        sleep(0.1)
+
         tgt = Path("test.dat")
         assert tgt.exists()
         contents = open(tgt, "r").read()
