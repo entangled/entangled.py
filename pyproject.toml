@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "entangled-cli"
-version = "2.0.0-beta-4"
+version = "2.0.0-beta-5"
 description = "Literate Programming toolbox"
 repository = "https://github.com/entangled/entangled.py"
 homepage = "https://entangled.github.io/"
@@ -17,7 +17,7 @@ mawk = "^0.1.4"           # use mawk as line parsing engine
 watchdog = "^3.0.0"       # file watching
 filelock = "^3.12.0"      # file lock for json db
 argh = "^0.28.1"
-rich = { version = "^13.3.5", optional = true }
+rich = "^13.3.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
@@ -28,9 +28,6 @@ mkdocs = "^1.4.3"
 mkdocs-material = "^9.1.13"
 mkdocstrings = {extras = ["python"], version = "^0.21.2"}
 twine = "^4.0.2"
-
-[tool.poetry.extras]
-rich = ["rich"]
 
 [build-system]
 requires = ["poetry-core"]
