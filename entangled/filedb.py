@@ -16,6 +16,14 @@ from .version import __version__
 from .utility import normal_relative, ensure_parent
 
 
+def hexdigest(s: str) -> str:
+    """Creates a MD5 hash digest from a string. Before hashing, the string has
+    linefeed `\\r` characters and trailing newlines removed, and the string
+    is encoded as UTF-8."""
+    content = s.replace("\r", "").rstrip("\n").encode()
+    return hashlib.sha256(content).hexdigest()
+
+
 @dataclass
 class FileStat:
     path: Path
@@ -26,10 +34,10 @@ class FileStat:
     @staticmethod
     def from_path(path: Path, deps: Optional[list[Path]]):
         stat = os.stat(path)
-        with open(path, "rb") as f:
-            hash = hashlib.sha256(f.read())
+        with open(path, "r") as f:
+            digest = hexdigest(f.read())
         return FileStat(
-            path, deps, datetime.fromtimestamp(stat.st_mtime), hash.hexdigest()
+            path, deps, datetime.fromtimestamp(stat.st_mtime), digest
         )
 
     def __lt__(self, other: FileStat) -> bool:
@@ -136,9 +144,7 @@ class FileDB:
         return self._files.keys()
 
     def check(self, path: Path, content: str) -> bool:
-        return (
-            hashlib.sha256(content.encode()).hexdigest() == self._files[path].hexdigest
-        )
+        return hexdigest(content) == self._files[path].hexdigest
 
     @staticmethod
     def initialize() -> FileDB:
