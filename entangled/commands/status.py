@@ -12,7 +12,7 @@ try:
 
     def tree_from_files(files):
         tree = Tree(label=".")
-        dirs = { Path("."): tree }
+        dirs = {Path("."): tree}
         for f in sorted(files):
             for p in reversed(f.parents):
                 if p not in dirs:
@@ -20,31 +20,34 @@ try:
             dirs[f.parent].add(f.name, style="repr.filename")
         return tree
 
-
     def files_panel(file_list: list[str], title: str) -> Panel:
         tree = tree_from_files(file_list)
         return Panel(tree, title=title, border_style="dark_cyan")
-
 
     def rich_status():
         cfg = config.config
         config_table = Table()
         config_table.add_column("name")
         config_table.add_column("value")
-        config_table.add_row("Watch list", ", ".join(f"'{pat}'" for pat in cfg.watch_list))
+        config_table.add_row(
+            "Watch list", ", ".join(f"'{pat}'" for pat in cfg.watch_list)
+        )
         config_table.add_row("Hooks enabled", ", ".join(cfg.hooks))
 
         console = Console(color_system="auto")
         group = Group(
             Panel(config_table, title="config", border_style="dark_cyan"),
-            Columns([
-                files_panel([str(f) for f in list_input_files()], "input files"),
-                files_panel([str(f) for f in list_dependent_files()], "dependent files"),
-            ]),
+            Columns(
+                [
+                    files_panel([str(f) for f in list_input_files()], "input files"),
+                    files_panel(
+                        [str(f) for f in list_dependent_files()], "dependent files"
+                    ),
+                ]
+            ),
         )
 
         console.print(group)
-
 
     WITH_RICH = True
 except ImportError:

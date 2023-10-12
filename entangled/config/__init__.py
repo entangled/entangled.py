@@ -42,15 +42,12 @@ class Markers:
 
     open: str
     close: str
-    begin_ignore: str
-    end_ignore: str
+    begin_ignore: str = r"^\s*\~\~\~markdown\s*$"
+    end_ignore: str = r"^\s*\~\~\~\s*$"
 
 
 markers = Markers(
-    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
-    r"^(?P<indent>\s*)```\s*$",
-    r"^\s*\~\~\~markdown\s*$",
-    r"^\s*\~\~\~\s*$",
+    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$", r"^(?P<indent>\s*)```\s*$"
 )
 
 
@@ -83,7 +80,9 @@ class Config(threading.local):
 default = Config(Version.from_string("2.0"))
 
 
-def read_config_from_toml(path: Path, section: Optional[str] = None) -> Optional[Config]:
+def read_config_from_toml(
+    path: Path, section: Optional[str] = None
+) -> Optional[Config]:
     """Read a config from given `path` in given `section`. The path should refer to
     a TOML file that should decode to a `Config` object. If `section` is given, only
     that section is decoded to a `Config` object. The `section` string may contain
@@ -117,7 +116,9 @@ def read_config():
     if Path("./entangled.toml").exists():
         return read_config_from_toml(Path("./entangled.toml")) or default
     if Path("./pyproject.toml").exists():
-        return read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or default
+        return (
+            read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or default
+        )
     return default
 
 
@@ -147,4 +148,3 @@ class ConfigWrapper:
 config = ConfigWrapper(read_config())
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""
-
