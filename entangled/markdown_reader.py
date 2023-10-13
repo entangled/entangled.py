@@ -31,6 +31,7 @@ class MarkdownReader(mawk.RuleSet):
         self.content: list[Content] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
+        self.current_header: list[str] = []
         self.ignore = False
         self.hooks = hooks or []
 
@@ -89,6 +90,14 @@ class MarkdownReader(mawk.RuleSet):
         target_file = get_attribute(self.current_codeblock_properties, "file")
         language = config.get_language(language_class) if language_class else None
 
+        header = (
+            "\n".join(
+                line.removeprefix(self.current_codeblock_indent)
+                for line in self.current_header
+            )
+            if self.current_header
+            else None
+        )
         content = "\n".join(
             line.removeprefix(self.current_codeblock_indent)
             for line in self.current_content
@@ -108,6 +117,7 @@ class MarkdownReader(mawk.RuleSet):
                 language,
                 self.current_codeblock_properties,
                 self.current_codeblock_indent,
+                header,
                 content,
                 self.current_codeblock_location,
             )
@@ -125,6 +135,12 @@ class MarkdownReader(mawk.RuleSet):
         self.current_content.append(m[0])
         self.inside_codeblock = False
         return []
+
+    @mawk.on_match(r"^\s*#!.*$")
+    def on_shebang(self, m: re.Match):
+        if self.inside_codeblock and not self.current_content:
+            self.current_header.append(m[0])
+            return []
 
     @mawk.always
     def add_line(self, line: str):
