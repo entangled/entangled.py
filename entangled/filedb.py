@@ -36,9 +36,7 @@ class FileStat:
         stat = os.stat(path)
         with open(path, "r") as f:
             digest = hexdigest(f.read())
-        return FileStat(
-            path, deps, datetime.fromtimestamp(stat.st_mtime), digest
-        )
+        return FileStat(path, deps, datetime.fromtimestamp(stat.st_mtime), digest)
 
     def __lt__(self, other: FileStat) -> bool:
         return self.modified < other.modified

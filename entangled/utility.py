@@ -11,8 +11,6 @@ import types
 T = TypeVar("T")
 
 
-
-
 def first(it: Iterable[T]) -> Optional[T]:
     try:
         return next(iter(it))

@@ -91,8 +91,9 @@ class MarkdownReader(mawk.RuleSet):
 
         content = "\n".join(
             line.removeprefix(self.current_codeblock_indent)
-            for line in self.current_content)
-            
+            for line in self.current_content
+        )
+
         ref_name = block_id or target_file
         if ref_name is None:
             ref_name = f"unnamed-{self.location}"

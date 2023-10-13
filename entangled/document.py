@@ -57,6 +57,7 @@ class ReferenceMap:
         `index`: maps names to list of references
         `targets`: lists filenames; a target should be in `index`
     """
+
     map: dict[ReferenceId, CodeBlock] = field(default_factory=dict)
     index: defaultdict[str, list[ReferenceId]] = field(
         default_factory=lambda: defaultdict(list)

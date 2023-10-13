@@ -60,8 +60,7 @@ class Hook(HookBase):
         def to_makefile(self, config: Hook.Config):
             dep_str = " ".join(self.dependencies)
             exec_cmd = config.runners[self.language.name].format(script=self.scriptfile)
-            return f"{self.target}: {self.scriptfile} {dep_str}\n" \
-                   f"> {exec_cmd}"
+            return f"{self.target}: {self.scriptfile} {dep_str}\n" f"> {exec_cmd}"
 
     def __init__(self, config: Hook.Config):
         self.recipes: list[Hook.Recipe] = []
@@ -77,8 +76,9 @@ class Hook(HookBase):
     def condition(self, props: list[Property]):
         """Condition by which a CodeBlock is processed: should have `.build` class
         and `target=` attribute."""
-        return "build" in get_classes(props) \
-            and get_attribute(props, "target") is not None
+        return (
+            "build" in get_classes(props) and get_attribute(props, "target") is not None
+        )
 
     def on_read(self, refs: ReferenceMap, ref: ReferenceId, cb: CodeBlock):
         """Add a CodeBlock's target attribute to the list of targets."""
@@ -98,7 +98,9 @@ class Hook(HookBase):
     def post_tangle(self, _: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
         targets = " ".join([r.target for r in self.recipes])
-        makefile = preamble.format(targets=targets, rules="\n\n".join(r.to_makefile(self.config) for r in self.recipes))
+        makefile = preamble.format(
+            targets=targets,
+            rules="\n\n".join(r.to_makefile(self.config) for r in self.recipes),
+        )
         Path(".entangled/build").mkdir(exist_ok=True, parents=True)
         Path(".entangled/build/Makefile").write_text(makefile)
-

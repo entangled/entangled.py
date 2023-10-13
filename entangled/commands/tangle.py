@@ -57,6 +57,5 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
         for h in hooks:
             h.post_tangle(refs)
 
-
     except UserError as e:
         logging.error(str(e))
