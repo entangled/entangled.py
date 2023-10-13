@@ -56,6 +56,12 @@ class Tangler(mawk.RuleSet):
     def lineno(self, _):
         self.location.line_number += 1
 
+    def on_begin(self):
+        if self.cb.header is not None:
+            return [self.cb.header]
+        else:
+            return []
+
     @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
     def on_noweb(self, m: re.Match):
         try:
@@ -85,9 +91,13 @@ class AnnotatedTangler(Tangler):
 
     def on_begin(self):
         count = "init" if self.init else str(self.ref.ref_count)
-        return [
+        result = []
+        if self.cb.header is not None:
+            result.append(self.cb.header)
+        result.append(
             f"{self.cb.language.comment.open} ~/~ begin <<{self.ref.file}#{self.ref.name}>>[{count}]{self.close_comment}"
-        ]
+        )
+        return result
 
     def on_eof(self):
         return [f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"]

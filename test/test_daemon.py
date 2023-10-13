@@ -34,6 +34,7 @@ def test_daemon(tmp_path: Path):
             assert md_stat1 < md_stat2
 
             lines = Path("main.md").read_text().splitlines()
+            print(lines)
             assert lines[2] == goodbye
 
             lines[0] = "``` {.scheme file=foo.scm}"

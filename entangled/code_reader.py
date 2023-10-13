@@ -20,7 +20,7 @@ class CodeReader(mawk.RuleSet):
 
     def __init__(self, path: str, refs: ReferenceMap):
         self.location = TextLocation(path, 0)
-        self.stack: list[Frame] = [Frame(ReferenceId("root", "", -1), "")]
+        self.stack: list[Frame] = [Frame(ReferenceId("#root#", "", -1), "")]
         self.refs: ReferenceMap = refs
 
     @property
@@ -36,6 +36,15 @@ class CodeReader(mawk.RuleSet):
     )
     def on_block_begin(self, m: re.Match):
         ref_name = m["ref_name"]
+
+        # When there are lines above the first ref, say a shebang, swap
+        # them into the first block.
+        if len(self.stack) == 1 and len(self.stack[0].content) > 0:
+            content = self.stack[0].content
+            self.stack[0].content = []
+        else:
+            content = []
+
         if m["ref_count"] == "init":
             ref_count = 0
             if not m["indent"].startswith(self.current.indent):
@@ -46,7 +55,9 @@ class CodeReader(mawk.RuleSet):
             ref_count = int(m["ref_count"])
 
         self.stack.append(
-            Frame(ReferenceId(m["ref_name"], m["source"], ref_count), m["indent"])
+            Frame(
+                ReferenceId(m["ref_name"], m["source"], ref_count), m["indent"], content
+            )
         )
         return []
 

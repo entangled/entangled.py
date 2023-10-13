@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Any
+from typing import Optional, Union, Iterable, Any
 from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
@@ -45,6 +45,7 @@ class CodeBlock:
     language: Language
     properties: list[Property]
     indent: str
+    header: Optional[str]
     source: str
     origin: TextLocation
 
