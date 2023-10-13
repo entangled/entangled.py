@@ -7,18 +7,22 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Optional, Union, Callable
 from asyncio import create_subprocess_exec
-
+from .task import Task, TaskDB
+from ..filedb import stat
 
 PROGRAMS: dict[str, tuple[str, list[str]]] = {
     "Python": ("python", []),
-    "Bash": ("bash", []),
+    "Bash": ("bash", [])
 }
 
+@dataclass
+class Phony:
+    name: str
+
+Target = Union[Path, Phony]
 
 @dataclass
-class Rule:
-    targets: list[Path]
-    dependencies: list[Path]
+class LoomTask(Task[Target, None]):
     language: str
     path: Optional[Path] = None
     script: Optional[str] = None
@@ -27,6 +31,18 @@ class Rule:
 
     def validate(self):
         assert (self.path is None) or (self.script is None)
+        if self.stdin is not None:
+            assert self.stdin in self.dependencies
+        if self.stdout is not None:
+            assert self.stdout in self.targets
+
+    def needs_run(self) -> bool:
+        target_paths = [t for t in self.targets if isinstance(t, Path)]
+        if any(not path.exists() for path in target_paths):
+            return True
+        target_stats = [stat(p) for p in target_paths]
+        dep_stats = [stat(p) for p in self.dependencies if isinstance(p, Path)]
+        if any()
 
     async def run(self):
         program, args = PROGRAMS[self.language]
@@ -60,9 +76,9 @@ class Pattern:
     def validate(self):
         assert (self.path is None) ^ (self.script is None)
 
-    def call(self, args: Any) -> Rule:
-        targets = [Path(t.format(**args)) for t in self.targets]
-        deps = [Path(d.format(**args)) for d in self.dependencies]
+    def call(self, args: Any) -> LoomTask:
+        targets: list[Target] = [Path(t.format(**args)) for t in self.targets]
+        deps: list[Target] = [Path(d.format(**args)) for d in self.dependencies]
         lang = self.language
         if self.path is not None:
             script = self.path.read_text().format(**args)
@@ -71,12 +87,12 @@ class Pattern:
         else:
             raise ValueError("A `Pattern` needs to have either a `path` or `script` defined.")
 
-        return Rule(targets, deps, lang, script=script)
+        return LoomTask(targets, deps, lang, script=script)
 
 
 @dataclass
 class Config:
-    rules: list[Rule] = field(default_factory=list)
+    tasks: list[LoomTask] = field(default_factory=list)
     patterns: dict[str, Pattern] = field(default_factory=dict)
     calls: dict[str, Any] = field(default_factory=dict)
     includes: list[Path] = field(default_factory=list)
