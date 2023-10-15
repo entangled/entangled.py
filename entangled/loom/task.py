@@ -33,7 +33,7 @@ class TaskFailure(Failure[T], Exception):
 
 @dataclass
 class DependencyFailure(Failure[T], Generic[T]):
-    dependent: Failure[T]
+    dependent: list[Failure[T]]
 
 
 @dataclass
@@ -78,7 +78,6 @@ class Task(Generic[T, R]):
             raise ValueError("Task has not run yet.")
         if not self._result:
             raise ValueError("Task has failed.")
-        print(self._result)
         assert isinstance(self._result, Ok)
         return self._result.value
 
@@ -86,9 +85,9 @@ class Task(Generic[T, R]):
         raise NotImplementedError()
 
     async def run_after_deps(self, recurse) -> Result[T, R]:
-        for dep in self.dependencies:
-            if not (dep_result := await recurse(dep)):
-                return DependencyFailure(self, dep_result)
+        dep_res = await asyncio.gather(*(recurse(dep) for dep in self.dependencies))
+        if not all(dep_res):
+            return DependencyFailure(self, [f for f in dep_res if not f])
         try:
             result = await self.run()
             return Ok(self, result)
