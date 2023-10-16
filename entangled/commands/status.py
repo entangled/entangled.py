@@ -41,8 +41,7 @@ try:
             Columns(
                 [
                     files_panel(list_input_files(), "input files"),
-                    files_panel(list_dependent_files(), "dependent files"
-                    ),
+                    files_panel(list_dependent_files(), "dependent files"),
                 ]
             ),
         )
