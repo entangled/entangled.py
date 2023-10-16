@@ -19,13 +19,13 @@ We’re trying to increase the visibility of Entangled. If you like Entangled, p
 To install Entangled, all you need is a Python installation. If you use [`poetry`](https://python-poetry.org),
 
 ```
-poetry add entangled-cli[rich]
+poetry add entangled-cli
 ```
 
 Or, if you prefer `pip`,
 
 ```
-pip install entangled-cli[rich]
+pip install entangled-cli
 ```
 
 ## Use
