@@ -1,11 +1,12 @@
 from dataclasses import dataclass
+import os
 from typing import Optional
 import pytest
 from contextlib import asynccontextmanager, chdir
 from pathlib import Path
 import time
 from entangled.loom.task import TaskDB
-from entangled.loom.rule import LoomTask, Target, Phony
+from entangled.loom.file_task import LoomTask, Target, Phony
 
 
 @dataclass
@@ -22,7 +23,13 @@ async def timer():
 
 
 class FileTaskDB(TaskDB[Target, None]):
-    pass
+    def target(self, target_path: Path, deps: list[Target], **kwargs):
+        task = LoomTask([target_path], deps, **kwargs)
+        self.add(task)
+
+    def phony(self, target_name: str, deps: list[Target], **kwargs):
+        task = LoomTask([Phony(target_name)], deps, **kwargs)
+        self.add(task)
 
 
 @pytest.mark.asyncio
@@ -30,14 +37,13 @@ async def test_hello(tmp_path: Path):
     with chdir(tmp_path):
         db = FileTaskDB()
         tgt = Path("hello.txt")
-        db.add(LoomTask(
-            [tgt], [], "Python", script=\
+        db.target(tgt, [], language="Python", script=\
             f"with open('{tgt}', 'w') as f:\n" \
-            f"   print(\"Hello, World!\", file=f)\n"))
-        db.add(LoomTask([Phony("all")], [tgt]))
+            f"   print(\"Hello, World!\", file=f)\n")
+        db.phony("all", [tgt])
 
         await db.run(Phony("all"))
-        time.sleep(0.1)
+        os.sync()
         assert tgt.exists()
         assert tgt.read_text() == "Hello, World!\n"
 
@@ -47,12 +53,12 @@ async def test_hello_stdout(tmp_path: Path):
     with chdir(tmp_path):
         db = FileTaskDB()
         tgt = Path("hello.txt")
-        db.add(LoomTask([tgt], [], "Python", stdout=tgt, script=\
-            "print(\"Hello, World!\")\n"))
-        db.add(LoomTask([Phony("all")], [tgt]))
+        db.target(tgt, [], language="Python", stdout=tgt, script=\
+            "print(\"Hello, World!\")\n")
+        db.phony("all", [tgt])
 
         await db.run(Phony("all"))
-        time.sleep(0.1)
+        os.sync()
         assert tgt.exists()
         assert tgt.read_text() == "Hello, World!\n"
 
@@ -72,3 +78,9 @@ async def test_runtime(tmp_path: Path):
         assert t.time is not None
         assert t.time > 0.1 and t.time < 0.4
 
+
+# @pytest.mark.asyncio
+# async def test_rebuild(tmp_path: Path):
+#     with chdir(tmp_path):
+#         db = FileTaskDB()
+#         db.
