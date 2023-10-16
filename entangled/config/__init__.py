@@ -102,7 +102,7 @@ def read_config_from_toml(
     try:
         with open(path, "r") as f:
             toml_content = f.read()
-            json = tomlkit.parse(toml_content)
+            json: Any = tomlkit.parse(toml_content)
             if section is not None:
                 for s in section.split("."):
                     json = json[s]
