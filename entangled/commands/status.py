@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Iterable
 from ..status import find_watch_dirs, list_input_files, list_dependent_files
 from ..config import config
 from pathlib import Path
@@ -10,7 +11,7 @@ try:
     from rich.panel import Panel
     from rich.tree import Tree
 
-    def tree_from_files(files):
+    def tree_from_files(files: Iterable[Path]):
         tree = Tree(label=".")
         dirs = {Path("."): tree}
         for f in sorted(files):
@@ -20,7 +21,7 @@ try:
             dirs[f.parent].add(f.name, style="repr.filename")
         return tree
 
-    def files_panel(file_list: list[str], title: str) -> Panel:
+    def files_panel(file_list: Iterable[Path], title: str) -> Panel:
         tree = tree_from_files(file_list)
         return Panel(tree, title=title, border_style="dark_cyan")
 
@@ -39,9 +40,8 @@ try:
             Panel(config_table, title="config", border_style="dark_cyan"),
             Columns(
                 [
-                    files_panel([str(f) for f in list_input_files()], "input files"),
-                    files_panel(
-                        [str(f) for f in list_dependent_files()], "dependent files"
+                    files_panel(list_input_files(), "input files"),
+                    files_panel(list_dependent_files(), "dependent files"
                     ),
                 ]
             ),
