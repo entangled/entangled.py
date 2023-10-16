@@ -19,12 +19,11 @@ We’re trying to increase the visibility of Entangled. If you like Entangled, p
 To install Entangled, all you need is a Python (version 3.11) installation. If you use [`poetry`](https://python-poetry.org),
 
 ```
-poetry new my-project
 poetry init 
 poetry add entangled-cli
 ```
 
-This will create a new project folder `my-project` and install Entangled. The `poetry init` command will create a `pyproject.toml` file, which is the equivalent of `entangled.toml` for Python projects. You can edit this file to configure Entangled. 
+The `poetry init` command will create a `pyproject.toml` file, which is the equivalent of `entangled.toml` for Python projects. You can edit this file to configure Entangled. 
 
 Or, if you prefer `pip`,
 
