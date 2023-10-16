@@ -4,20 +4,20 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-from typing import Any, Optional, ClassVar, TypeVar
-from enum import Enum
-from dataclasses import dataclass, field
-from copy import copy
-from pathlib import Path
+import logging
+import threading
 from contextlib import contextmanager
+from copy import copy
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Any, ClassVar, Optional, TypeVar
+
+import tomlkit
 
 from ..construct import construct
-from .version import Version
 from .language import Language, languages
-
-import threading
-import tomllib
-import logging
+from .version import Version
 
 
 class AnnotationMethod(Enum):
@@ -100,8 +100,9 @@ def read_config_from_toml(
     if not path.exists():
         return None
     try:
-        with open(path, "rb") as f:
-            json = tomllib.load(f)
+        with open(path, "r") as f:
+            toml_content = f.read()
+            json: Any = tomlkit.parse(toml_content)
             if section is not None:
                 for s in section.split("."):
                     json = json[s]
