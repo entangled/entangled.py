@@ -100,8 +100,9 @@ def read_config_from_toml(
     if not path.exists():
         return None
     try:
-        with open(path, "rb") as f:
-            json = tomlkit.load(f)
+        with open(path, "r") as f:
+            toml_content = f.read()
+            json = tomlkit.parse(toml_content)
             if section is not None:
                 for s in section.split("."):
                     json = json[s]
