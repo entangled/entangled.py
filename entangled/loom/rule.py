@@ -8,7 +8,7 @@ import logging
 from tempfile import NamedTemporaryFile
 from typing import Any, Optional, Union
 from asyncio import create_subprocess_exec
-from .task import Task, TaskDB
+from .task import Task
 from ..filedb import stat
 
 PROGRAMS: dict[str, tuple[str, list[str]]] = {

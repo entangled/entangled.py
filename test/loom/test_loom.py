@@ -6,7 +6,6 @@ from pathlib import Path
 import time
 from entangled.loom.task import TaskDB
 from entangled.loom.rule import LoomTask, Target, Phony
-from entangled.filedb import stat
 
 
 @dataclass
