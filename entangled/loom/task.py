@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from typing import Generic, Optional, TypeVar, Union
 import asyncio
 
+from ..errors.user import UserError
+
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -21,6 +23,10 @@ class Failure(Generic[T]):
 
     def __bool__(self):
         return False
+
+
+class MissingFailure(Failure[T]):
+    pass
 
 
 @dataclass
@@ -101,17 +107,36 @@ class Task(Generic[T, R]):
             self._result = await self.run_after_deps(recurse)
             return self._result
 
+    def reset(self):
+        self._result = None
+
+
+TaskT = TypeVar("TaskT", bound=Task)
+
+
+class MissingDependency(Exception):
+    pass
 
 @dataclass
-class TaskDB(Generic[T, R]):
+class TaskDB(Generic[T, TaskT]):
     """Collect tasks and coordinate running a task from a task identifier."""
-    tasks: list[Task[T, R]] = field(default_factory=list)
-    index: dict[T, Task[T, R]] = field(default_factory=dict)
+    tasks: list[TaskT] = field(default_factory=list)
+    index: dict[T, TaskT] = field(default_factory=dict)
 
     async def run(self, t: T) -> Result[T, R]:
-        return await self.index[t].run_cached(self.run)
+        if t not in self.index:
+            try:
+                task = self.on_missing(t)
+            except MissingDependency:
+                return MissingFailure(t)
+        else:
+            task = self.index[t]
+        return await task.run_cached(self.run)
 
-    def add(self, task: Task[T, R]):
+    def on_missing(self, _: T) -> TaskT:
+        raise MissingDependency()
+
+    def add(self, task: TaskT):
         """Add a task to the DB."""
         self.tasks.append(task)
         for target in task.targets:
@@ -120,4 +145,8 @@ class TaskDB(Generic[T, R]):
     def clean(self):
         self.tasks = []
         self.index = {}
+
+    def reset(self):
+        for t in self.tasks:
+            t.reset()
 

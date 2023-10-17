@@ -80,7 +80,8 @@ class LoomTask(Task[Target, None]):
         stdin = open(self.stdin, "r") if self.stdin is not None else None
         stdout = open(self.stdout, "w") if self.stdout is not None else None
        
-        logging.info(f"{program} " + " ".join(args))
+        tgt_str = "(" + " ".join(str(t) for t in self.targets) + ")"
+        logging.info(f"{tgt_str} -> {program} " + " ".join(args))
         proc = await create_subprocess_exec(program, *args, stdin=stdin, stdout=stdout)
         await proc.communicate()
 
