@@ -2,6 +2,7 @@ from typing import Optional
 from pathlib import Path
 from itertools import chain
 from threading import Event
+import os
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
@@ -25,7 +26,8 @@ class EventHandler(FileSystemEventHandler):
         path = Path(event.src_path)
         if path.is_relative_to(Path("./.entangled")):
             return
-        if any(path.is_relative_to(p) for p in self.watched):
+        if any(path.is_relative_to(p.absolute()) for p in self.watched):
+            os.sync()
             sync()
         self.update_watched()
 
