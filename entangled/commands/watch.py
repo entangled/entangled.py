@@ -24,15 +24,15 @@ class EventHandler(FileSystemEventHandler):
             return
         config.read()
         path = Path(event.src_path)
-        if path.is_relative_to(Path("./.entangled")):
+        if path.absolute().is_relative_to(Path("./.entangled").absolute()):
             return
-        if any(path.is_relative_to(p.absolute()) for p in self.watched):
-            os.sync()
+        if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
             sync()
+            os.sync()
         self.update_watched()
 
 
-def _watch(_stop_event: Optional[Event] = None):
+def _watch(_stop_event: Optional[Event] = None, _start_event: Optional[Event] = None):
     """Keep a loop running, watching for changes. This interface is separated
     from the CLI one, so that it can be tested using threading instead of
     subprocess."""
@@ -46,6 +46,9 @@ def _watch(_stop_event: Optional[Event] = None):
     observer = Observer()
     observer.schedule(event_handler, ".", recursive=True)
     observer.start()
+
+    if _start_event:
+        _start_event.set()
 
     try:
         while observer.is_alive() and not stop():

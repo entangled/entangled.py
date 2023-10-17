@@ -36,8 +36,11 @@ def test_daemon(tmp_path: Path):
         try:
             configure(debug=True)
             stop = threading.Event()
-            t = threading.Thread(target=_watch, args=(stop,))
+            start = threading.Event()
+            t = threading.Thread(target=_watch, args=(stop, start))
             t.start()
+            # Wait for watch to boot up
+            start.wait()
             Path("main.md").write_text(
                 "``` {.scheme file=hello.scm}\n" '(display "hello") (newline)\n' "```\n"
             )
