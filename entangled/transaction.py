@@ -43,6 +43,7 @@ class Create(Action):
     def conflict(self, _) -> Optional[str]:
         if self.target.exists():
             # Check if file contents are the same as what we want to write or is empty
+            # then it is safe to take ownership.
             md_stat = stat(self.target)
             fileHexdigest = md_stat.hexdigest
             contentHexdigest = hexdigest(self.content)
@@ -70,6 +71,9 @@ class Write(Action):
 
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
+        # If content remained the same then we resolve the conflict
+        if st.hexdigest == db[self.target].hexdigest:
+            return None
         if st != db[self.target]:
             return f"`{self.target}` seems to have changed outside the control of Entangled"
         if self.sources:
