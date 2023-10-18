@@ -71,9 +71,6 @@ class Write(Action):
 
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
-        # If content remained the same then we resolve the conflict
-        if st.hexdigest == db[self.target].hexdigest:
-            return None
         if st != db[self.target]:
             return f"`{self.target}` seems to have changed outside the control of Entangled"
         if self.sources:
@@ -96,9 +93,7 @@ class Delete(Action):
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
         if st != db[self.target]:
-            return (
-                f"{self.target} seems to have changed outside the control of Entangled"
-            )
+            return f"{self.target} seems to have changed outside the control of Entangled"
         return None
 
     def run(self, db: FileDB):
