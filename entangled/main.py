@@ -2,26 +2,17 @@ import argh  # type: ignore
 import logging
 import sys
 
+from rich.logging import RichHandler
+from rich.highlighter import RegexHighlighter
 
-try:
-    from rich.logging import RichHandler
-    from rich.highlighter import RegexHighlighter
-
-    WITH_RICH = True
-except ImportError:
-    WITH_RICH = False
-
-
-from .commands import tangle, stitch, sync, watch, status
+from .commands import tangle, stitch, sync, watch, status, loom
 from .errors.internal import bug_contact
 from .errors.user import UserError
 from .version import __version__
 
 
-if WITH_RICH:
-
-    class BackTickHighlighter(RegexHighlighter):
-        highlights = [r"`(?P<bold>[^`]*)`"]
+class BackTickHighlighter(RegexHighlighter):
+    highlights = [r"`(?P<bold>[^`]*)`"]
 
 
 def configure(debug=False):
@@ -30,19 +21,13 @@ def configure(debug=False):
     else:
         level = logging.INFO
 
-    if WITH_RICH:
-        FORMAT = "%(message)s"
-        logging.basicConfig(
-            level=level,
-            format=FORMAT,
-            datefmt="[%X]",
-            handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
-        )
-        logging.debug("Rich logging enabled")
-    else:
-        logging.basicConfig(level=level)
-        logging.debug("Plain logging enabled")
-
+    FORMAT = "%(message)s"
+    logging.basicConfig(
+        level=level,
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
+    )
     logging.info(f"Entangled {__version__} (https://entangled.github.io/)")
 
 
@@ -57,7 +42,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [tangle, stitch, sync, watch, status])
+        argh.add_commands(parser, [tangle, stitch, sync, watch, status, loom])
         args = parser.parse_args()
 
         if args.version:

@@ -15,6 +15,7 @@ from typing import Any, ClassVar, Optional, TypeVar
 
 import tomlkit
 
+from ..loom import LoomProgram
 from ..construct import construct
 from .language import Language, languages
 from .version import Version
@@ -47,14 +48,31 @@ class Markers:
 
 
 markers = Markers(
-    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$", r"^(?P<indent>\s*)```\s*$"
+    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
+    r"^(?P<indent>\s*)```\s*$"
 )
 
 
 @dataclass
 class Config(threading.local):
-    """Main config class. This class is made thread-local to make
-    it possible to test in parallel."""
+    """Main config class.
+
+    Attributes:
+        version: Version of Entangled for which this config was created.
+            Entangled should read all versions lower than its own.
+        languages: List of programming languages and their comment styles.
+        markers: Regexes for detecting open and close of code blocks.
+        watch_list: List of glob-expressions indicating files to include
+            for tangling.
+        annotation: Style of annotation.
+        annotation_format: Extra annotation.
+        use_line_directives: Wether to print pragmas in source code for
+            indicating markdown source locations.
+        hooks: List of enabled hooks.
+        hook: Sub-config of hooks.
+        loom: Sub-config of loom.
+
+    This class is made thread-local to make it possible to test in parallel."""
 
     version: Version
     languages: list[Language] = field(default_factory=list)
@@ -65,6 +83,7 @@ class Config(threading.local):
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=list)
     hook: dict = field(default_factory=dict)
+    loom: LoomProgram = field(default_factory=LoomProgram)
 
     def __post_init__(self):
         self.languages = languages + self.languages

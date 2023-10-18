@@ -3,6 +3,8 @@ A minimal build system.
 """
 
 from __future__ import annotations
+import asyncio
+from contextlib import nullcontext
 from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -118,7 +120,7 @@ class LoomTask(Task[Target, None]):
         return False
 
     async def run(self, cfg):
-        if not self.always_run() and not self.needs_run():
+        if not self.always_run() and not self.needs_run() and not cfg.force_run:
             return
 
         if self.language is None or (self.path is None and self.script is None):
@@ -142,7 +144,8 @@ class LoomTask(Task[Target, None]):
 
         tgt_str = "(" + " ".join(str(t) for t in self.targets) + ")"
         logging.info(f"{tgt_str} -> {runner.command} " + " ".join(args))
-        proc = await create_subprocess_exec(runner.command, *args, stdin=stdin, stdout=stdout)
+        async with cfg.throttle or nullcontext():
+            proc = await create_subprocess_exec(runner.command, *args, stdin=stdin, stdout=stdout)
         await proc.communicate()
 
         if tmpfile is not None:
@@ -154,6 +157,8 @@ class LoomTask(Task[Target, None]):
 @dataclass
 class LoomTaskDB(TaskDB[Target, LoomTask]):
     runners: dict[str, Runner] = field(default_factory=lambda: copy(DEFAULT_RUNNERS))
+    throttle: Optional[asyncio.Semaphore] = None
+    force_run: bool = False
 
     async def run(self, t: Target, *args):
         return await super().run(t, self, *args)
