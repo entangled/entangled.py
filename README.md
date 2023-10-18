@@ -272,7 +272,7 @@ To define a phony target "all",
 
 ```toml
 [[task]]
-targets = [["phony(all)"]]
+targets = ["phony(all)"]
 dependencies = ["msg.txt"]
 ```
 
