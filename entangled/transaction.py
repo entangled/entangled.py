@@ -3,8 +3,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
-from atomicwrites import atomic_write
 
+import os
+import tempfile
 import logging
 
 try:
@@ -54,8 +55,13 @@ class Create(Action):
 
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
-        with atomic_write(self.target, overwrite=True) as f:
+        # Write to tmp file then replace with file name
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
             f.write(self.content)
+            # Flush and sync contents to disk
+            f.flush()
+            os.fsync(f.fileno())
+            os.replace(f.name, self.target) 
         db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
@@ -80,8 +86,13 @@ class Write(Action):
         return None
 
     def run(self, db: FileDB):
-        with atomic_write(self.target, overwrite=True) as f:
+        # Write to tmp file then replace with file name
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
             f.write(self.content)
+            # Flush and sync contents to disk
+            f.flush()
+            os.fsync(f.fileno())
+            os.replace(f.name, self.target) 
         db.update(self.target, self.sources)
 
     def __str__(self):
