@@ -16,13 +16,16 @@ We’re trying to increase the visibility of Entangled. If you like Entangled, p
 ```
 
 ## Get started
-To install Entangled, all you need is a Python installation. If you use [`poetry`](https://python-poetry.org),
+To install Entangled, all you need is a Python (version &ge;3.11) installation. If you use [`poetry`](https://python-poetry.org), and you start a new project,
 
 ```
+poetry init 
 poetry add entangled-cli
 ```
 
-Or, if you prefer `pip`,
+The `poetry init` command will create a `pyproject.toml` file and a virtual environment to install Python dependencies in. To activate the virtual environment, run `poetry shell` inside the project directory.
+
+Or, if you prefer plain old `pip`,
 
 ```
 pip install entangled-cli
@@ -125,6 +128,15 @@ The `identifiers` are the tags that you may use in your code block header to ide
 
 And so on...
 ~~~
+
+If you have a `pyproject.toml` file, either because you use `poetry` to setup Entangled or because you're actually developing a Python project, you may want to put the configuration in `pyproject.toml` instead. Add a section `tools.entangled` like so:
+
+```toml
+[[tools.entangled]]
+version = "2.0"
+watch_list = ["docs/**/*.md"]
+```
+
 
 ### Using the `build` hook
 
