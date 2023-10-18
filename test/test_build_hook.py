@@ -1,6 +1,9 @@
 from contextlib import chdir
 import subprocess
 
+import pytest
+import sys
+
 from entangled.config import config
 from entangled.commands import tangle
 
@@ -22,6 +25,7 @@ python script.py > test.dat
 """
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Skipped on Windows")
 def test_build(tmp_path):
     message = uuid4().hex
     with chdir(tmp_path):
