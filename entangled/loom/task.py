@@ -70,6 +70,7 @@ class Task(Generic[T, R]):
         result (property): value of the result, once the task was run. This
             throws an exception if accessed before the task is complete.
     """
+
     targets: list[T]
     dependencies: list[T]
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
@@ -90,21 +91,21 @@ class Task(Generic[T, R]):
     async def run(self) -> R:
         raise NotImplementedError()
 
-    async def run_after_deps(self, recurse) -> Result[T, R]:
+    async def run_after_deps(self, recurse, *args) -> Result[T, R]:
         dep_res = await asyncio.gather(*(recurse(dep) for dep in self.dependencies))
         if not all(dep_res):
             return DependencyFailure(self, [f for f in dep_res if not f])
         try:
-            result = await self.run()
+            result = await self.run(*args)
             return Ok(self, result)
         except TaskFailure as f:
             return f
 
-    async def run_cached(self, recurse) -> Result[T, R]:
+    async def run_cached(self, recurse, *args) -> Result[T, R]:
         async with self._lock:
             if self._result is not None:
                 return self._result
-            self._result = await self.run_after_deps(recurse)
+            self._result = await self.run_after_deps(recurse, *args)
             return self._result
 
     def reset(self):
@@ -117,13 +118,15 @@ TaskT = TypeVar("TaskT", bound=Task)
 class MissingDependency(Exception):
     pass
 
+
 @dataclass
 class TaskDB(Generic[T, TaskT]):
     """Collect tasks and coordinate running a task from a task identifier."""
+
     tasks: list[TaskT] = field(default_factory=list)
     index: dict[T, TaskT] = field(default_factory=dict)
 
-    async def run(self, t: T) -> Result[T, R]:
+    async def run(self, t: T, *args) -> Result[T, R]:
         if t not in self.index:
             try:
                 task = self.on_missing(t)
@@ -131,7 +134,7 @@ class TaskDB(Generic[T, TaskT]):
                 return MissingFailure(t)
         else:
             task = self.index[t]
-        return await task.run_cached(self.run)
+        return await task.run_cached(self.run, *args)
 
     def on_missing(self, _: T) -> TaskT:
         raise MissingDependency()
@@ -149,4 +152,3 @@ class TaskDB(Generic[T, TaskT]):
     def reset(self):
         for t in self.tasks:
             t.reset()
-
