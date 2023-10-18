@@ -1,5 +1,5 @@
 from typing import Optional
-import argh
+import argh  # type: ignore
 import asyncio
 
 from ..config import config
