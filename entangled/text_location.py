@@ -8,4 +8,3 @@ class TextLocation:
 
     def __str__(self):
         return f"{self.filename}:{self.line_number}"
-

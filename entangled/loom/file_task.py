@@ -145,7 +145,9 @@ class LoomTask(Task[Target, None]):
         tgt_str = "(" + " ".join(str(t) for t in self.targets) + ")"
         logging.info(f"{tgt_str} -> {runner.command} " + " ".join(args))
         async with cfg.throttle or nullcontext():
-            proc = await create_subprocess_exec(runner.command, *args, stdin=stdin, stdout=stdout)
+            proc = await create_subprocess_exec(
+                runner.command, *args, stdin=stdin, stdout=stdout
+            )
         await proc.communicate()
 
         if tmpfile is not None:

@@ -5,6 +5,7 @@ from typing import Any
 from entangled.loom.task import Task, TaskDB
 import uuid
 
+
 @dataclass
 class PyFunc(Task[str, Any]):
     foo: Any
@@ -17,12 +18,14 @@ class PyFunc(Task[str, Any]):
     async def eval(self):
         return await self.db.run(self.targets[0])
 
+
 @dataclass
 class PyLiteral(Task[str, Any]):
     value: Any
 
     async def run(self):
         return self.value
+
 
 class PyTaskDB(TaskDB[str, Any]):
     def lazy(self, f):
@@ -40,7 +43,9 @@ class PyTaskDB(TaskDB[str, Any]):
             task = PyFunc([target], deps, f, self)
             self.add(task)
             return task
+
         return delayed
+
 
 @pytest.mark.asyncio
 async def test_noodles():
@@ -61,6 +66,7 @@ async def test_noodles():
     db.clean()
 
     exec_order = []
+
     @db.lazy
     def add2(label, x, y):
         exec_order.append(label)
@@ -75,4 +81,3 @@ async def test_noodles():
     assert w_result.value == 13
     assert exec_order[-1] == "w"
     assert exec_order[0] == "x"
-

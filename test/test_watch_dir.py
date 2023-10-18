@@ -29,6 +29,7 @@ data_md = """
 Don't tangle me!
 """
 
+
 def test_watch_dirs(tmp_path):
     with chdir(tmp_path):
         Path("./docs").mkdir()
@@ -41,7 +42,8 @@ def test_watch_dirs(tmp_path):
             assert set(find_watch_dirs()) == set([Path("./docs"), Path("./src")])
             Path("./docs/index.md").write_text(index_md_1 + "\n" + index_md_2)
             tangle()
-            assert set(find_watch_dirs()) == set([Path("."), Path("./docs"), Path("./src")])
+            assert set(find_watch_dirs()) == set(
+                [Path("."), Path("./docs"), Path("./src")]
+            )
 
             assert sorted(list_input_files()) == [Path("./docs/index.md")]
-    

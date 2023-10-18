@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from contextlib import chdir
 
+
 @pytest.fixture(scope="session")
 def example_files(tmp_path_factory: pytest.TempPathFactory):
     tmp_path = tmp_path_factory.mktemp("test-filedb")

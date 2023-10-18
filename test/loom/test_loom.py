@@ -27,9 +27,13 @@ async def test_hello(tmp_path: Path):
     with chdir(tmp_path):
         db = LoomTaskDB()
         tgt = Path("hello.txt")
-        db.target(tgt, [], language="Python", script=\
-            f"with open('{tgt}', 'w') as f:\n" \
-            f"   print(\"Hello, World!\", file=f)\n")
+        db.target(
+            tgt,
+            [],
+            language="Python",
+            script=f"with open('{tgt}', 'w') as f:\n"
+            f'   print("Hello, World!", file=f)\n',
+        )
         db.phony("all", [Target(tgt)])
 
         await db.run(Target(Phony("all")))
@@ -43,8 +47,9 @@ async def test_hello_stdout(tmp_path: Path):
     with chdir(tmp_path):
         db = LoomTaskDB()
         tgt = Path("hello.txt")
-        db.target(tgt, [], language="Python", stdout=tgt, script=\
-            "print(\"Hello, World!\")\n")
+        db.target(
+            tgt, [], language="Python", stdout=tgt, script='print("Hello, World!")\n'
+        )
         db.phony("all", [Target(tgt)])
 
         await db.run(Target(Phony("all")))
@@ -58,9 +63,7 @@ async def test_runtime(tmp_path: Path):
     with chdir(tmp_path):
         db = LoomTaskDB()
         for a in range(4):
-            db.phony(
-                f"sleep{a}", [], language="Bash",
-                script=f"sleep 0.2\n")
+            db.phony(f"sleep{a}", [], language="Bash", script=f"sleep 0.2\n")
         db.phony("all", [Target(Phony(f"sleep{a}")) for a in range(4)])
         async with timer() as t:
             await db.run(Target(Phony("all")))
@@ -82,14 +85,29 @@ async def test_rebuild(tmp_path: Path):
         # Make tasks
         a, b, c = (Path(x) for x in "abc")
         # a = i1 + 1
-        db.target(a, [Target(i1)], language="Python", stdout=a,
-                  script="print(int(open('i1','r').read()) + 1)")
+        db.target(
+            a,
+            [Target(i1)],
+            language="Python",
+            stdout=a,
+            script="print(int(open('i1','r').read()) + 1)",
+        )
         # b = a * i2
-        db.target(b, [Target(a), Target(i2)], language="Python", stdout=b,
-                  script="print(int(open('a','r').read()) * int(open('i2','r').read()))")
+        db.target(
+            b,
+            [Target(a), Target(i2)],
+            language="Python",
+            stdout=b,
+            script="print(int(open('a','r').read()) * int(open('i2','r').read()))",
+        )
         # c = a + b
-        db.target(c, [Target(a), Target(b)], language="Python", stdout=c,
-                  script="print(int(open('b','r').read()) * int(open('a','r').read()))")
+        db.target(
+            c,
+            [Target(a), Target(b)],
+            language="Python",
+            stdout=c,
+            script="print(int(open('b','r').read()) * int(open('a','r').read()))",
+        )
         await db.run(Target(c))
         assert all(x.exists() for x in (a, b, c))
         assert c.read_text() == "12\n"
@@ -108,4 +126,3 @@ async def test_rebuild(tmp_path: Path):
         assert a.read_text() == "2\n"
         assert b.read_text() == "8\n"
         assert c.read_text() == "16\n"
-
