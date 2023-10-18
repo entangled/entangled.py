@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
+from atomicwrites import atomic_write
 
 import logging
 
@@ -47,12 +48,12 @@ class Create(Action):
             contentHexdigest = hexdigest(self.content)
             if (contentHexdigest == fileHexdigest) or (md_stat.size == 0):
                 return None
-            return f"{self.target} already exists and is not managed by Entangled"
+            return f"{self.target} is not managed by Entangled"
         return None
 
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.target, "w") as f:
+        with atomic_write(self.target, overwrite=True) as f:
             f.write(self.content)
         db.update(self.target, self.sources)
         if self.sources != []:
@@ -78,7 +79,7 @@ class Write(Action):
         return None
 
     def run(self, db: FileDB):
-        with open(self.target, "w") as f:
+        with atomic_write(self.target, overwrite=True) as f:
             f.write(self.content)
         db.update(self.target, self.sources)
 
