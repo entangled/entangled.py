@@ -14,7 +14,7 @@ except ImportError:
     WITH_RICH = False
 
 from .utility import cat_maybes
-from .filedb import FileDB, stat, file_db
+from .filedb import FileDB, stat, file_db, hexdigest
 from .errors.internal import InternalError
 
 
@@ -41,6 +41,12 @@ class Create(Action):
 
     def conflict(self, _) -> Optional[str]:
         if self.target.exists():
+            # Check if file contents are the same as what we want to write or is empty
+            md_stat = stat(self.target)
+            fileHexdigest = md_stat.hexdigest
+            contentHexdigest = hexdigest(self.content)
+            if (contentHexdigest == fileHexdigest) or (md_stat.size == 0):
+                return None
             return f"{self.target} already exists and is not managed by Entangled"
         return None
 
