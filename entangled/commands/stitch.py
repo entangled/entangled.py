@@ -28,7 +28,9 @@ def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
 @argh.arg("-s", "--show", help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):
     """Stitch code changes back into the Markdown"""
-    input_file_list = list(chain.from_iterable(map(Path(".").glob, config.watch_list)))
+    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+    exclude_file_list = list(chain.from_iterable(map(Path(".").glob, config.ignore_list)))
+    input_file_list = [path for path in include_file_list if not path in exclude_file_list]
 
     if show:
         mode = TransactionMode.SHOW

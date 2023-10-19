@@ -4,6 +4,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
 
+import os
+import tempfile
 import logging
 
 try:
@@ -14,7 +16,7 @@ except ImportError:
     WITH_RICH = False
 
 from .utility import cat_maybes
-from .filedb import FileDB, stat, file_db
+from .filedb import FileDB, stat, file_db, hexdigest
 from .errors.internal import InternalError
 
 
@@ -41,13 +43,25 @@ class Create(Action):
 
     def conflict(self, _) -> Optional[str]:
         if self.target.exists():
-            return f"{self.target} already exists and is not managed by Entangled"
+            # Check if file contents are the same as what we want to write or is empty
+            # then it is safe to take ownership.
+            md_stat = stat(self.target)
+            fileHexdigest = md_stat.hexdigest
+            contentHexdigest = hexdigest(self.content)
+            if (contentHexdigest == fileHexdigest) or (md_stat.size == 0):
+                return None
+            return f"{self.target} is not managed by Entangled"
         return None
 
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.target, "w") as f:
+        # Write to tmp file then replace with file name
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
             f.write(self.content)
+            # Flush and sync contents to disk
+            f.flush()
+            os.fsync(f.fileno())
+            os.replace(f.name, self.target) 
         db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
@@ -72,8 +86,13 @@ class Write(Action):
         return None
 
     def run(self, db: FileDB):
-        with open(self.target, "w") as f:
+        # Write to tmp file then replace with file name
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
             f.write(self.content)
+            # Flush and sync contents to disk
+            f.flush()
+            os.fsync(f.fileno())
+            os.replace(f.name, self.target) 
         db.update(self.target, self.sources)
 
     def __str__(self):
@@ -85,9 +104,7 @@ class Delete(Action):
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
         if st != db[self.target]:
-            return (
-                f"{self.target} seems to have changed outside the control of Entangled"
-            )
+            return f"{self.target} seems to have changed outside the control of Entangled"
         return None
 
     def run(self, db: FileDB):

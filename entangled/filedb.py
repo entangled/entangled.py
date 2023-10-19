@@ -30,13 +30,16 @@ class FileStat:
     deps: Optional[list[Path]]
     modified: datetime
     hexdigest: str
+    size: int
 
     @staticmethod
     def from_path(path: Path, deps: Optional[list[Path]]):
         stat = os.stat(path)
+        size = stat.st_size
         with open(path, "r") as f:
             digest = hexdigest(f.read())
-        return FileStat(path, deps, datetime.fromtimestamp(stat.st_mtime), digest)
+
+        return FileStat(path, deps, datetime.fromtimestamp(stat.st_mtime), digest, size)
 
     def __lt__(self, other: FileStat) -> bool:
         return self.modified < other.modified
@@ -51,6 +54,7 @@ class FileStat:
             None if data["deps"] is None else [Path(d) for d in data["deps"]],
             datetime.fromisoformat(data["modified"]),
             data["hexdigest"],
+            data["size"]
         )
 
     def to_json(self):
@@ -59,6 +63,7 @@ class FileStat:
             "deps": None if self.deps is None else [str(p) for p in self.deps],
             "modified": self.modified.isoformat(),
             "hexdigest": self.hexdigest,
+            "size": self.size
         }
 
 
@@ -154,6 +159,8 @@ class FileDB:
                     "File `%s` in DB doesn't exist. Removing entry from DB.", path
                 )
                 del db[path]
+            if len(undead) > 0:
+                db.write()
             return db
 
         FileDB.path().parent.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from textwrap import wrap
-from typing import Any
+from typing import Any, Callable
 
 from ..text_location import TextLocation
 
@@ -17,6 +16,19 @@ class ConfigError(UserError):
 
     def __str__(self):
         return f"Expected {self.expected}, got: {self.got}"
+
+
+@dataclass
+class HelpfulUserError(UserError):
+    """Raise a user error and supply an optional function `func` for context.
+
+    Make sure to also execute e.func() in your error handling."""
+
+    msg: str
+    func: Callable = lambda: None
+
+    def __str__(self):
+        return f"error: {self.msg}"
 
 
 @dataclass

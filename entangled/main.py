@@ -7,9 +7,9 @@ import sys
 import traceback
 import logging
 
-from .commands import tangle, stitch, sync, watch, status, loom
+from .commands import new, status, stitch, sync, tangle, watch, loom
 from .errors.internal import bug_contact
-from .errors.user import UserError
+from .errors.user import HelpfulUserError, UserError
 from .version import __version__
 
 def cli():
@@ -25,7 +25,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [tangle, stitch, sync, watch, status, loom])
+        argh.add_commands(parser, [new, loom, status, stitch, sync, tangle, watch])
         args = parser.parse_args()
 
         if args.version:
@@ -41,8 +41,12 @@ def cli():
     except KeyboardInterrupt:
         log.info("Goodbye")
         sys.exit(0)
+    except HelpfulUserError as e:
+        log.error(e, exc_info=False)
+        e.func()
+        sys.exit(0)
     except UserError as e:
-        log.error(e)
+        log.error(e, exc_info=False)
         sys.exit(0)
     except Exception as e:
         log.error(str(e))

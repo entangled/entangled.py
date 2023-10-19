@@ -1,8 +1,18 @@
-from .tangle import tangle
+from .new import new
+from .status import status
 from .stitch import stitch
 from .sync import sync
+from .tangle import tangle
 from .watch import watch
-from .status import status
 from .loom import loom
 
-__all__ = ["tangle", "stitch", "sync", "watch", "status", "loom"]
+
+__all__ = [
+        "new",
+        "loom",
+        "status",
+        "stitch",
+        "sync",
+        "tangle",
+        "watch",
+        ]
