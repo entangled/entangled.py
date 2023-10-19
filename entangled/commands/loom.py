@@ -4,10 +4,14 @@ import asyncio
 
 from ..config import config
 from ..loom import resolve_tasks, Target
+from ..logging import logger
 
+log = logger()
 
 async def main(target_strs: list[str], force_run: bool, throttle: Optional[int]):
     db = await resolve_tasks(config.loom)
+    for t in db.tasks:
+        log.debug(str(t))
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
     db.force_run = force_run
@@ -15,7 +19,7 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
     await asyncio.gather(*jobs)
 
 
-@argh.arg("targets", nargs="*", default=["phony(all)"], help="name of target to run")
+@argh.arg("targets", nargs="+", help="name of target to run")
 @argh.arg("-B", "--force-run", help="rebuild all dependencies")
 @argh.arg("-j", "--throttle", help="limit number of concurrent jobs")
 def loom(targets: list[str], force_run: bool = False, throttle: Optional[int] = None):

@@ -4,7 +4,6 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-import logging
 import threading
 from contextlib import contextmanager
 from copy import copy
@@ -15,10 +14,16 @@ from typing import Any, ClassVar, Optional, TypeVar
 
 import tomlkit
 
+from entangled.errors.user import UserError
+
 from ..loom import Program
 from ..construct import construct
 from .language import Language, languages
 from .version import Version
+from ..logging import logger
+
+
+log = logger()
 
 
 class AnnotationMethod(Enum):
@@ -123,11 +128,11 @@ def read_config_from_toml(
                     json = json[s]
             return construct(Config, json)
     except ValueError as e:
-        logging.error("Could not read config: %s", e)
+        log.error("Could not read config: %s", e)
         return None
     except KeyError as e:
-        logging.debug("%s", e)
-        logging.debug("The config file %s should contain a section %s", path, section)
+        log.debug("%s", str(e))
+        log.debug("The config file %s should contain a section %s", path, section)
         return None
 
 
@@ -143,7 +148,7 @@ def read_config():
 
 class ConfigWrapper:
     def __init__(self, config):
-        self.config = config
+        self.config: Optional[Config] = config
 
     def read(self):
         self.config = read_config()

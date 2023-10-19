@@ -1,39 +1,21 @@
+from .logging import configure, logger
+
+configure(debug=False)
+
 import argh  # type: ignore
-import logging
 import sys
 import traceback
-
-from rich.logging import RichHandler
-from rich.highlighter import RegexHighlighter
+import logging
 
 from .commands import tangle, stitch, sync, watch, status, loom
 from .errors.internal import bug_contact
 from .errors.user import UserError
 from .version import __version__
 
-
-class BackTickHighlighter(RegexHighlighter):
-    highlights = [r"`(?P<bold>[^`]*)`"]
-
-
-def configure(debug=False):
-    if debug:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-
-    FORMAT = "%(message)s"
-    logging.basicConfig(
-        level=level,
-        format=FORMAT,
-        datefmt="[%X]",
-        handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
-    )
-    logging.info(f"Entangled {__version__} (https://entangled.github.io/)")
-
-
 def cli():
     import argparse
+
+    log = logger()
 
     try:
         parser = argparse.ArgumentParser()
@@ -50,16 +32,20 @@ def cli():
             print(f"Entangled {__version__}")
             sys.exit(0)
 
-        configure(args.debug)
+        if args.debug:
+            log.level = logging.DEBUG
+        else:
+            log.level = logging.INFO
+
         argh.dispatch(parser)
     except KeyboardInterrupt:
-        logging.info("Goodbye")
+        log.info("Goodbye")
         sys.exit(0)
     except UserError as e:
-        logging.error(e)
+        log.error(e)
         sys.exit(0)
     except Exception as e:
-        logging.error(str(e))
+        log.error(str(e))
         bug_contact(e)
         traceback.print_exc()
         raise e

@@ -8,15 +8,29 @@ from contextlib import nullcontext
 from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
-import logging
 from tempfile import NamedTemporaryFile
 from typing import Any, Optional, Union
 from asyncio import create_subprocess_exec
+from textwrap import indent
 
 from .lazy import MissingDependency, Lazy, LazyDB
 from .target import Phony, Target
 from ..filedb import stat
+from ..logging import logger
+from ..errors.user import UserError
 
+
+@dataclass
+class FailedTaskError(UserError):
+    error_code: int
+    stderr: str
+
+    def __str__(self):
+        return f"process returned code {self.error_code}\n" \
+               f"standard error output: {self.stderr}"
+
+
+log = logger()
 
 @dataclass
 class Runner:
@@ -37,6 +51,17 @@ class Task(Lazy[Target, None]):
     script: Optional[str] = None
     stdin: Optional[Path] = None
     stdout: Optional[Path] = None
+
+    def __str__(self):
+        tgts = ", ".join(str(t) for t in self.targets)
+        deps = ", ".join(str(t) for t in self.dependencies)
+        if self.script is not None:
+            src = indent(self.script, prefix = " ▎ ", predicate = lambda _: True)
+        elif self.path is not None:
+            src = str(self.path)
+        else:
+            src = " - "
+        return f"[{tgts}] <- [{deps}]\n" + src
 
     def __post_init__(self):
         if self.stdin and Target(self.stdin) not in self.dependencies:
@@ -71,6 +96,7 @@ class Task(Lazy[Target, None]):
         return False
 
     async def run(self, cfg):
+        log.debug(f"targets: {self.targets}")
         if not self.always_run() and not self.needs_run() and not cfg.force_run:
             return
 
@@ -94,17 +120,20 @@ class Task(Lazy[Target, None]):
         stdout = open(self.stdout, "w") if self.stdout is not None else None
 
         tgt_str = "(" + " ".join(str(t) for t in self.targets) + ")"
-        logging.info(f"{tgt_str} -> {runner.command} " + " ".join(args))
+        log.info(f"{tgt_str} -> {runner.command} " + " ".join(args))
         async with cfg.throttle or nullcontext():
             proc = await create_subprocess_exec(
-                runner.command, *args, stdin=stdin, stdout=stdout
+                runner.command, *args, stdin=stdin, stdout=stdout, stderr=asyncio.subprocess.PIPE
             )
-        await proc.communicate()
+        stderr = await proc.stderr.read() if proc.stderr else b""
+        await proc.wait()
+        log.debug(f"return-code {proc.returncode}")
 
         if tmpfile is not None:
             tmpfile.close()
 
-        assert not self.needs_run()
+        if self.needs_run():
+            raise FailedTaskError(proc.returncode or 0, stderr.decode())
 
 
 @dataclass
@@ -114,6 +143,7 @@ class TaskDB(LazyDB[Target, Task]):
     force_run: bool = False
 
     async def run(self, t: Target, *args):
+        log.debug(str(t))
         return await super().run(t, self, *args)
 
     def on_missing(self, t: Target):
