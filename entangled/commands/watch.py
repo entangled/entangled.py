@@ -28,7 +28,7 @@ class EventHandler(FileSystemEventHandler):
             return
         if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
             sync()
-            os.sync()
+            # os.sync()
         self.update_watched()
 
 
