@@ -22,6 +22,7 @@ R = TypeVar("R")
 
 @dataclass
 class Failure(Generic[T]):
+    """Signals failure in running a task."""
     task: T
 
     def __bool__(self):
@@ -29,11 +30,13 @@ class Failure(Generic[T]):
 
 
 class MissingFailure(Failure[T]):
+    """Signals a missing dependency."""
     pass
 
 
 @dataclass
 class TaskFailure(Failure[T], Exception):
+    """If a task fails, it should throw this exception."""
     message: str
 
     def __post_init__(self):
@@ -42,11 +45,13 @@ class TaskFailure(Failure[T], Exception):
 
 @dataclass
 class DependencyFailure(Failure[T], Generic[T]):
+    """One of the dependencies failed."""
     dependent: list[Failure[T]]
 
 
 @dataclass
 class Ok(Generic[T, R]):
+    """Result of a task on success."""
     task: Lazy[T, R]
     value: R
 
@@ -115,6 +120,7 @@ class Lazy(Generic[T, R]):
         self._result = None
 
 
+TargetT = TypeVar("TargetT")
 TaskT = TypeVar("TaskT", bound=Lazy)
 
 
@@ -123,13 +129,13 @@ class MissingDependency(Exception):
 
 
 @dataclass
-class LazyDB(Generic[T, TaskT]):
+class LazyDB(Generic[TargetT, TaskT]):
     """Collect tasks and coordinate running a task from a task identifier."""
 
     tasks: list[TaskT] = field(default_factory=list)
-    index: dict[T, TaskT] = field(default_factory=dict)
+    index: dict[TargetT, TaskT] = field(default_factory=dict)
 
-    async def run(self, t: T, *args) -> Result[T, R]:
+    async def run(self, t: TargetT, *args) -> Result[T, R]:
         if t not in self.index:
             try:
                 task = self.on_missing(t)
@@ -139,7 +145,8 @@ class LazyDB(Generic[T, TaskT]):
             task = self.index[t]
         return await task.run_cached(self.run, *args)
 
-    def on_missing(self, _: T) -> TaskT:
+    def on_missing(self, _: TargetT) -> TaskT:
+        """Overload this to create a default task for a given identifier."""
         raise MissingDependency()
 
     def add(self, task: TaskT):

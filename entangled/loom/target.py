@@ -7,6 +7,7 @@ from ..parsing import Parsable, Parser, matching, starmap, fmap, fullmatch, choi
 
 @dataclass
 class Phony(Parsable):
+    """A Phony is a target that does not correspond to a file."""
     _pattern: ClassVar[Parser] = matching(r"phony\(([^()\s]+)\)")
     name: str
 
@@ -23,6 +24,7 @@ class Phony(Parsable):
 
 @dataclass
 class Target(Parsable):
+    """A Target is either a Phony or a Path."""
     phony_or_path: Phony | Path
 
     @staticmethod

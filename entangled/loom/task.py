@@ -13,15 +13,14 @@ from typing import Any, Optional, Union
 from asyncio import create_subprocess_exec
 from textwrap import indent
 
-from .lazy import MissingDependency, Lazy, LazyDB
+from .lazy import MissingDependency, Lazy, LazyDB, TaskFailure
 from .target import Phony, Target
 from ..filedb import stat
 from ..logging import logger
-from ..errors.user import UserError
 
 
 @dataclass
-class FailedTaskError(UserError):
+class FailedTaskError(TaskFailure):
     error_code: int
     stderr: str
 
@@ -46,6 +45,17 @@ DEFAULT_RUNNERS: dict[str, Runner] = {
 
 @dataclass
 class Task(Lazy[Target, None]):
+    """Task. A task should have either `script` or `path` defined (unless it's a noop).
+
+    Attributes:
+        targets: (from `Lazy`) list of targets realized by script.
+        dependencies: (from `Lazy`) list of targets that the script depends on.
+        language: programming language that the script or file is written in.
+        path: path to a script.
+        script: content of a script.
+        stdout: file to write stdout to.
+        stdin: file to read stdin from.
+    """
     language: Optional[str] = None
     path: Optional[Path] = None
     script: Optional[str] = None
@@ -79,12 +89,16 @@ class Task(Lazy[Target, None]):
             assert Target(self.stdout) in self.targets
 
     def always_run(self) -> bool:
+        """Detects if a task should always be run. This is the case if
+        there are no dependencies on files."""
         dep_paths = [p.path for p in self.dependencies if p.is_path()]
         if not dep_paths:
             return True
         return False
 
     def needs_run(self) -> bool:
+        """Detects if a task should be run, given the modification times
+        of the dependencies."""
         target_paths = [t.path for t in self.targets if t.is_path()]
         dep_paths = [p.path for p in self.dependencies if p.is_path()]
         if any(not path.exists() for path in target_paths):
@@ -96,12 +110,27 @@ class Task(Lazy[Target, None]):
         return False
 
     async def run(self, cfg):
+        """Runs the task.
+
+        The task is not run if all dependencies are older than all targets.
+
+        If the task is given as `script`, the script is written to a temporary
+        file and fed to the runner that is configured for the given `language`.
+        If the task is given as `path`, that path is directly fed to the runner.
+
+        `stdout` and `stdin` are optionally redirected to or from a given file.
+
+        `stderr` is read and logged in case of failure.
+        """
         log.debug(f"targets: {self.targets}")
         if not self.always_run() and not self.needs_run() and not cfg.force_run:
             return
 
-        if self.language is None or (self.path is None and self.script is None):
+        if self.path is None and self.script is None:
             return
+
+        if self.language not in cfg.runners:
+            raise TaskFailure(self, f"language {self.language} not configured")
 
         runner = cfg.runners[self.language]
         if self.path is not None:
@@ -133,11 +162,12 @@ class Task(Lazy[Target, None]):
             tmpfile.close()
 
         if self.needs_run():
-            raise FailedTaskError(proc.returncode or 0, stderr.decode())
+            raise FailedTaskError(self, "failed process", proc.returncode or 0, stderr.decode())
 
 
 @dataclass
 class TaskDB(LazyDB[Target, Task]):
+    """Collection of interdependent tasks."""
     runners: dict[str, Runner] = field(default_factory=lambda: copy(DEFAULT_RUNNERS))
     throttle: Optional[asyncio.Semaphore] = None
     force_run: bool = False
