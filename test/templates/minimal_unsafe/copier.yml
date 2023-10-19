@@ -1,0 +1,12 @@
+_subdirectory: template
+
+_tasks:
+    - "git init"
+
+_message_after_copy: |
+    Your minimal project has been generated.
+
+project_name:
+    type: str
+    help: What is your project name?
+
