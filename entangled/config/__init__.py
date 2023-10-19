@@ -149,7 +149,7 @@ def read_config():
 
 class ConfigWrapper:
     def __init__(self, config):
-        self.config: Optional[Config] = config
+        self.config = config
 
     def read(self):
         self.config = read_config()
@@ -167,6 +167,7 @@ class ConfigWrapper:
             setattr(self.config, k, backup[k])
 
     def get_language(self, lang_name: str) -> Optional[Language]:
+        assert self.config
         return self.config.language_index.get(lang_name, None)
 
 
