@@ -1,4 +1,4 @@
-from .program import LoomProgram, resolve_tasks
-from .file_task import LoomTask, LoomTaskDB, Target
+from .program import Program, resolve_tasks
+from .task import Task, TaskDB, Target
 
-__all__ = ["LoomProgram", "resolve_tasks", "LoomTask", "LoomTaskDB", "Target"]
+__all__ = ["Program", "resolve_tasks", "Task", "TaskDB", "Target"]

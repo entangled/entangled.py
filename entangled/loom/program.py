@@ -10,7 +10,7 @@ import tomlkit
 from entangled.errors.user import UserError
 
 from ..construct import construct
-from .file_task import DEFAULT_RUNNERS, LoomTask, LoomTaskDB, Pattern, Runner, Target
+from .task import DEFAULT_RUNNERS, Task, TaskDB, Pattern, Runner, Target
 
 
 @dataclass
@@ -37,7 +37,7 @@ class PatternCall:
 
 @dataclass
 class TaskProxy:
-    targets: list[Target]
+    targets: list[Target] = field(default_factory=list)
     dependencies: list[Target] = field(default_factory=list)
     language: Optional[str] = None
     path: Optional[Path] = None
@@ -47,7 +47,7 @@ class TaskProxy:
 
 
 @dataclass
-class LoomProgram:
+class Program:
     task: list[TaskProxy] = field(default_factory=list)
     pattern: dict[str, Pattern] = field(default_factory=dict)
     call: list[PatternCall] = field(default_factory=list)
@@ -59,18 +59,18 @@ class LoomProgram:
             tomlkit.dump(self.__dict__, f_out)
 
     @staticmethod
-    def read(path: Path) -> LoomProgram:
+    def read(path: Path) -> Program:
         with open(path, "r") as f_in:
             data = tomlkit.load(f_in)
-        return construct(LoomProgram, data)
+        return construct(Program, data)
 
 
-async def resolve_tasks(program: LoomProgram) -> LoomTaskDB:
-    db = LoomTaskDB()
+async def resolve_tasks(program: Program) -> TaskDB:
+    db = TaskDB()
     pattern_index = dict()
 
-    async def go(program: LoomProgram):
-        tasks = [LoomTask(**t.__dict__) for t in program.task]
+    async def go(program: Program):
+        tasks = [Task(**t.__dict__) for t in program.task]
         pattern_index.update(program.pattern)
         delayed_calls: list[PatternCall] = []
 
@@ -97,7 +97,7 @@ async def resolve_tasks(program: LoomProgram) -> LoomTaskDB:
             if not inc.exists():
                 raise MissingInclude(inc)
 
-            prg = LoomProgram.read(inc)
+            prg = Program.read(inc)
             await go(prg)
 
         for c in delayed_calls:

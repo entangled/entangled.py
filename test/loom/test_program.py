@@ -3,8 +3,8 @@ from pathlib import Path
 import sys
 
 import pytest
-from entangled.loom.file_task import Phony, Target
-from entangled.loom.program import LoomProgram, resolve_tasks
+from entangled.loom.task import Phony, Target
+from entangled.loom.program import Program, resolve_tasks
 
 
 hello_world_loom = """
@@ -26,7 +26,7 @@ async def test_loom(tmp_path):
         src = Path("hello.toml")
         tgt = Path("hello.txt")
         src.write_text(hello_world_loom)
-        prg = LoomProgram.read(src)
+        prg = Program.read(src)
         db = await resolve_tasks(prg)
         assert db.index[Target(tgt)].stdout == tgt
         await db.run(Target(Phony("all")))
@@ -65,7 +65,7 @@ async def test_include(tmp_path):
         src = Path("hello.toml")
         tgt = Path("hello.txt")
         src.write_text(include_loom)
-        prg = LoomProgram.read(src)
+        prg = Program.read(src)
         db = await resolve_tasks(prg)
         assert db.index[Target(tgt)].stdout == tgt
         await db.run(Target(Phony("all")))
@@ -98,7 +98,7 @@ async def test_pattern(tmp_path):
         src = Path("hello.toml")
         tgt = Path("hello.txt")
         src.write_text(pattern_loom)
-        prg = LoomProgram.read(src)
+        prg = Program.read(src)
         db = await resolve_tasks(prg)
         assert db.index[Target(tgt)].stdout == tgt
         await db.run(Target(Phony("all")))
@@ -108,7 +108,6 @@ async def test_pattern(tmp_path):
 
 rot_13_loom = """
 [[task]]
-targets = ["secret.txt"]
 stdout = "secret.txt"
 language = "Python"
 script = \"\"\"
@@ -116,8 +115,6 @@ print("Uryyb, Jbeyq!")
 \"\"\"
 
 [pattern.rot13]
-targets = ["{stdout}"]
-dependencies = ["{stdin}"]
 stdout = "{stdout}"
 stdin = "{stdin}"
 language = "Bash"
@@ -144,7 +141,7 @@ async def test_rot13(tmp_path):
         src = Path("hello.toml")
         tgt = Path("hello.txt")
         src.write_text(rot_13_loom)
-        prg = LoomProgram.read(src)
+        prg = Program.read(src)
         db = await resolve_tasks(prg)
         assert db.index[Target(tgt)].stdout == tgt
         await db.run(Target(Phony("all")))

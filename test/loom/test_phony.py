@@ -1,4 +1,4 @@
-from entangled.loom.file_task import Phony
+from entangled.loom.task import Phony
 
 # from entangled.parsing import
 

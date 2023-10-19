@@ -248,7 +248,7 @@ print("Uryyb, Jbeyq!")
 """
 ```
 
-To have this message encoded define a pattern,
+To have this message decoded define a pattern,
 
 ```toml
 [pattern.rot13]

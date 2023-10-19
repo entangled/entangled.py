@@ -2,14 +2,14 @@ from __future__ import annotations
 import pytest
 from dataclasses import dataclass
 from typing import Any
-from entangled.loom.task import Task, TaskDB
+from entangled.loom.lazy import Lazy, LazyDB
 import uuid
 
 
 @dataclass
-class PyFunc(Task[str, Any]):
+class PyFunc(Lazy[str, Any]):
     foo: Any
-    db: TaskDB
+    db: LazyDB
 
     async def run(self):
         args = [self.db.index[t].result for t in self.dependencies]
@@ -20,20 +20,20 @@ class PyFunc(Task[str, Any]):
 
 
 @dataclass
-class PyLiteral(Task[str, Any]):
+class PyLiteral(Lazy[str, Any]):
     value: Any
 
     async def run(self):
         return self.value
 
 
-class PyTaskDB(TaskDB[str, Any]):
+class PyTaskDB(LazyDB[str, Any]):
     def lazy(self, f):
         def delayed(*args):
             target = uuid.uuid4().hex
             deps = []
             for arg in args:
-                if isinstance(arg, Task):
+                if isinstance(arg, Lazy):
                     deps.append(arg.targets[0])
                 else:
                     dep = uuid.uuid4().hex
