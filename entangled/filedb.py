@@ -159,6 +159,8 @@ class FileDB:
                     "File `%s` in DB doesn't exist. Removing entry from DB.", path
                 )
                 del db[path]
+            if len(undead) > 0:
+                db.write()
             return db
 
         FileDB.path().parent.mkdir(parents=True, exist_ok=True)
