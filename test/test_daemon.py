@@ -9,26 +9,29 @@ from entangled.main import configure
 
 from contextlib import chdir
 
+
 def wait_for_file(filename, timeout=5):
     start_time = time.time()
 
     while time.time() - start_time < timeout:
         if os.path.exists(filename):
             return True
-        time.sleep(0.1)  
+        time.sleep(0.1)
 
     return False
+
 
 def wait_for_stat_diff(md_stat, filename, timeout=5):
     start_time = time.time()
 
     while time.time() - start_time < timeout:
         md_stat2 = stat(Path(filename))
-        if(md_stat != md_stat2):
+        if md_stat != md_stat2:
             return True
-        time.sleep(0.1)  
+        time.sleep(0.1)
 
     return False
+
 
 def test_daemon(tmp_path: Path):
     config.read()

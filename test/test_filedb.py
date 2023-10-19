@@ -4,11 +4,13 @@ from pathlib import Path
 import pytest
 from contextlib import chdir
 
+
 @pytest.fixture(scope="session")
 def example_files(tmp_path_factory: pytest.TempPathFactory):
     tmp_path = tmp_path_factory.mktemp("test-filedb")
     with open(tmp_path / "a", "w") as f:
         f.write("hello")
+    # modification times of b, c, and d need to be later than a
     sleep(0.01)
     with open(tmp_path / "b", "w") as f:
         f.write("hello")

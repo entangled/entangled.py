@@ -1,13 +1,21 @@
 from dataclasses import dataclass
-from textwrap import wrap
-from typing import Callable
+from typing import Any, Callable
 
-from ..document import TextLocation
+from ..text_location import TextLocation
 
 
 class UserError(Exception):
     def __str__(self):
         return "Unknown user error."
+
+
+@dataclass
+class ConfigError(UserError):
+    expected: str
+    got: Any
+
+    def __str__(self):
+        return f"Expected {self.expected}, got: {self.got}"
 
 
 @dataclass

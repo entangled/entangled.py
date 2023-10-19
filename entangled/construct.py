@@ -1,9 +1,12 @@
-from typing import Union
+from pathlib import Path
+from typing import Any, Union
 from dataclasses import is_dataclass
 from enum import Enum
 
 import typing
 import types
+
+from entangled.errors.user import ConfigError
 
 from .parsing import Parser
 
@@ -12,7 +15,14 @@ def isgeneric(annot):
     return hasattr(annot, "__origin__") and hasattr(annot, "__args__")
 
 
-def construct(annot, json):
+def construct(annot: Any, json: Any) -> Any:
+    try:
+        return _construct(annot, json)
+    except (AssertionError, ValueError):
+        raise ConfigError(annot, json)
+
+
+def _construct(annot: Any, json: Any) -> Any:
     """Construct an object from a given type from a JSON stream.
 
     The `annot` type should be one of: str, int, list[T], Optional[T],
@@ -28,9 +38,20 @@ def construct(annot, json):
     if isinstance(json, str) and isinstance(annot, Parser):
         result, _ = annot.read(json)
         return result
+    if (
+        isgeneric(annot)
+        and typing.get_origin(annot) is dict
+        and typing.get_args(annot)[0] is str
+    ):
+        assert isinstance(json, dict)
+        return {k: construct(typing.get_args(annot)[1], v) for k, v in json.items()}
+    if annot is Any:
+        return json
     if annot is dict or isgeneric(annot) and typing.get_origin(annot) is dict:
         assert isinstance(json, dict)
         return json
+    if annot is Path and isinstance(json, str):
+        return Path(json)
     if isgeneric(annot) and typing.get_origin(annot) is list:
         assert isinstance(json, list)
         return [construct(typing.get_args(annot)[0], item) for item in json]
@@ -49,7 +70,7 @@ def construct(annot, json):
         # assert all(k in json for k in arg_annot)
         args = {k: construct(arg_annot[k], json[k]) for k in json}
         return annot(**args)
-    if isinstance(json, str) and issubclass(annot, Enum):
+    if isinstance(json, str) and isinstance(annot, type) and issubclass(annot, Enum):
         options = {opt.name.lower(): opt for opt in annot}
         assert json.lower() in options
         return options[json.lower()]

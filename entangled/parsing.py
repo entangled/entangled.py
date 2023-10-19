@@ -53,8 +53,8 @@ class Expected(Failure):
         return self.msg
 
     def __str__(self):
-        if len(inp) > 20:
-            inp = f"{inp[:20]} ..."
+        if len(self.inp) > 20:
+            inp = f"{self.inp[:20]} ..."
         return f'expected: {self.expected}, got: "{self.inp}"'
 
 
@@ -72,7 +72,7 @@ class ChoiceFailure(Expected):
 class Parser(Generic[T]):
     """Base class for parsers."""
 
-    def read(self, inp: str) -> tuple[T, str]:
+    def read(self, _: str) -> tuple[T, str]:
         """Read a string and return an object the remainder of the string."""
         raise NotImplementedError()
 
@@ -168,7 +168,7 @@ def bind(p: Parser[T], f: Callable[[T], Parser[U]]) -> Parser[U]:
 
 def choice(*options: Parser[Any]) -> Parser[Any]:
     @parser
-    def _choice(inp: str) -> tuple[T, str]:
+    def _choice(inp: str) -> tuple[Any, str]:
         failures = []
 
         for o in options:
@@ -202,11 +202,11 @@ def many(p: Parser[T]) -> Parser[list[T]]:
     return _many
 
 
-def matching(regex: str) -> Parser[re.Match]:
+def matching(regex: str) -> Parser[tuple[str | Any, ...]]:
     pattern = re.compile(f"^{regex}")
 
     @parser
-    def _matching(inp: str):
+    def _matching(inp: str) -> tuple[tuple[str | Any, ...], str]:
         if m := pattern.match(inp):
             return m.groups(), inp[m.end() :]
         raise Expected(f"/^{regex}/", inp)

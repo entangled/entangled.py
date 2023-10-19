@@ -4,7 +4,6 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-import logging
 import threading
 from contextlib import contextmanager
 from copy import copy
@@ -15,9 +14,16 @@ from typing import Any, ClassVar, Optional, TypeVar
 
 import tomlkit
 
+from entangled.errors.user import UserError
+
+from ..loom import Program
 from ..construct import construct
 from .language import Language, languages
 from .version import Version
+from ..logging import logger
+
+
+log = logger()
 
 
 class AnnotationMethod(Enum):
@@ -42,22 +48,35 @@ class Markers:
 
     open: str
     close: str
-    begin_ignore: str
-    end_ignore: str
+    begin_ignore: str = r"^\s*\~\~\~markdown\s*$"
+    end_ignore: str = r"^\s*\~\~\~\s*$"
 
 
 markers = Markers(
-    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$",
-    r"^(?P<indent>\s*)```\s*$",
-    r"^\s*\~\~\~markdown\s*$",
-    r"^\s*\~\~\~\s*$",
+    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$", r"^(?P<indent>\s*)```\s*$"
 )
 
 
 @dataclass
 class Config(threading.local):
-    """Main config class. This class is made thread-local to make
-    it possible to test in parallel."""
+    """Main config class.
+
+    Attributes:
+        version: Version of Entangled for which this config was created.
+            Entangled should read all versions lower than its own.
+        languages: List of programming languages and their comment styles.
+        markers: Regexes for detecting open and close of code blocks.
+        watch_list: List of glob-expressions indicating files to include
+            for tangling.
+        annotation: Style of annotation.
+        annotation_format: Extra annotation.
+        use_line_directives: Wether to print pragmas in source code for
+            indicating markdown source locations.
+        hooks: List of enabled hooks.
+        hook: Sub-config of hooks.
+        loom: Sub-config of loom.
+
+    This class is made thread-local to make it possible to test in parallel."""
 
     version: Version
     languages: list[Language] = field(default_factory=list)
@@ -69,6 +88,7 @@ class Config(threading.local):
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=list)
     hook: dict = field(default_factory=dict)
+    loom: Program = field(default_factory=Program)
 
     def __post_init__(self):
         self.languages = languages + self.languages
@@ -109,11 +129,11 @@ def read_config_from_toml(
                     json = json[s]
             return construct(Config, json)
     except ValueError as e:
-        logging.error("Could not read config: %s", e)
+        log.error("Could not read config: %s", e)
         return None
     except KeyError as e:
-        logging.debug("%s", e)
-        logging.debug("The config file %s should contain a section %s", path, section)
+        log.debug("%s", str(e))
+        log.debug("The config file %s should contain a section %s", path, section)
         return None
 
 
@@ -147,6 +167,7 @@ class ConfigWrapper:
             setattr(self.config, k, backup[k])
 
     def get_language(self, lang_name: str) -> Optional[Language]:
+        assert self.config
         return self.config.language_index.get(lang_name, None)
 
 

@@ -30,6 +30,7 @@ mkdocs = "^1.4.3"
 mkdocs-material = "^9.1.13"
 mkdocstrings = {extras = ["python"], version = "^0.21.2"}
 twine = "^4.0.2"
+pytest-asyncio = "^0.21.1"
 
 [build-system]
 requires = ["poetry-core"]

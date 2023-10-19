@@ -37,6 +37,7 @@ echo "Hello, Universe!"
 ```
 """
 
+
 def test_shebang():
     md = MarkdownReader("-")
     md.run(input_md)
@@ -44,12 +45,8 @@ def test_shebang():
     assert next(md.reference_map["test.sh"]).header == "#!/bin/bash"
     content, _ = tangle_ref(md.reference_map, "test.sh", AnnotationMethod.STANDARD)
     assert content.strip() == output_test_sh.strip()
-    
+
     cr = CodeReader("test.sh", md.reference_map)
     cr.run(output_test_sh_modified)
     md_content = stitch_markdown(md.reference_map, md.content)
     assert md_content.strip() == input_md_modified.strip()
-
-
-
-
