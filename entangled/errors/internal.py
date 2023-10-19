@@ -14,7 +14,6 @@ class InternalError(Exception):
 
 
 def bug_contact(e: Exception):
-    logging.error(e)
     logging.error(
         "This error is due to an internal bug in Entangled. Please file an "
         "issue including the above stack trace "

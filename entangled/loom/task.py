@@ -10,19 +10,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import logging
 from tempfile import NamedTemporaryFile
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, Optional, Union
 from asyncio import create_subprocess_exec
 
-from entangled.parsing import (
-    Parsable,
-    Parser,
-    choice,
-    fmap,
-    fullmatch,
-    matching,
-    starmap,
-)
 from .lazy import MissingDependency, Lazy, LazyDB
+from .target import Phony, Target
 from ..filedb import stat
 
 
@@ -36,54 +28,6 @@ DEFAULT_RUNNERS: dict[str, Runner] = {
     "Python": Runner("python", ["{script}"]),
     "Bash": Runner("bash", ["{script}"]),
 }
-
-
-@dataclass
-class Phony(Parsable):
-    _pattern: ClassVar[Parser] = matching(r"phony\(([^()\s]+)\)")
-    name: str
-
-    @staticmethod
-    def __parser__() -> Parser[Phony]:
-        return Phony._pattern >> starmap(lambda n: Phony(n))
-
-    def __str__(self):
-        return f"phony({self.name})"
-
-    def __hash__(self):
-        return hash(f"#{self.name}#")
-
-
-@dataclass
-class Target(Parsable):
-    phony_or_path: Phony | Path
-
-    @staticmethod
-    def __parser__() -> Parser[Target]:
-        return choice(Phony, fullmatch(".*") >> fmap(Path)) >> fmap(Target)
-
-    @staticmethod
-    def from_str(s: str) -> Target:
-        result: Target = Target.__parser__().read(s)[0]
-        return result
-
-    def __str__(self):
-        return f"Target({self.phony_or_path})"
-
-    def __hash__(self):
-        return hash(self.phony_or_path)
-
-    def is_phony(self) -> bool:
-        return isinstance(self.phony_or_path, Phony)
-
-    def is_path(self) -> bool:
-        return isinstance(self.phony_or_path, Path)
-
-    @property
-    def path(self) -> Path:
-        if not isinstance(self.phony_or_path, Path):
-            raise ValueError("Not a path")
-        return self.phony_or_path
 
 
 @dataclass

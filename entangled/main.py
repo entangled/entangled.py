@@ -1,6 +1,7 @@
 import argh  # type: ignore
 import logging
 import sys
+import traceback
 
 from rich.logging import RichHandler
 from rich.highlighter import RegexHighlighter
@@ -55,12 +56,13 @@ def cli():
         logging.info("Goodbye")
         sys.exit(0)
     except UserError as e:
-        logging.info(str(e))
+        logging.error(e)
         sys.exit(0)
     except Exception as e:
         logging.error(str(e))
         bug_contact(e)
-        sys.exit(1)
+        traceback.print_exc()
+        raise e
 
 
 if __name__ == "__main__":

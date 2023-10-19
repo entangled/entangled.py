@@ -6,6 +6,8 @@ from enum import Enum
 import typing
 import types
 
+from entangled.errors.user import ConfigError
+
 from .parsing import Parser
 
 
@@ -14,6 +16,13 @@ def isgeneric(annot):
 
 
 def construct(annot: Any, json: Any) -> Any:
+    try:
+        return _construct(annot, json)
+    except (AssertionError, ValueError):
+        raise ConfigError(annot, json)
+
+
+def _construct(annot: Any, json: Any) -> Any:
     """Construct an object from a given type from a JSON stream.
 
     The `annot` type should be one of: str, int, list[T], Optional[T],
