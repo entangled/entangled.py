@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from textwrap import wrap
+from typing import Callable
 
 from ..document import TextLocation
 
@@ -7,6 +8,19 @@ from ..document import TextLocation
 class UserError(Exception):
     def __str__(self):
         return "Unknown user error."
+
+
+@dataclass
+class HelpfulUserError(UserError):
+    """Raise a user error and supply an optional function `func` for context.
+
+    Make sure to also execute e.func() in your error handling."""
+
+    msg: str
+    func: Callable = lambda: None
+
+    def __str__(self):
+        return f"error: {self.msg}"
 
 
 @dataclass

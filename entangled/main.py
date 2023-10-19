@@ -12,9 +12,9 @@ except ImportError:
     WITH_RICH = False
 
 
-from .commands import tangle, stitch, sync, watch, status
+from .commands import new, status, stitch, sync, tangle, watch
 from .errors.internal import bug_contact
-from .errors.user import UserError
+from .errors.user import HelpfulUserError, UserError
 from .version import __version__
 
 
@@ -57,7 +57,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [tangle, stitch, sync, watch, status])
+        argh.add_commands(parser, [new, status, stitch, sync, tangle, watch])
         args = parser.parse_args()
 
         if args.version:
@@ -69,8 +69,12 @@ def cli():
     except KeyboardInterrupt:
         logging.info("Goodbye")
         sys.exit(0)
+    except HelpfulUserError as e:
+        logging.error(e, exc_info=False)
+        e.func()
+        sys.exit(0)
     except UserError as e:
-        logging.info(str(e))
+        logging.error(e, exc_info=False)
         sys.exit(0)
     except Exception as e:
         logging.error(str(e))
