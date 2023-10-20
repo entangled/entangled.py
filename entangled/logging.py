@@ -30,8 +30,7 @@ def configure(debug=False):
         level=level,
         format=FORMAT,
         datefmt="[%X]",
-        handlers=
-        [RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
+        handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
     )
     log = logging.getLogger("entangled")
     log.setLevel(level)

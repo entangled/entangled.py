@@ -8,11 +8,11 @@ from .loom import loom
 
 
 __all__ = [
-        "new",
-        "loom",
-        "status",
-        "stitch",
-        "sync",
-        "tangle",
-        "watch",
-        ]
+    "new",
+    "loom",
+    "status",
+    "stitch",
+    "sync",
+    "tangle",
+    "watch",
+]
