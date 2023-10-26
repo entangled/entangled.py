@@ -30,8 +30,12 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
         annotation_method = AnnotationMethod[annotate.upper()]
 
     include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-    exclude_file_list = list(chain.from_iterable(map(Path(".").glob, config.ignore_list)))
-    input_file_list = [path for path in include_file_list if not path in exclude_file_list]
+    exclude_file_list = list(
+        chain.from_iterable(map(Path(".").glob, config.ignore_list))
+    )
+    input_file_list = [
+        path for path in include_file_list if not path in exclude_file_list
+    ]
 
     refs = ReferenceMap()
     hooks = get_hooks()

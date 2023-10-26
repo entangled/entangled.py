@@ -54,7 +54,7 @@ class FileStat:
             None if data["deps"] is None else [Path(d) for d in data["deps"]],
             datetime.fromisoformat(data["modified"]),
             data["hexdigest"],
-            data["size"]
+            data["size"],
         )
 
     def to_json(self):
@@ -63,7 +63,7 @@ class FileStat:
             "deps": None if self.deps is None else [str(p) for p in self.deps],
             "modified": self.modified.isoformat(),
             "hexdigest": self.hexdigest,
-            "size": self.size
+            "size": self.size,
         }
 
 

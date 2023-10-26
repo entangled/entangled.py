@@ -12,6 +12,7 @@ from .errors.internal import bug_contact
 from .errors.user import HelpfulUserError, UserError
 from .version import __version__
 
+
 def cli():
     import argparse
 

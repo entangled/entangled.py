@@ -56,12 +56,14 @@ class Create(Action):
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
         # Write to tmp file then replace with file name
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        tmp_dir = Path() / ".entangled" / "tmp"
+        tmp_dir.mkdir(exist_ok=True, parents=True)
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
             f.write(self.content)
             # Flush and sync contents to disk
             f.flush()
             os.fsync(f.fileno())
-            os.replace(f.name, self.target) 
+            os.replace(f.name, self.target)
         db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
@@ -87,12 +89,14 @@ class Write(Action):
 
     def run(self, db: FileDB):
         # Write to tmp file then replace with file name
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        tmp_dir = Path() / ".entangled" / "tmp"
+        tmp_dir.mkdir(exist_ok=True, parents=True)
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
             f.write(self.content)
             # Flush and sync contents to disk
             f.flush()
             os.fsync(f.fileno())
-            os.replace(f.name, self.target) 
+            os.replace(f.name, self.target)
         db.update(self.target, self.sources)
 
     def __str__(self):
@@ -104,7 +108,9 @@ class Delete(Action):
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
         if st != db[self.target]:
-            return f"{self.target} seems to have changed outside the control of Entangled"
+            return (
+                f"{self.target} seems to have changed outside the control of Entangled"
+            )
         return None
 
     def run(self, db: FileDB):

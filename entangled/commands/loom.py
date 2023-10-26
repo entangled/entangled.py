@@ -8,6 +8,7 @@ from ..logging import logger
 
 log = logger()
 
+
 async def main(target_strs: list[str], force_run: bool, throttle: Optional[int]):
     db = await resolve_tasks(config.loom)
     for t in db.tasks:

@@ -7,13 +7,13 @@ tasks ask for the result of the same dependent task, the lock makes sure a
 computation is perforemed only once. Once the lock is free, all future requests
 immediately return the memoized result.
 
-  .------.        .------. 
- |  Lazy  | -->  |  Task  |
-  `------'        `------' 
+      .------.        .------. 
+     |  Lazy  | -->  |  Task  |
+      `------'        `------' 
 
-  .--------.        .--------. 
- |  LazyDB  | -->  |  TaskDB  |
-  `--------'        `--------' 
+      .--------.        .--------. 
+     |  LazyDB  | -->  |  TaskDB  |
+      `--------'        `--------' 
 
 """
 

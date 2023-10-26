@@ -53,5 +53,3 @@ class Target(Parsable):
         if not isinstance(self.phony_or_path, Path):
             raise ValueError("Not a path")
         return self.phony_or_path
-
-
