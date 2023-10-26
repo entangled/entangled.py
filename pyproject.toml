@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "entangled-cli"
-version = "2.0.0-beta-6"
+version = "2.0.0-beta-7"
 description = "Literate Programming toolbox"
 repository = "https://github.com/entangled/entangled.py"
 homepage = "https://entangled.github.io/"
@@ -16,7 +16,7 @@ python = "^3.11"
 mawk = "^0.1.4"           # use mawk as line parsing engine
 watchdog = "^3.0.0"       # file watching
 filelock = "^3.12.0"      # file lock for json db
-argh = "^0.28.1"
+argh = "^0.30"
 rich = "^13.3.5"
 tomlkit = "^0.12.1"
 copier = "^8.3.0"
