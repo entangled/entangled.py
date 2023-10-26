@@ -1,12 +1,10 @@
-from typing import Optional, Union
+from typing import Optional
 
 import argh  # type: ignore
 import argparse
-import logging
-import traceback
 
 from copier import run_copy  # type: ignore
-from copier.errors import CopierError, UnsafeTemplateError  # type: ignore
+from copier.errors import UnsafeTemplateError  # type: ignore
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -87,19 +85,19 @@ def print_help() -> None:
 )
 @argh.arg(
     "template",
-    default=None,
+    # default=None,
     nargs="?",
     help="Template handle or URL; initialize a new project from this template",
 )
 @argh.arg(
-    "project_path",
-    default=None,
+    "project-path",
+    # default=None,
     nargs="?",
     help="Initialize a new project at this path",
 )
 def new(
     template: Optional[str],
-    project_path: Optional[Path],
+    project_path: Optional[Path], *,
     answers_file: Optional[str] = None,
     data: str = "",
     defaults: bool = False,

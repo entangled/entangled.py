@@ -23,6 +23,6 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
 @argh.arg("targets", nargs="+", help="name of target to run")
 @argh.arg("-B", "--force-run", help="rebuild all dependencies")
 @argh.arg("-j", "--throttle", help="limit number of concurrent jobs")
-def loom(targets: list[str], force_run: bool = False, throttle: Optional[int] = None):
+def loom(targets: list[str], *, force_run: bool = False, throttle: Optional[int] = None):
     """Build one of the configured targets."""
     asyncio.run(main(targets, force_run, throttle))
