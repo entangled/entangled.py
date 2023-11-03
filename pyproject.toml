@@ -7,21 +7,19 @@ homepage = "https://entangled.github.io/"
 authors = ["Johan Hidding <j.hidding@esciencecenter.nl>"]
 license = "Apache 2"
 readme = "README.md"
-packages = [
-    { include = "entangled" }
-]
+packages = [{ include = "entangled" }]
 
 [tool.poetry.dependencies]
-python = "^3.11"          
-mawk = "^0.1.4"           # use mawk as line parsing engine
-watchdog = "^3.0.0"       # file watching
-filelock = "^3.12.0"      # file lock for json db
-argh = "^0.30"
-rich = "^13.3.5"
-tomlkit = "^0.12.1"
-copier = "^8.3.0"
-brei = "^0.2.1"
-rich-argparse = "^1.4.0"
+python = "^3.11"
+mawk = "^0.1.4"          # use mawk as line parsing engine
+watchdog = "^3.0.0"      # file watching
+filelock = "^3.12.0"     # file lock for json db
+argh = "^0.30"           # easy argument parsing
+rich = "^13.3.5"         # colourful output
+tomlkit = "^0.12.1"      # read/write toml files
+copier = "^8.3.0"        # project templates
+brei = "^0.2.1"          # build system
+rich-argparse = "^1.4.0" # colourful help messages
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
@@ -30,7 +28,7 @@ black = "^23.3.0"
 pytest-cov = "^4.0.0"
 mkdocs = "^1.4.3"
 mkdocs-material = "^9.1.13"
-mkdocstrings = {extras = ["python"], version = "^0.21.2"}
+mkdocstrings = { extras = ["python"], version = "^0.21.2" }
 twine = "^4.0.2"
 pytest-asyncio = "^0.21.1"
 
@@ -39,9 +37,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-testpaths = [
-    "test"
-]
+testpaths = ["test"]
 
 [tool.mypy]
 packages = ["entangled"]
