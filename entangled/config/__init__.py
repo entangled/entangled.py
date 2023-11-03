@@ -16,7 +16,7 @@ import tomlkit
 
 from entangled.errors.user import UserError
 
-from ..loom import Program
+from brei import Program
 from ..construct import construct
 from .language import Language, languages
 from .version import Version
@@ -88,7 +88,7 @@ class Config(threading.local):
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=list)
     hook: dict = field(default_factory=dict)
-    loom: Program = field(default_factory=Program)
+    brei: Program = field(default_factory=Program)
 
     def __post_init__(self):
         self.languages = languages + self.languages

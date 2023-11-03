@@ -8,7 +8,7 @@ import traceback
 import logging
 from rich_argparse import RichHelpFormatter
 
-from .commands import new, status, stitch, sync, tangle, watch, loom
+from .commands import new, status, stitch, sync, tangle, watch, brei
 from .errors.internal import bug_contact
 from .errors.user import HelpfulUserError, UserError
 from .version import __version__
@@ -28,7 +28,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [new, loom, status, stitch, sync, tangle, watch])
+        argh.add_commands(parser, [new, brei, status, stitch, sync, tangle, watch])
         args = parser.parse_args()
 
         if args.version:

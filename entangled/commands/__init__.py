@@ -4,12 +4,12 @@ from .stitch import stitch
 from .sync import sync
 from .tangle import tangle
 from .watch import watch
-from .loom import loom
+from .brei import brei
 
 
 __all__ = [
     "new",
-    "loom",
+    "brei",
     "status",
     "stitch",
     "sync",
