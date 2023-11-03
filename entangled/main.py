@@ -6,6 +6,7 @@ import argh  # type: ignore
 import sys
 import traceback
 import logging
+from rich_argparse import RichHelpFormatter
 
 from .commands import new, status, stitch, sync, tangle, watch, loom
 from .errors.internal import bug_contact
@@ -13,13 +14,14 @@ from .errors.user import HelpfulUserError, UserError
 from .version import __version__
 
 
+log = logger()
+
+
 def cli():
     import argparse
 
-    log = logger()
-
     try:
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(formatter_class=RichHelpFormatter)
         parser.add_argument(
             "-d", "--debug", action="store_true", help="enable debug messages"
         )
@@ -38,6 +40,7 @@ def cli():
         else:
             log.level = logging.INFO
 
+        configure(args.debug)
         argh.dispatch(parser)
     except KeyboardInterrupt:
         log.info("Goodbye")
