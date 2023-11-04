@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Awaitable, Optional
 import argh  # type: ignore
 import asyncio
 
@@ -15,7 +15,7 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
     db.force_run = force_run
-    jobs = [db.run(str_to_target(t)) for t in target_strs]
+    jobs: list[Awaitable] = [db.run(str_to_target(t)) for t in target_strs]
     await asyncio.gather(*jobs)
 
 
@@ -24,4 +24,5 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
 @argh.arg("-j", "--throttle", help="limit number of concurrent jobs")
 def brei(targets: list[str], *, force_run: bool = False, throttle: Optional[int] = None):
     """Build one of the configured targets."""
+    config.read()
     asyncio.run(main(targets, force_run, throttle))

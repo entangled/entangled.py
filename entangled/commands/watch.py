@@ -60,4 +60,5 @@ def _watch(_stop_event: Optional[Event] = None, _start_event: Optional[Event] = 
 
 def watch():
     """Keep a loop running, watching for changes."""
+    config.read()
     _watch()

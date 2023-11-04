@@ -6,8 +6,6 @@ import logging
 import argh  # type: ignore
 
 from ..config import config
-from ..code_reader import CodeReader
-from ..markdown_reader import MarkdownReader
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
 from ..errors.user import UserError
@@ -28,6 +26,12 @@ def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
 @argh.arg("-s", "--show", help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):
     """Stitch code changes back into the Markdown"""
+    config.read()
+
+    # these imports depend on config being read
+    from ..markdown_reader import MarkdownReader
+    from ..code_reader import CodeReader
+
     include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
     exclude_file_list = list(
         chain.from_iterable(map(Path(".").glob, config.ignore_list))

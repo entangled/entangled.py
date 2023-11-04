@@ -50,6 +50,7 @@ def sync_action() -> Optional[Callable[[], None]]:
 
 def sync():
     """Be smart wether to tangle or stich"""
+    config.read()
     action = sync_action()
     if action is not None:
         action()

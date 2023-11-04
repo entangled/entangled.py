@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Optional, TypeVar
 
 import tomlkit
+from entangled.errors.internal import InternalError
 
 from entangled.errors.user import UserError
 
@@ -148,13 +149,16 @@ def read_config():
 
 
 class ConfigWrapper:
-    def __init__(self, config):
+    def __init__(self, config = None):
         self.config = config
 
-    def read(self):
-        self.config = read_config()
+    def read(self, force=False):
+        if self.config is None or force:
+            self.config = read_config()
 
     def __getattr__(self, attr):
+        if self.config is None:
+            raise InternalError("Config not loaded.")
         return getattr(self.config, attr)
 
     @contextmanager
@@ -171,6 +175,6 @@ class ConfigWrapper:
         return self.config.language_index.get(lang_name, None)
 
 
-config = ConfigWrapper(read_config())
+config = ConfigWrapper()
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""

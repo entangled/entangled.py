@@ -7,9 +7,7 @@ import logging
 
 from ..document import ReferenceMap
 from ..config import config, AnnotationMethod
-from ..markdown_reader import MarkdownReader
 from ..transaction import transaction, TransactionMode
-from ..tangle import tangle_ref
 from ..hooks import get_hooks
 from ..errors.user import UserError
 
@@ -24,6 +22,12 @@ from ..errors.user import UserError
 @argh.arg("-s", "--show", help="only show, don't act")
 def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
     """Tangle codes from Markdown"""
+    config.read()
+
+    # these imports depend on config being read
+    from ..markdown_reader import MarkdownReader
+    from ..tangle import tangle_ref
+
     if annotate is None:
         annotation_method = config.annotation
     else:

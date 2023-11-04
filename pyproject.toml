@@ -18,7 +18,7 @@ argh = "^0.30"           # easy argument parsing
 rich = "^13.3.5"         # colourful output
 tomlkit = "^0.12.1"      # read/write toml files
 copier = "^8.3.0"        # project templates
-brei = "^0.2.1"          # build system
+brei = "^0.2.2"          # build system
 rich-argparse = "^1.4.0" # colourful help messages
 
 [tool.poetry.group.dev.dependencies]

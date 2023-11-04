@@ -1,5 +1,6 @@
 import pytest
 from pathlib import Path
+from entangled.config import config
 
 
 @pytest.fixture
@@ -11,3 +12,8 @@ def data():
 def markdown(request):
     with open(request.param, "r") as f:
         yield f.read()
+
+
+def pytest_configure():
+    config.read()
+

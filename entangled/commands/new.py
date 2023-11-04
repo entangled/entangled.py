@@ -3,14 +3,11 @@ from typing import Optional
 import argh  # type: ignore
 import argparse
 
-from copier import run_copy  # type: ignore
-from copier.errors import UnsafeTemplateError  # type: ignore
 from pathlib import Path
+from brei.cli import RichHelpFormatter
 from rich.console import Console
 from rich.table import Table
 
-from ..config.templates import templates as AVAILABLE_TEMPLATES
-from ..config.templates import Template
 from ..errors.user import HelpfulUserError
 
 description = """Create a new entangled project from a template.
@@ -21,6 +18,9 @@ https://copier.readthedocs.io/en/stable/reference/vcs/#copier.vcs.get_repo"""
 
 
 def print_available_templates() -> None:
+    from ..config.templates import templates as AVAILABLE_TEMPLATES
+    from ..config.templates import Template
+
     table: Table = Table(title="Official Templates")
     table.add_column("Handle")
     table.add_column("Name")
@@ -43,7 +43,7 @@ def print_help() -> None:
     For this we first have to create a parser and attach this `new` function
     to it. Then we have a parser object that we can `print_help()` from.
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=RichHelpFormatter)
     argh.add_commands(parser, [new])
     argh.utils.get_subparsers(parser).choices["new"].print_help()
 
@@ -107,6 +107,12 @@ def new(
     trust: bool = False,
 ) -> None:
     """Create a new entangled project from a template."""
+
+    from ..config.templates import templates as AVAILABLE_TEMPLATES
+    from ..config.templates import Template
+
+    from copier import run_copy  # type: ignore
+    from copier.errors import UnsafeTemplateError  # type: ignore
 
     if list_templates:
         print_available_templates()

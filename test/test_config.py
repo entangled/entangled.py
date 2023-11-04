@@ -43,7 +43,7 @@ def test_new_language(tmp_path):
         Path("entangled.toml").write_text(config_with_language)
         Path("test.md").write_text(md_source)
         sleep(0.1)
-        config.read()
+        config.read(force=True)
         assert config.annotation == AnnotationMethod.NAKED
         tangle()
         sleep(0.1)
@@ -74,7 +74,7 @@ def test_more_language(tmp_path):
     with chdir(tmp_path):
         Path("entangled.toml").write_text(config_with_more)
         sleep(0.1)
-        config.read()
+        config.read(force=True)
 
         assert config.get_language("html").name == "XML"
         assert config.get_language("java").name == "Custom Java"
@@ -91,12 +91,12 @@ def test_pyproject_toml(tmp_path):
     with chdir(tmp_path):
         Path("pyproject.toml").write_text("answer=42")
         sleep(0.1)
-        config.read()
+        config.read(force=True)
 
         assert config.config == default
 
         Path("pyproject.toml").write_text(config_in_pyproject)
         sleep(0.1)
-        config.read()
+        config.read(force=True)
 
         assert config.watch_list == ["docs/*.md"]
