@@ -44,7 +44,7 @@ def print_help() -> None:
     to it. Then we have a parser object that we can `print_help()` from.
     """
     parser = argparse.ArgumentParser(formatter_class=RichHelpFormatter)
-    argh.add_commands(parser, [new])
+    argh.add_commands(parser, [new], func_kwargs={"formatter_class": RichHelpFormatter})
     argh.utils.get_subparsers(parser).choices["new"].print_help()
 
 

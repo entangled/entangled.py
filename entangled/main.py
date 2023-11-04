@@ -28,7 +28,7 @@ def cli():
         parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        argh.add_commands(parser, [new, brei, status, stitch, sync, tangle, watch])
+        argh.add_commands(parser, [new, brei, status, stitch, sync, tangle, watch], func_kwargs={"formatter_class": RichHelpFormatter})
         args = parser.parse_args()
 
         if args.version:
