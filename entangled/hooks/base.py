@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 from ..properties import Property
 from ..document import ReferenceMap, ReferenceId, CodeBlock
@@ -25,10 +24,10 @@ class HookBase:
         return
 
     def condition(self, props: list[Property]):
-        raise NotImplementedError()
+        return True
 
     def on_read(self, refs: ReferenceMap, ref: ReferenceId, code: CodeBlock):
-        raise NotImplementedError()
+        pass
 
     def pre_tangle(self, refs: ReferenceMap):
         pass
