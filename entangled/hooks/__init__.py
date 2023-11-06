@@ -7,7 +7,7 @@ from ..construct import construct
 
 hooks: dict[str, type[HookBase]] = {
     "build": build.Hook,
-    "task": task.Hook,
+    "brei": task.Hook,
     "quarto_attributes": quarto_attributes.Hook }
 
 

@@ -31,6 +31,7 @@ languages = [
     Language("Python", ["python"], Comment("#")),
     Language("Rust", ["rust"], Comment("//")),
     Language("Haskell", ["haskell"], Comment("--")),
+    Language("OCaml", ["ocaml", "ml"], Comment("(*", "*)")),
     Language(
         "Lisp", ["scheme", "r5rs", "r6rs", "r7rs", "racket", "clojure"], Comment(";")
     ),

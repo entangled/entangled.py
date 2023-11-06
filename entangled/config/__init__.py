@@ -102,7 +102,7 @@ class Config(threading.local):
                 self.language_index[i] = l
 
 
-default = Config(Version.from_string("2.0"))
+default = Config(Version.from_str("2.0"))
 
 
 def read_config_from_toml(

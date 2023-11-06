@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import defaultdict
 from dataclasses import dataclass, fields
 import json
 from pathlib import Path
@@ -7,26 +8,31 @@ from typing import Any
 from ..document import CodeBlock, ReferenceId, ReferenceMap
 from ..properties import Class, Property, get_attribute, get_classes
 from .base import HookBase
+from ..logging import logger
 
+
+log = logger()
 
 class Hook(HookBase):
+    @dataclass
     class Config(HookBase.Config):
         pass
 
-    @dataclass()
+    @dataclass
     class Recipe:
         description: str | None
-        target: str
+        creates: list[str] | None
         requires: list[str] | None
         runner: str | None
         stdout: str | None
         stdin: str | None
         script: str
+        collect: str | None
 
         def to_brei_task(self):
             return {
                 "description": self.description,
-                "creates": [self.target],
+                "creates": self.creates or [],
                 "requires": self.requires or [],
                 "runner": self.runner,
                 "stdout": self.stdout,
@@ -36,19 +42,15 @@ class Hook(HookBase):
 
     def __init__(self, config: Hook.Config):
         self.recipes: list[Hook.Recipe] = []
+        self.collections: dict[str, list[str]] = defaultdict(list)
         self.config = config
 
     def condition(self, props: list[Property]):
         return (
-            "task" in get_classes(props) and
-            get_attribute(props, "target") is not None
+            "task" in get_classes(props)
         )
 
     def on_read(self, refs: ReferenceMap, ref: ReferenceId, cb: CodeBlock):
-        target = get_attribute(cb.properties, "target")
-        if target is None:
-            return
-
         match cb.properties[0]:
             case Class("task"):
                 runner = None
@@ -61,18 +63,30 @@ class Hook(HookBase):
             f.name: get_attribute(cb.properties, f.name)
             for f in fields(Hook.Recipe)
         }
+        if file := get_attribute(cb.properties, "file"):
+            record["path"] = file
+        else:
+            record["script"] = cb.source
+
         record["runner"] = record["runner"] or runner
+        record["creates"] = record["creates"].split() if record["creates"] else None
         record["requires"] = record["requires"].split() if record["requires"] else None
-        self.recipes.append(Hook.Recipe(**record))
+        log.debug(f"task: {record}")
+        recipe = Hook.Recipe(**record)
+        self.recipes.append(recipe)
+        if recipe.collect:
+            targets = recipe.creates or []
+            if recipe.stdout:
+                targets.append(recipe.stdout)
+            self.collections[recipe.collect].extend(targets)
     
     def post_tangle(self, _: ReferenceMap):
-        targets = [r.target for r in self.recipes]
-        collect = {
-            "name": "weave-tasks",
-            "requires": targets
-        }
-        with open(Path(".entangled/weave.json"), "w") as f_out:
+        collect = [{
+            "name": k,
+            "requires": tgts
+        } for k, tgts in self.collections.items()]
+        with open(Path(".entangled/tasks.json"), "w") as f_out:
             json.dump({
-                "task": [r.to_brei_task() for r in self.recipes] + [collect]
-            }, f_out)
+                "task": [r.to_brei_task() for r in self.recipes] + collect
+            }, f_out, indent=2)
 

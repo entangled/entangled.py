@@ -3,8 +3,7 @@ import argh  # type: ignore
 import asyncio
 
 from ..config import config
-from brei import resolve_tasks
-from brei.task import str_to_target
+from brei import resolve_tasks, Phony
 from ..logging import logger
 
 log = logger()
@@ -15,7 +14,7 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
     db.force_run = force_run
-    jobs: list[Awaitable] = [db.run(str_to_target(t)) for t in target_strs]
+    jobs: list[Awaitable] = [db.run(Phony(t), db=db) for t in target_strs]
     await asyncio.gather(*jobs)
 
 

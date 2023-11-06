@@ -33,7 +33,7 @@ def configure(debug=False):
         handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
     )
     log = logging.getLogger("entangled")
-    log.setLevel(level)
+    # log.setLevel(level)
     # log.addHandler(RichHandler(show_path=debug, highlighter=BackTickHighlighter()))
     # log.propagate = False
     log.debug(f"Entangled {__version__} (https://entangled.github.io/)")

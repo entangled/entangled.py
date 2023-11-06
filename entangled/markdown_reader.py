@@ -90,6 +90,9 @@ class MarkdownReader(mawk.RuleSet):
         target_file = get_attribute(self.current_codeblock_properties, "file")
         language = config.get_language(language_class) if language_class else None
 
+        if language_class and not language:
+            logging.warning(f"Language `{language_class}` unknown at `{self.location}`.")
+
         header = (
             "\n".join(
                 line.removeprefix(self.current_codeblock_indent)

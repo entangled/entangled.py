@@ -5,6 +5,11 @@ from itertools import takewhile
 from ..properties import Attribute
 from ..document import ReferenceId, ReferenceMap, CodeBlock
 from .base import HookBase
+from ..logging import logger
+
+
+log = logger()
+
 
 class Hook(HookBase):
     @dataclass
@@ -15,7 +20,9 @@ class Hook(HookBase):
         self.config = config
 
     def on_read(self, refs: ReferenceMap, ref: ReferenceId, cb: CodeBlock):
-        header = takewhile(lambda line: line[1] == "|", cb.source.splitlines())
+        trigger = f"{cb.language.comment.open}|"
+        header = (line[len(trigger):] for line in cb.source.splitlines() if line.startswith(trigger))
         attrs = [Attribute(k.strip(), v.strip()) for k, v in map(lambda line: line.split(":"), header)]
         cb.properties.extend(attrs)
+        log.debug(f"quarto attrs on {ref}: {attrs}")
 
