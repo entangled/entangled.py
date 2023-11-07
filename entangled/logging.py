@@ -1,4 +1,6 @@
 import logging
+from rich.console import Console
+
 from rich.logging import RichHandler
 from rich.highlighter import RegexHighlighter
 
@@ -9,6 +11,17 @@ LOGGING_SETUP = False
 
 class BackTickHighlighter(RegexHighlighter):
     highlights = [r"`(?P<bold>[^`]*)`"]
+
+# Blablabla "roll your own logging handler"
+# https://github.com/Textualize/rich/issues/2647#issuecomment-1335017733
+class WhitespaceStrippingConsole(Console):
+    def _render_buffer(self, *args, **kwargs):
+        rendered = super()._render_buffer(*args, **kwargs)
+        newline_char = "\n" if rendered[-1] == "\n" else ""
+        return "\n".join(line.rstrip() for line in rendered.splitlines()) + newline_char
+
+# Global rich console object
+console: Console = WhitespaceStrippingConsole()
 
 
 def logger():
@@ -30,7 +43,7 @@ def configure(debug=False):
         level=level,
         format=FORMAT,
         datefmt="[%X]",
-        handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter())],
+        handlers=[RichHandler(show_path=debug, highlighter=BackTickHighlighter(), console=console)],
     )
     log = logging.getLogger("entangled")
     # log.setLevel(level)
