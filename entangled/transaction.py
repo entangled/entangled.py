@@ -40,6 +40,7 @@ class Action:
 class Create(Action):
     content: str
     sources: list[Path]
+    mode: int | None
 
     def conflict(self, _) -> Optional[str]:
         if self.target.exists():
@@ -62,6 +63,8 @@ class Create(Action):
             f.write(self.content)
             # Flush and sync contents to disk
             f.flush()
+            if self.mode is not None:
+                os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
             os.replace(f.name, self.target)
         db.update(self.target, self.sources)
@@ -76,6 +79,7 @@ class Create(Action):
 class Write(Action):
     content: str
     sources: list[Path]
+    mode: int | None
 
     def conflict(self, db: FileDB) -> Optional[str]:
         st = stat(self.target)
@@ -95,6 +99,8 @@ class Write(Action):
             f.write(self.content)
             # Flush and sync contents to disk
             f.flush()
+            if self.mode is not None:
+                os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
             os.replace(f.name, self.target)
         db.update(self.target, self.sources)
@@ -135,16 +141,16 @@ class Transaction:
     def update(self, path: Path):
         self.updates.append(path)
 
-    def write(self, path: Path, content: str, sources: list[Path]):
+    def write(self, path: Path, content: str, sources: list[Path], mode: int | None = None):
         if path in self.passed:
             raise InternalError("Path is being written to twice", [path])
         self.passed.add(path)
         if path not in self.db:
             logging.debug("creating target `%s`", path)
-            self.actions.append(Create(path, content, sources))
+            self.actions.append(Create(path, content, sources, mode))
         elif not self.db.check(path, content):
             logging.debug("target `%s` changed", path)
-            self.actions.append(Write(path, content, sources))
+            self.actions.append(Write(path, content, sources, mode))
         else:
             logging.debug("target `%s` unchanged", path)
 

@@ -61,7 +61,8 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
 
             for tgt in refs.targets:
                 result, deps = tangle_ref(refs, tgt, annotation_method)
-                t.write(Path(tgt), result, list(map(Path, deps)))
+                mode = next(refs[tgt]).mode
+                t.write(Path(tgt), result, list(map(Path, deps)), mode)
 
             t.clear_orphans()
 

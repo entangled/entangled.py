@@ -116,6 +116,7 @@ class MarkdownReader(mawk.RuleSet):
             ref = self.reference_map.new_id(
                 self.current_codeblock_location.filename, ref_name
             )
+            mode = get_attribute(self.current_codeblock_properties, "mode")
             code = CodeBlock(
                 language,
                 self.current_codeblock_properties,
@@ -123,6 +124,7 @@ class MarkdownReader(mawk.RuleSet):
                 header,
                 content,
                 self.current_codeblock_location,
+                int(mode, 8) if mode else None
             )
             # logging.debug(repr(code))
             self.reference_map[ref] = code
