@@ -280,6 +280,58 @@ name = "all"
 requires = ["msg.txt"]
 ```
 
+### The `brei` hook
+The following example uses both `brei` and `quatro_attributes` hooks. To add a Brei task, tag a code block with the `.task` class. 
+
+~~~markdown
+First we generate some data.
+
+``` {.python #some-functions}
+# define some functions
+```
+
+Now we show what that data would look like:
+
+``` {.python .task}
+#| description: Generate data
+#| creates: data/data.npy
+
+<<some-functions>>
+
+# generate and save data
+```
+
+Then we plot in another task.
+
+``` {.python .task}
+#| description: Plot data
+#| creates: docs/fig/plot.svg
+#| requires: data/data.npy
+#| collect: figures
+
+# load data and plot
+```
+~~~
+
+The `collect` attribute tells the Brei hook to add the `docs/fig/plot.svg` target to the `figures` collection. All figures can then be rendered as follows, having in `entangled.toml`
+
+```toml
+version = "2.0"
+watch_list = ["docs/**/*.md"]
+hooks = ["quatro_attributes", "brei"]
+
+[brei]
+include = [".entangled/tasks.json"]
+```
+
+And run
+
+```bash
+entangled brei figures
+```
+
+You can use `${variable}` syntax inside Brei tasks just as you would in a stand-alone Brei script.
+
 ## Support for Document Generators
 Entangled has been used successfully with the following document generators. Note that some of these examples were built using older versions of Entangled, but they should work just the same.
 
