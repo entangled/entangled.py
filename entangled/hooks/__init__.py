@@ -1,12 +1,14 @@
 import logging
-from typing import Any
 from .base import HookBase, PrerequisitesFailed
-from . import build
+from . import build, task, quarto_attributes
 from ..config import config
 from ..construct import construct
 
 
-hooks: dict[str, type[HookBase]] = {"build": build.Hook}
+hooks: dict[str, type[HookBase]] = {
+    "build": build.Hook,
+    "brei": task.Hook,
+    "quarto_attributes": quarto_attributes.Hook }
 
 
 def get_hooks() -> list[HookBase]:

@@ -12,7 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Optional, TypeVar
 
-import tomlkit
+import tomllib
 from entangled.errors.internal import InternalError
 
 from entangled.errors.user import UserError
@@ -102,7 +102,7 @@ class Config(threading.local):
                 self.language_index[i] = l
 
 
-default = Config(Version.from_string("2.0"))
+default = Config(Version.from_str("2.0"))
 
 
 def read_config_from_toml(
@@ -122,9 +122,8 @@ def read_config_from_toml(
     if not path.exists():
         return None
     try:
-        with open(path, "r") as f:
-            toml_content = f.read()
-            json: Any = tomlkit.parse(toml_content)
+        with open(path, "rb") as f:
+            json: Any = tomllib.load(f)
             if section is not None:
                 for s in section.split("."):
                     json = json[s]

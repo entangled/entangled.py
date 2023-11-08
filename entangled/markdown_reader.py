@@ -90,6 +90,9 @@ class MarkdownReader(mawk.RuleSet):
         target_file = get_attribute(self.current_codeblock_properties, "file")
         language = config.get_language(language_class) if language_class else None
 
+        if language_class and not language:
+            logging.warning(f"Language `{language_class}` unknown at `{self.location}`.")
+
         header = (
             "\n".join(
                 line.removeprefix(self.current_codeblock_indent)
@@ -113,6 +116,7 @@ class MarkdownReader(mawk.RuleSet):
             ref = self.reference_map.new_id(
                 self.current_codeblock_location.filename, ref_name
             )
+            mode = get_attribute(self.current_codeblock_properties, "mode")
             code = CodeBlock(
                 language,
                 self.current_codeblock_properties,
@@ -120,6 +124,7 @@ class MarkdownReader(mawk.RuleSet):
                 header,
                 content,
                 self.current_codeblock_location,
+                int(mode, 8) if mode else None
             )
             # logging.debug(repr(code))
             self.reference_map[ref] = code

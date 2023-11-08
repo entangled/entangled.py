@@ -40,6 +40,7 @@ class CodeBlock:
     header: Optional[str]
     source: str
     origin: TextLocation
+    mode: Optional[int]
 
 
 @dataclass
