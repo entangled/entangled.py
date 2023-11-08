@@ -35,7 +35,7 @@ class Hook(HookBase):
         def to_brei_task(self, refs: ReferenceMap):
             cb = refs[self.ref]
             if (path := get_attribute(cb.properties, "file")) is None:
-                script = tangle_ref(refs, self.ref.name, AnnotationMethod.NAKED)
+                script, _ = tangle_ref(refs, self.ref.name, AnnotationMethod.NAKED)
             else:
                 script = None
 
@@ -80,9 +80,10 @@ class Hook(HookBase):
         record["runner"] = record["runner"] or runner
         record["creates"] = record["creates"].split() if record["creates"] else None
         record["requires"] = record["requires"].split() if record["requires"] else None
-    
+        record["ref"] = ref
+
         log.debug(f"task: {record}")
-        recipe = Hook.Recipe(**record, ref=ref)
+        recipe = Hook.Recipe(**record)
         self.recipes.append(recipe)
         if recipe.collect:
             targets = recipe.creates or []

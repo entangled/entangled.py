@@ -125,8 +125,10 @@ def tangle_ref(
 
     if isinstance(annotation, AnnotationMethod):
         tangler = tanglers[annotation]
-    else:
+    elif annotation is not None:
         tangler = annotation
+    else:
+        raise ValueError("impossible code path")
 
     with v.visit(ref_name):
         init = True
