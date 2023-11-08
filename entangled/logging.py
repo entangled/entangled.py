@@ -12,8 +12,7 @@ LOGGING_SETUP = False
 class BackTickHighlighter(RegexHighlighter):
     highlights = [r"`(?P<bold>[^`]*)`"]
 
-# Blablabla "roll your own logging handler"
-# https://github.com/Textualize/rich/issues/2647#issuecomment-1335017733
+# Snippet from https://github.com/Textualize/rich/issues/2647#issuecomment-1324286428
 class WhitespaceStrippingConsole(Console):
     def _render_buffer(self, *args, **kwargs):
         rendered = super()._render_buffer(*args, **kwargs)
@@ -22,7 +21,6 @@ class WhitespaceStrippingConsole(Console):
 
 # Global rich console object
 console: Console = WhitespaceStrippingConsole()
-
 
 def logger():
     return logging.getLogger("entangled")
