@@ -137,14 +137,15 @@ version = "2.0"
 watch_list = ["docs/**/*.md"]
 ```
 
+## Hooks
+Entangled has a system of *hooks*: these add actions to the tangling process:
 
-### Using the `build` hook
+- `build` trigger actions in a generated `Makefile`
+- `brei` trigger actions (or tasks) using [Brei](https://entangled.github.io/brei), which is automatically installed along with Entangled. This is now prefered over the `build` hook.
+- `quatro_attributes` add attributes to the code block in Quatro style with `#|` comments at the top of the code block.
 
-:::warning
-The `build` hook has changed from version 2.0.0b3 to 2.0.0b4; Previously you would have to enter Makefile code yourself. Now, `target` and `deps` are specified as attributes to the codeblock, and the Makefile is generated for you. This means less features, but also a simpler interface that may be backed by other build systems than Make.
-:::
-
-Entangled has a system of *hooks*, of which there exists currently only one: `build`. You can enable this hook in `entangled.toml`:
+## `build` hook
+You can enable this hook in `entangled.toml`:
 
 ```toml
 version = "2.0"
