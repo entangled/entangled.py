@@ -113,9 +113,12 @@ tanglers = {
 def tangle_ref(
     refs: ReferenceMap,
     ref_name: str,
-    annotation: Union[type[Tangler], AnnotationMethod] = config.annotation,
+    annotation: type[Tangler] | AnnotationMethod | None = None,
     _visited: Optional[Visitor[str]] = None,
 ) -> tuple[str, set[str]]:
+    if annotation is None:
+        annotation = config.annotation
+
     if ref_name not in refs:
         raise KeyError(ref_name)
     v = _visited or Visitor()
