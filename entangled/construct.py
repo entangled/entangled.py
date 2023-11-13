@@ -27,7 +27,7 @@ class FromStr:
 def construct(annot: Any, json: Any) -> Any:
     try:
         return _construct(annot, json)
-    except (AssertionError, ValueError) as e:
+    except (AssertionError, ValueError, KeyError) as e:
         raise ConfigError(annot, json) from e
 
 

@@ -12,6 +12,9 @@ log = logger()
 
 
 async def main(target_strs: list[str], force_run: bool, throttle: Optional[int]):
+    if not Path(".entangled").exists():
+        Path(".entangled").mkdir()
+
     db = await resolve_tasks(config.brei, Path(".entangled/brei_history"))
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
