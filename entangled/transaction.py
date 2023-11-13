@@ -66,7 +66,7 @@ class Create(Action):
             if self.mode is not None:
                 os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
-            os.replace(f.name, self.target)
+        os.replace(f.name, self.target)
         db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
@@ -102,7 +102,7 @@ class Write(Action):
             if self.mode is not None:
                 os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
-            os.replace(f.name, self.target)
+        os.replace(f.name, self.target)
         db.update(self.target, self.sources)
 
     def __str__(self):
