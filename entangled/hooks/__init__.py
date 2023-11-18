@@ -1,5 +1,5 @@
 import logging
-from importlib_metadata import entry_points
+from importlib.metadata import entry_points
 
 from .base import HookBase, PrerequisitesFailed
 from . import build, task, quarto_attributes
@@ -12,7 +12,7 @@ discovered_hooks = entry_points(group="entangled.hooks")
 
 external_hooks = {
     name: discovered_hooks[name].load().Hook
-    for name in discovered_hooks
+    for name in discovered_hooks.names
 }
 
 hooks: dict[str, type[HookBase]] = {
