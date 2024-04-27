@@ -97,6 +97,9 @@ version = "2.0"
 
 # default watch_list is ["**/*.md"]
 watch_list = ["docs/**/*.md"]
+
+# default ignore_list is ["**/README.md"]
+ignore_list = ["docs/**/examples.md"]
 ```
 
 You may add languages as follows:
