@@ -46,5 +46,6 @@ languages = [
     Language("F#", ["fsharp"], Comment("//")),
     Language("Javascript", ["javascript", "js", "ecma"], Comment("//")),
     Language("Go", ["go", "golang"], Comment("//")),
-    Language("R", ["r", "rlang"], Comment("#"))
+    Language("R", ["r", "rlang"], Comment("#")),
+    Language("Nix", ["nix"], Comment("#"))
 ]
