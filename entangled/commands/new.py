@@ -123,7 +123,7 @@ def new(
             "Please supply both a [template] and a [project_path].\n", print_help
         )
 
-    copy_this_template: Optional[str] = template
+    copy_this_template: str = template
     trust_this_template: bool = trust
 
     # Use an officially supported template, if available, and trust it
