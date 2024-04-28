@@ -31,6 +31,9 @@ def rich_status():
     config_table.add_row(
         "Watch list", ", ".join(f"'{pat}'" for pat in config.watch_list)
     )
+    config_table.add_row(
+        "Ignore list", ", ".join(f"'{pat}'" for pat in config.ignore_list)
+    )
     config_table.add_row("Hooks enabled", ", ".join(config.hooks))
 
     console = Console(color_system="auto")
