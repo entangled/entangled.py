@@ -16,9 +16,9 @@ def find_watch_dirs():
 
 def list_input_files():
     """List all input files."""
-    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+    include_file_list = chain.from_iterable(map(Path().glob, config.watch_list))
     exclude_file_list = list(
-        chain.from_iterable(map(Path(".").glob, config.ignore_list))
+        chain.from_iterable(map(Path().glob, config.ignore_list))
     )
     return [path for path in include_file_list if not path in exclude_file_list]
 

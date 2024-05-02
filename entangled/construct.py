@@ -27,7 +27,7 @@ class FromStr:
 def construct(annot: Any, json: Any) -> Any:
     try:
         return _construct(annot, json)
-    except (AssertionError, ValueError, KeyError) as e:
+    except (AssertionError, ValueError, KeyError, TypeError) as e:
         raise ConfigError(annot, json) from e
 
 
@@ -45,6 +45,10 @@ def is_optional_type(dtype: Type[Any]) -> TypeGuard[Type[Optional[Any]]]:
         and typing.get_origin(dtype) is Union
         and typing.get_args(dtype)[1] is types.NoneType
     )
+
+
+def normalize_enum(x: str):
+    return x.upper().replace("-", "_")
 
 
 def _construct(annot: Type[T], json: Any) -> T:
@@ -70,14 +74,35 @@ def _construct(annot: Type[T], json: Any) -> T:
         )
     if annot is Any:
         return cast(T, json)
-    # if annot is dict or isgeneric(annot) and typing.get_origin(annot) is dict:
-    #    assert isinstance(json, dict)
-    #    return json
-    if annot is Path and isinstance(json, str):
-        return cast(T, Path(json))
+    
+    # dicts
+    if isgeneric(annot) and typing.get_origin(annot) is dict:
+        assert isinstance(json, dict)
+        return cast(T, {construct(typing.get_args(annot)[0], k): construct(typing.get_args(annot)[1], v)
+                        for k, v in json.items()})
+    if annot is dict:
+        assert isinstance(json, dict)
+        return cast(T, json)
+    
+    # lists
     if isgeneric(annot) and typing.get_origin(annot) is list:
         assert isinstance(json, list)
         return cast(T, [construct(typing.get_args(annot)[0], item) for item in json])
+    if annot is list:
+        assert isinstance(json, list)
+        return cast(T, json)
+
+    # sets
+    if isgeneric(annot) and typing.get_origin(annot) is set:
+        assert isinstance(json, list)
+        return cast(T, {construct(typing.get_args(annot)[0], item) for item in json})
+    if annot is set:
+        assert isinstance(json, list)
+        return cast(T, set(json))
+
+    if annot is Path and isinstance(json, str):
+        return cast(T, Path(json))
+    
     if is_optional_type(annot):
         if json is None:
             return cast(T, None)
@@ -97,13 +122,13 @@ def _construct(annot: Type[T], json: Any) -> T:
     if is_dataclass(annot):
         assert isinstance(json, dict)
         arg_annot = typing.get_type_hints(annot)
-        # assert all(k in json for k in arg_annot)
         args = {k: construct(arg_annot[k], json[k]) for k in json}
         return cast(T, annot(**args))
     if isinstance(json, str) and isinstance(annot, type) and issubclass(annot, Enum):
-        options = {opt.name.lower(): opt for opt in annot}
-        assert json.lower() in options
-        return cast(T, options[json.lower()])
+        options = {normalize_enum(e.name): e for e in annot}
+        assert isinstance(json, str)
+        assert normalize_enum(json) in options
+        return cast(T, options[normalize_enum(json)])
     raise ValueError(f"Couldn't construct {annot} from {repr(json)}")
 
 
