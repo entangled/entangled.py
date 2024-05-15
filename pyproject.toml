@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "entangled-cli"
-version = "2.0.2"
+version = "2.0.3"
 description = "Literate Programming toolbox"
 repository = "https://github.com/entangled/entangled.py"
 homepage = "https://entangled.github.io/"
@@ -20,6 +20,7 @@ tomlkit = "^0.12.1"      # read/write toml files
 copier = "^9"            # project templates
 brei = "^0.2.3"          # build system
 rich-argparse = "^1.4.0" # colourful help messages
+pexpect = "^4.9.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
@@ -31,6 +32,7 @@ mkdocs-material = "^9.1.13"
 mkdocstrings = { extras = ["python"], version = "^0.21.2" }
 twine = "^4.0.2"
 pytest-asyncio = "^0.21.1"
+ruff = "^0.4.4"
 
 [build-system]
 requires = ["poetry-core"]
