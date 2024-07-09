@@ -130,6 +130,12 @@ class MarkdownReader(mawk.RuleSet):
             self.reference_map[ref] = code
             if target_file is not None:
                 self.reference_map.targets.add(target_file)
+
+            # when both target_file and block_id are given,
+            # make an alias
+            if target_file is not None and block_id is not None:
+                self.reference_map.alias[target_file] = block_id
+
             self.content.append(ref)
             self.current_content = []
 
