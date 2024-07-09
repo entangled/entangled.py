@@ -57,11 +57,17 @@ class ReferenceMap:
         default_factory=lambda: defaultdict(list)
     )
     targets: set[str] = field(default_factory=set)
+    alias: dict[str, str] = field(default_factory=dict)
 
     def names(self) -> Iterable[str]:
         return self.index.keys()
 
     def by_name(self, n: str) -> Iterable[CodeBlock]:
+        if n not in self.index and n not in self.alias:
+            raise AttributeError(name=n, obj=self)
+        if n not in self.index:
+            return self.by_name(self.alias[n])
+
         return (self.map[r] for r in self.index[n])
 
     def new_id(self, filename: str, name: str) -> ReferenceId:
