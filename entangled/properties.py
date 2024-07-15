@@ -35,7 +35,7 @@ class Id(Parsable):
 @dataclass
 class Class(Parsable):
     value: str
-    _pattern: ClassVar[Parser] = matching(r"\.([a-zA-Z]\S*)")
+    _pattern: ClassVar[Parser] = matching(r"\.?([a-zA-Z]\S*)")
 
     def __str__(self):
         return f".{self.value}"
@@ -74,7 +74,7 @@ def read_properties(inp: str) -> list[Property]:
     """
     # Explicit typing is needed to convince MyPy of correctness
     # parsers: list[Parser[Property]] = [Id, Class, Attribute]
-    result, _ = many(tokenize(choice(Id, Class, Attribute))).read(inp)
+    result, _ = many(tokenize(choice(Id, Attribute, Class))).read(inp)
     return result
 
 

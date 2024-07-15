@@ -59,11 +59,13 @@ class MarkdownReader(mawk.RuleSet):
             return None
         if self.inside_codeblock:
             return None
+        logging.debug("triggered on codeblock: %s", m.group(0))
         self.current_codeblock_indent = m["indent"]
         self.current_codeblock_location = copy(self.location)
         self.current_content.append(m[0])
         try:
             self.current_codeblock_properties = read_properties(m["properties"])
+            logging.debug("properties: %s", self.current_codeblock_properties)
             self.flush_plain_text()
             self.inside_codeblock = True
         except parsing.Failure as f:
@@ -113,6 +115,7 @@ class MarkdownReader(mawk.RuleSet):
         if language is None:
             self.flush_plain_text()
         else:
+            logging.debug("language: %s, id: %s", language.name, ref_name)
             ref = self.reference_map.new_id(
                 self.current_codeblock_location.filename, ref_name
             )
