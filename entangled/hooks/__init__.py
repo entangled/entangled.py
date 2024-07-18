@@ -41,4 +41,4 @@ def get_hooks() -> list[HookBase]:
     return active_hooks
 
 
-__all__ = ["hooks", "PrerequisitesFailed"]
+__all__ = ["hooks", "PrerequisitesFailed", "get_hooks"]

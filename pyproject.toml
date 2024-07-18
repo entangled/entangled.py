@@ -44,7 +44,6 @@ testpaths = ["test"]
 
 [tool.mypy]
 packages = ["entangled"]
-enable_incomplete_feature = ["TypeVarTuple"]
 
 [tool.poetry.scripts]
 entangled = "entangled.main:cli"

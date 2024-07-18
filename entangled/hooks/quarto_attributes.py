@@ -21,6 +21,8 @@ class Hook(HookBase):
         self.config = config
 
     def on_read(self, code: CodeBlock):
+        log.debug(f"quarto filter: %s", code)
+
         if code.language is None:
             return
 
