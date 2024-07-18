@@ -34,6 +34,9 @@ mkdocstrings = { extras = ["python"], version = "^0.21.2" }
 twine = "^4.0.2"
 pytest-asyncio = "^0.21.1"
 ruff = "^0.4.4"
+types-pyyaml = "^6.0.12.20240311"
+types-pygments = "^2.18.0.20240506"
+types-colorama = "^0.4.15.20240311"
 
 [build-system]
 requires = ["poetry-core"]
