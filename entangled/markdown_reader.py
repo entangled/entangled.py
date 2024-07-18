@@ -8,35 +8,28 @@ import logging
 
 from .config import config
 from .utility import first
-from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText
+from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText, RawContent
 from .properties import read_properties, get_attribute, get_classes, get_id
 from .hooks.base import HookBase
 from .errors.user import ParseError, IndentationError
 from . import parsing
 
 
-class MarkdownReader(mawk.RuleSet):
+class MarkdownLexer(mawk.RuleSet):
     """Reads a Markdown file, and splits it up into code blocks and other
-    content. The contents of the code blocks get stored in `reference_map`.
-    """
-
+    content."""
     def __init__(
         self,
-        filename: str,
-        refs: Optional[ReferenceMap] = None,
-        hooks: Optional[list[HookBase]] = None,
+        filename: str
     ):
         self.location = TextLocation(filename)
-        self.reference_map = refs or ReferenceMap()
-        self.content: list[Content] = []
+        self.raw_content: list[RawContent] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
-        self.current_header: list[str] = []
         self.ignore = False
-        self.hooks = hooks or []
 
     def flush_plain_text(self):
-        self.content.append(PlainText("\n".join(self.current_content)))
+        self.raw_content.append(PlainText("\n".join(self.current_content)))
         self.current_content = []
 
     @mawk.always
@@ -86,75 +79,31 @@ class MarkdownReader(mawk.RuleSet):
         if m["indent"] != self.current_codeblock_indent:
             return  # treat this as code-block content
 
-        # add block to reference-map
         language_class = first(get_classes(self.current_codeblock_properties))
-        block_id = get_id(self.current_codeblock_properties)
-        target_file = get_attribute(self.current_codeblock_properties, "file")
         language = config.get_language(language_class) if language_class else None
-
         if language_class and not language:
             logging.warning(f"Language `{language_class}` unknown at `{self.location}`.")
 
-        header = (
-            "\n".join(
-                line.removeprefix(self.current_codeblock_indent)
-                for line in self.current_header
-            )
-            if self.current_header
-            else None
-        )
+
         content = "\n".join(
             line.removeprefix(self.current_codeblock_indent)
             for line in self.current_content
         )
 
-        ref_name = block_id or target_file
-        if ref_name is None:
-            ref_name = f"unnamed-{self.location}"
+        code = CodeBlock(
+            self.current_codeblock_properties,
+            self.current_codeblock_indent,
+            content,
+            self.current_codeblock_location,
+            language
+        )
 
-        if language is None:
-            self.flush_plain_text()
-        else:
-            logging.debug("language: %s, id: %s", language.name, ref_name)
-            ref = self.reference_map.new_id(
-                self.current_codeblock_location.filename, ref_name
-            )
-            mode = get_attribute(self.current_codeblock_properties, "mode")
-            code = CodeBlock(
-                language,
-                self.current_codeblock_properties,
-                self.current_codeblock_indent,
-                header,
-                content,
-                self.current_codeblock_location,
-                int(mode, 8) if mode else None
-            )
-            # logging.debug(repr(code))
-            self.reference_map[ref] = code
-            if target_file is not None:
-                self.reference_map.targets.add(target_file)
-
-            # when both target_file and block_id are given,
-            # make an alias
-            if target_file is not None and block_id is not None:
-                self.reference_map.alias[target_file] = block_id
-
-            self.content.append(ref)
-            self.current_content = []
-
-            for h in self.hooks:
-                if h.condition(self.current_codeblock_properties):
-                    h.on_read(self.reference_map, ref, code)
+        self.raw_content.append(code)
+        self.current_content = []
 
         self.current_content.append(m[0])
         self.inside_codeblock = False
         return []
-
-    @mawk.on_match(r"^\s*#!.*$")
-    def on_shebang(self, m: re.Match):
-        if self.inside_codeblock and not self.current_content:
-            self.current_header.append(m[0])
-            return []
 
     @mawk.always
     def add_line(self, line: str):
@@ -166,9 +115,54 @@ class MarkdownReader(mawk.RuleSet):
         return []
 
 
-def read_markdown(path: Path) -> tuple[ReferenceMap, list[Content]]:
+def read_markdown_file(
+    path: Path,
+    refs: ReferenceMap | None = None,
+    hooks: list[HookBase] | None = None) \
+    -> tuple[ReferenceMap, list[Content]]:
+
     with open(path, "r") as f:
         path_str = str(path.resolve().relative_to(Path.cwd()))
-        md = MarkdownReader(path_str)
-        md.run(f.read())
-    return md.reference_map, md.content
+        return read_markdown_string(f.read(), path_str, refs, hooks)
+
+
+def read_markdown_string(
+        text: str,
+        path_str: str = "-",
+        refs: ReferenceMap | None = None,
+        hooks: list[HookBase] | None = None) \
+        -> tuple[ReferenceMap, list[Content]]:
+    md = MarkdownLexer(path_str)
+    md.run(text)
+
+    hooks = hooks if hooks is not None else []
+    refs = refs if refs is not None else ReferenceMap()
+
+    def process(r: RawContent) -> Content:
+        match r:
+            case CodeBlock():
+                for h in hooks: h.on_read(r)
+                block_id = get_id(r.properties)
+                target_file = get_attribute(r.properties, "file")
+
+                if mode := get_attribute(r.properties, "mode"):
+                    r.mode = int(mode, 8)
+
+                ref_name = block_id or target_file
+                if ref_name is None:
+                    ref_name = f"unnamed-{r.origin}"
+                ref = refs.new_id(r.origin.filename, ref_name)
+
+                refs[ref] = r
+                if target_file is not None:
+                    refs.targets.add(target_file)
+                if target_file is not None and block_id is not None:
+                    refs.alias[target_file] = block_id
+
+                return ref
+
+            case PlainText(): return r
+
+    content = list(map(process, md.raw_content))
+    logging.debug("found ids: %s", list(refs.map.keys()))
+    return refs, content

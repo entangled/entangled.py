@@ -56,41 +56,40 @@ class Hook(HookBase):
         self.config = config
         self.sources: list[Path] = []
 
-    def condition(self, props: list[Property]):
-        return (
-            "task" in get_classes(props)
-        )
+    def pre_tangle(self, refs: ReferenceMap):
+        for ref, cb in refs.map.items():
+            if "task" not in get_classes(cb.properties):
+                continue
 
-    def on_read(self, refs: ReferenceMap, ref: ReferenceId, cb: CodeBlock):
-        self.sources.append(Path(ref.file))
+            self.sources.append(Path(ref.file))
 
-        match cb.properties[0]:
-            case Class("task"):
-                runner = None
-            case Class(lang_id):
-                runner = lang_id
-            case _:
-                return
+            match cb.properties[0]:
+                case Class("task"):
+                    runner = None
+                case Class(lang_id):
+                    runner = lang_id
+                case _:
+                    continue
 
-        record: dict[str, Any] = {
-            f.name: get_attribute(cb.properties, f.name)
-            for f in fields(Hook.Recipe)
-        }
+            record: dict[str, Any] = {
+                f.name: get_attribute(cb.properties, f.name)
+                for f in fields(Hook.Recipe)
+            }
 
-        record["runner"] = record["runner"] or runner
-        record["creates"] = record["creates"].split() if record["creates"] else None
-        record["requires"] = record["requires"].split() if record["requires"] else None
-        record["ref"] = ref
+            record["runner"] = record["runner"] or runner
+            record["creates"] = record["creates"].split() if record["creates"] else None
+            record["requires"] = record["requires"].split() if record["requires"] else None
+            record["ref"] = ref
 
-        log.debug(f"task: {record}")
-        recipe = Hook.Recipe(**record)
-        self.recipes.append(recipe)
-        if recipe.collect:
-            targets = recipe.creates or []
-            if recipe.stdout:
-                targets.append(recipe.stdout)
-            self.collections[recipe.collect].extend(targets)
-    
+            log.debug(f"task: {record}")
+            recipe = Hook.Recipe(**record)
+            self.recipes.append(recipe)
+            if recipe.collect:
+                targets = recipe.creates or []
+                if recipe.stdout:
+                    targets.append(recipe.stdout)
+                self.collections[recipe.collect].extend(targets)
+
     def on_tangle(self, t: Transaction, refs: ReferenceMap):
         collect = [{
             "name": k,
@@ -100,4 +99,3 @@ class Hook(HookBase):
                 "task": [r.to_brei_task(refs) for r in self.recipes] + collect
             }, indent=2)
         t.write(Path(".entangled/tasks.json"), content, self.sources, mode=0o444)
-

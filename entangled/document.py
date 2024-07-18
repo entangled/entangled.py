@@ -29,18 +29,19 @@ class PlainText:
     content: str
 
 
-Content = Union[PlainText, ReferenceId]
-
-
 @dataclass
 class CodeBlock:
-    language: Language
     properties: list[Property]
     indent: str
-    header: Optional[str]
     source: str
     origin: TextLocation
-    mode: Optional[int]
+    language: Optional[Language] = None
+    header: Optional[str] = None
+    mode: Optional[int] = None
+
+
+Content = Union[PlainText, ReferenceId]
+RawContent = Union[PlainText, CodeBlock]
 
 
 @dataclass

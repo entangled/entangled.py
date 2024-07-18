@@ -25,7 +25,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
     config.read()
 
     # these imports depend on config being read
-    from ..markdown_reader import MarkdownReader
+    from ..markdown_reader import read_markdown_file
     from ..tangle import tangle_ref
 
     if annotate is None:
@@ -43,6 +43,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
 
     refs = ReferenceMap()
     hooks = get_hooks()
+    logging.debug("tangling with hooks: %s", [h.__module__ for h in hooks])
 
     if show:
         mode = TransactionMode.SHOW
@@ -56,8 +57,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
             for path in input_file_list:
                 logging.debug("reading `%s`", path)
                 t.update(path)
-                with open(path, "r") as f:
-                    MarkdownReader(str(path), refs, hooks).run(f.read())
+                read_markdown_file(path, refs=refs, hooks=hooks)
 
             for h in hooks:
                 h.pre_tangle(refs)

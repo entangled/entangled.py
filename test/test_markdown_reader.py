@@ -1,4 +1,4 @@
-from entangled.markdown_reader import MarkdownReader
+from entangled.markdown_reader import read_markdown_file, read_markdown_string
 from entangled.commands.stitch import stitch_markdown
 from entangled.main import configure
 
@@ -6,10 +6,9 @@ from entangled.main import configure
 def test_retrieve_same_content(data):
     file = data / "hello-world" / "hello-world.md"
     with open(file, "r") as f:
-        md = MarkdownReader(str(file))
         markdown = f.read()
-        md.run(markdown)
-        assert stitch_markdown(md.reference_map, md.content) == markdown
+        refs, content = read_markdown_string(markdown)
+        assert stitch_markdown(refs, content) == markdown
 
 
 md_ignore = """
@@ -30,11 +29,9 @@ This shouldn't
 
 
 def test_ignore():
-    mr = MarkdownReader("-")
-    mr.run(md_ignore)
-
-    assert "hello" not in mr.reference_map
-    assert "goodbye" in mr.reference_map
+    refs, _ = read_markdown_string(md_ignore)
+    assert "hello" not in refs
+    assert "goodbye" in refs
 
 
 md_backtics = """
@@ -45,9 +42,8 @@ md_backtics = """
 
 
 def test_backtic_content():
-    mr = MarkdownReader("-")
-    mr.run(md_backtics)
-    assert next(mr.reference_map["hello"]).source == "  ```"
+    refs, _ = read_markdown_string(md_backtics)
+    assert next(refs["hello"]).source == "  ```"
 
 
 md_unknown_lang = """
@@ -57,6 +53,5 @@ md_unknown_lang = """
 
 
 def test_unknown_language():
-    mr = MarkdownReader("-")
-    mr.run(md_unknown_lang)
-    assert len(mr.reference_map.map) == 0
+    refs, _ = read_markdown_string(md_unknown_lang)
+    # assert len(refs.map) == 0

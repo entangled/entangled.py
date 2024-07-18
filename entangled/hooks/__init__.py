@@ -2,10 +2,13 @@ import logging
 from importlib.metadata import entry_points
 
 from .base import HookBase, PrerequisitesFailed
-from . import build, task, quarto_attributes
+from . import build, task, quarto_attributes, shebang
 from ..config import config
 from ..construct import construct
+from typing import TypeVar
 
+
+AbstractHook = TypeVar('AbstractHook', bound=HookBase)
 
 discovered_hooks = entry_points(group="entangled.hooks")
 
@@ -18,6 +21,7 @@ external_hooks = {
 hooks: dict[str, type[HookBase]] = {
     "build": build.Hook,
     "brei": task.Hook,
+    "shebang": shebang.Hook,
     "quarto_attributes": quarto_attributes.Hook }
 
 
@@ -37,4 +41,4 @@ def get_hooks() -> list[HookBase]:
     return active_hooks
 
 
-__all__ = ["hooks", "PrerequisitesFailed"]
+__all__ = ["hooks", "PrerequisitesFailed", "get_hooks"]
