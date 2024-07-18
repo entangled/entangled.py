@@ -145,9 +145,10 @@ Entangled has a system of *hooks*: these add actions to the tangling process:
 
 - `build` trigger actions in a generated `Makefile`
 - `brei` trigger actions (or tasks) using [Brei](https://entangled.github.io/brei), which is automatically installed along with Entangled. This is now prefered over the `build` hook.
-- `quatro_attributes` add attributes to the code block in Quatro style with `#|` comments at the top of the code block.
+- `quarto_attributes` add attributes to the code block in Quatro style with `#|` comments at the top of the code block.
+- `shebang` takes the first line if it starts with `#!` and puts it at the top of the file.
 
-## `build` hook
+### `build` hook
 You can enable this hook in `entangled.toml`:
 
 ```toml
@@ -231,6 +232,34 @@ plt.savefig("docs/fig/triangle.svg")
 ```
 
 ![](fig/triangle.svg)
+~~~
+
+Using these attributes it is possible to write in Entangled using completely standard Markdown syntax. The following configuration disables the curly braces alltogether, though currently the quarto tags encoding the meta-data will end-up in the tangled code.
+
+```toml
+#| file: entangled.toml
+version="2.0"
+watch_list=["*.typ"]
+hooks=["quarto_attributes"]
+
+[markers]
+open="^(?P<indent>\\s*)```(?P<properties>.*)$"
+close="^(?P<indent>\\s*)```\\s*$"
+```
+
+Then you can write code like so:
+
+~~~markdown
+```python
+#| id: hello
+print("Hello, World!")
+```
+
+```python
+#| file: test.py
+if __name__ == "__main__":
+    <<hello>>
+```
 ~~~
 
 ## Brei
@@ -362,6 +391,19 @@ Example: [Hello World in C++](https://entangled.github.io/examples/hello-world.h
 - :heavy_minus_sign: documentation is on par with most Python projects: Ok for most things, but really hard if you want specifics
 
 Example: TBD
+
+### Typst
+[Typst](https://typst.app/) has a syntax that is similar to Markdown when it comes to code blocks. Set the code block markers in `entangled.toml` like so:
+
+```toml
+version="2.0"
+watch_list=["*.typ"]
+hooks=["quarto_attributes"]
+
+[markers]
+open="^(?P<indent>\\s*)```(?P<properties>.*)$"
+close="^(?P<indent>\\s*)```\\s*$"
+```
 
 ### Documenter.jl
 [Documenter.jl]() is the standard tool to write Julia documention in. It has internal support for evaluating code block contents.
