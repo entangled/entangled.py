@@ -53,7 +53,7 @@ def test_new_language(tmp_path):
 
 config_with_more = """
 # required: the minimum version of Entangled
-version = "2.0"            
+version = "2.0"
 
 # default watch_list is ["**/*.md"]
 watch_list = ["docs/**/*.md"]
@@ -76,8 +76,13 @@ def test_more_language(tmp_path):
         sleep(0.1)
         config.read(force=True)
 
-        assert config.get_language("html").name == "XML"
-        assert config.get_language("java").name == "Custom Java"
+        html = config.get_language("html")
+        assert html is not None
+        assert html.name == "XML"
+
+        java = config.get_language("java")
+        assert java is not None
+        assert java.name == "Custom Java"
 
 
 config_in_pyproject = """

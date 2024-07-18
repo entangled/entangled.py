@@ -15,6 +15,7 @@ class PrerequisitesFailed(Exception):
 
 
 class HookBase:
+    @dataclass
     class Config:
         pass
 
@@ -25,13 +26,8 @@ class HookBase:
         """When prerequisites aren't met, raise PrerequisitesFailed."""
         return
 
-    def condition(self, props: list[Property]):
-        """Condition upon which the `on_read` is triggered. Maybe a bit superfluous
-        could be removed in the future."""
-        return True
-
-    def on_read(self, refs: ReferenceMap, ref: ReferenceId, code: CodeBlock):
-        """Called when the Markdown is being read, during the assembling of
+    def on_read(self, code: CodeBlock):
+        """Called when the Markdown is being read, before the assembling of
         the reference map."""
         pass
 

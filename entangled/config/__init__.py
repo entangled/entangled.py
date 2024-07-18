@@ -87,7 +87,7 @@ class Config(threading.local):
     annotation_format: Optional[str] = None
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
-    hooks: list[str] = field(default_factory=list)
+    hooks: list[str] = field(default_factory=lambda: ["shebang"])
     hook: dict = field(default_factory=dict)
     brei: Program = field(default_factory=Program)
 

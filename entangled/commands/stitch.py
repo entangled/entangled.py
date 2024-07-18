@@ -29,8 +29,9 @@ def stitch(*, force: bool = False, show: bool = False):
     config.read()
 
     # these imports depend on config being read
-    from ..markdown_reader import MarkdownReader
+    from ..markdown_reader import read_markdown_file
     from ..code_reader import CodeReader
+    from ..hooks import get_hooks
 
     include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
     exclude_file_list = list(
@@ -39,6 +40,7 @@ def stitch(*, force: bool = False, show: bool = False):
     input_file_list = [
         path for path in include_file_list if not path in exclude_file_list
     ]
+    hooks = get_hooks()
 
     if show:
         mode = TransactionMode.SHOW
@@ -52,10 +54,8 @@ def stitch(*, force: bool = False, show: bool = False):
     try:
         for path in input_file_list:
             logging.debug("reading `%s`", path)
-            with open(path, "r") as f:
-                mr = MarkdownReader(str(path), refs)
-                mr.run(f.read())
-                content[path] = mr.content
+            _, c = read_markdown_file(path, refs=refs, hooks=hooks)
+            content[path] = c
 
         with transaction(mode) as t:
             for path in t.db.managed:

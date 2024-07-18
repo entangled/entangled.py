@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from subprocess import run, SubprocessError, DEVNULL
+import logging
 
 from entangled.config.language import Language
 
@@ -72,29 +73,29 @@ class Hook(HookBase):
         except (SubprocessError, FileNotFoundError):
             raise PrerequisitesFailed("GNU Make needs to be installed")
 
-    def condition(self, props: list[Property]):
-        """Condition by which a CodeBlock is processed: should have `.build` class
-        and `target=` attribute."""
-        return (
-            "build" in get_classes(props) and get_attribute(props, "target") is not None
-        )
-
-    def on_read(self, refs: ReferenceMap, ref: ReferenceId, cb: CodeBlock):
+    def pre_tangle(self, refs: ReferenceMap):
         """Add a CodeBlock's target attribute to the list of targets."""
-        target = get_attribute(cb.properties, "target")
-        if target is None:
-            return
+        for (ref, cb) in refs.map.items():
+            logging.debug("build hook: passing: %s", ref)
+            if "build" not in get_classes(cb.properties):
+                continue
+            target = get_attribute(cb.properties, "target")
+            if target is None:
+                continue
+            if cb.language is None:
+                continue
 
-        script_file_name = get_attribute(cb.properties, "file")
-        if script_file_name is None:
-            script_file_name = f".entangled/build/{ref.name}".replace(":", "_")
-            refs.index[script_file_name].append(ref)
-            refs.targets.add(script_file_name)
+            logging.debug("build hook: target: %s", target)
+            script_file_name = get_attribute(cb.properties, "file")
+            if script_file_name is None:
+                script_file_name = f".entangled/build/{ref.name}".replace(":", "_")
+                refs.index[script_file_name].append(ref)
+                refs.targets.add(script_file_name)
 
-        deps = (get_attribute(cb.properties, "deps") or "").split()
-        self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
+            deps = (get_attribute(cb.properties, "deps") or "").split()
+            self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
 
-    def post_tangle(self, _: ReferenceMap):
+    def post_tangle(self, refs: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
         targets = " ".join([r.target for r in self.recipes])
         makefile = preamble.format(

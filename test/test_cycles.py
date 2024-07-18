@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 
 from entangled.tangle import tangle_ref
-from entangled.markdown_reader import MarkdownReader
+from entangled.markdown_reader import read_markdown_string
 from entangled.errors.user import CyclicReference
 from entangled.document import AnnotationMethod
 
@@ -44,9 +44,7 @@ negative charge
 
 
 def test_cycles():
-    mr = MarkdownReader("-")
-    mr.run(md_source)
-    refs = mr.reference_map
+    refs, _ = read_markdown_string(md_source)
 
     with pytest.raises(CyclicReference):
         tangle_ref(refs, "hello")

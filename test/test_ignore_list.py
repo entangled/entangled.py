@@ -39,11 +39,6 @@ print("test2")
 ```
 """
 
-def list_files_recursive(directory):
-    for root, _, files in os.walk(directory):
-        for file in files:
-            file_path = os.path.join(root, file)
-            print(file_path)
 
 def test_watch_dirs(tmp_path):
     with chdir(tmp_path):
@@ -55,9 +50,8 @@ def test_watch_dirs(tmp_path):
         with config(watch_list=["**/*.md"], ignore_list=["**/data/*", "**/README.md"]):
             tangle()
             # data.md and README.md should not be entangled cause they are part
-            # of the ignore list while index.md should be so test2.py, test.py 
+            # of the ignore list while index.md should be so test2.py, test.py
             # should not be created while test.c should be created.
             assert not Path.exists(Path("./src/test2.py"))
             assert not Path.exists(Path("./src/test.py"))
             assert Path.exists(Path("./src/test.c"))
-    
