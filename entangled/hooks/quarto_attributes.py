@@ -21,7 +21,7 @@ class Hook(HookBase):
         self.config = config
 
     def on_read(self, code: CodeBlock):
-        log.debug(f"quarto filter: %s", code)
+        log.debug("quarto filter: %s", code)
 
         if code.language is None:
             return
@@ -32,8 +32,11 @@ class Hook(HookBase):
             if line.startswith(trigger))
 
         attrs = yaml.safe_load(header)
+        if attrs is None:
+            return
+
         if "id" in attrs:
             code.properties.append(Id(attrs["id"]))
         code.properties.extend(Attribute(k, v) for k, v in attrs.items())
 
-        log.debug(f"quarto attributes: {attrs}")
+        log.debug("quarto attributes: %s", attrs)
