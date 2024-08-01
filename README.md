@@ -129,12 +129,24 @@ The `identifiers` are the tags that you may use in your code block header to ide
 And so on...
 ~~~
 
-If you have a `pyproject.toml` file, either because you use `poetry` to setup Entangled or because you're actually developing a Python project, you may want to put the configuration in `pyproject.toml` instead. Add a section `tools.entangled` like so:
+#### Reading from `pyproject.toml`
+
+If you have a `pyproject.toml` file, either because you use `poetry` to set up Entangled or because you're actually developing a Python project, you may want to put the configuration in `pyproject.toml` instead. Add a `tool.entangled` table like so:
 
 ```toml
-[[tools.entangled]]
+[tool.entangled]
 version = "2.0"
 watch_list = ["docs/**/*.md"]
+```
+
+To add languages in your `pyproject.toml`, add `tool.entangled.languages` sections.
+Be aware that these should be lists, not tables, so you will need to use double brackets, like so:
+
+```toml
+[[tool.entangled.languages]]
+name = "Java"
+identifiers = ["java"]
+comment = { open = "//" }
 ```
 
 ## Hooks
