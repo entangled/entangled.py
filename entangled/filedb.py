@@ -111,9 +111,9 @@ class FileDB:
         logging.debug("Writing FileDB")
         raw = {
             "version": __version__,
-            "files": [stat.to_json() for stat in self._files.values()],
-            "source": list(map(str, self._source)),
-            "target": list(map(str, self._target)),
+            "files": sorted([stat.to_json() for stat in self._files.values()], key=lambda s: s["path"]),
+            "source": list(sorted(map(str, self._source))),
+            "target": list(sorted(map(str, self._target))),
         }
         json.dump(raw, open(FileDB.path(), "w"), indent=2, sort_keys=True)
 
