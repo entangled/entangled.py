@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "entangled-cli"
-version = "2.1.1"
+version = "2.1.2"
 description = "Literate Programming toolbox"
 repository = "https://github.com/entangled/entangled.py"
 homepage = "https://entangled.github.io/"

@@ -115,7 +115,7 @@ class FileDB:
             "source": list(map(str, self._source)),
             "target": list(map(str, self._target)),
         }
-        json.dump(raw, open(FileDB.path(), "w"), indent=2)
+        json.dump(raw, open(FileDB.path(), "w"), indent=2, sort_keys=True)
 
     def changed(self) -> list[Path]:
         """List all target files that have changed w.r.t. the database."""
