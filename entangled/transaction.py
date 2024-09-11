@@ -75,6 +75,13 @@ class Create(Action):
         return f"create `{self.target}`"
 
 
+def assure_final_newline(str) -> str:
+    if str[-1] != "\n":
+        return str + "\n"
+    else:
+        return str
+
+
 @dataclass
 class Write(Action):
     content: str
@@ -96,7 +103,7 @@ class Write(Action):
         tmp_dir = Path() / ".entangled" / "tmp"
         tmp_dir.mkdir(exist_ok=True, parents=True)
         with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-            f.write(self.content)
+            f.write(assure_final_newline(self.content))
             # Flush and sync contents to disk
             f.flush()
             if self.mode is not None:
