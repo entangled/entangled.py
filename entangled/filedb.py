@@ -20,7 +20,7 @@ def hexdigest(s: str) -> str:
     """Creates a MD5 hash digest from a string. Before hashing, the string has
     linefeed `\\r` characters and trailing newlines removed, and the string
     is encoded as UTF-8."""
-    content = s.replace("\r", "").rstrip("\n").encode()
+    content = s.replace("\r", "").rstrip().encode()
     return hashlib.sha256(content).hexdigest()
 
 
