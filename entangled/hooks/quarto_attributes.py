@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from itertools import takewhile
 import yaml
 
-from ..properties import Attribute, Id
+from ..properties import Attribute, Class, Id
 from ..document import ReferenceId, ReferenceMap, CodeBlock
 from .base import HookBase
 from ..logging import logger
@@ -37,6 +37,10 @@ class Hook(HookBase):
 
         if "id" in attrs:
             code.properties.append(Id(attrs["id"]))
+
+        if "classes" in attrs:
+            code.properties.extend(Class(c) for c in attrs["classes"])
+        
         code.properties.extend(Attribute(k, v) for k, v in attrs.items())
 
         log.debug("quarto attributes: %s", attrs)

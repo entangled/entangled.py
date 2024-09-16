@@ -271,6 +271,8 @@ if __name__ == "__main__":
 ```
 ~~~
 
+The `id` attribute is reserved for the code's identifier (normally indicated with `#`) and the `classes` attribute can be used to indicate a list of classes in addition to the language class already given.
+
 ## Brei
 Entangled has a small build engine (similar to GNU Make) embedded, called Brei. You may give it a list of tasks (specified in TOML) that may depend on one another. Brei will run these when dependencies are newer than the target. Execution is lazy and in parallel. Brei supports:
 
