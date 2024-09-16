@@ -18,6 +18,10 @@ log = logger()
 
 
 def ensure_list(strs: str | list[str]) -> list[str]:
+    """Some options may be given either as a list or as a single string,
+    where the string is supposed to have a whitespace separated list.
+    This function converts from either to a list of strings.
+    """
     if isinstance(strs, str):
         return strs.split()
     elif isinstance(strs, list):
