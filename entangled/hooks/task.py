@@ -16,6 +16,16 @@ from ..tangle import tangle_ref
 
 log = logger()
 
+
+def ensure_list(strs: str | list[str]) -> list[str]:
+    if isinstance(strs, str):
+        return strs.split()
+    elif isinstance(strs, list):
+        return strs
+    else:
+        raise ValueError(f"Expected `str` or `list[str]`, got: {strs}")
+
+
 class Hook(HookBase):
     @dataclass
     class Config(HookBase.Config):
@@ -77,8 +87,8 @@ class Hook(HookBase):
             }
 
             record["runner"] = record["runner"] or runner
-            record["creates"] = record["creates"].split() if record["creates"] else None
-            record["requires"] = record["requires"].split() if record["requires"] else None
+            record["creates"] = ensure_list(record["creates"].split()) if record["creates"] else None
+            record["requires"] = ensure_list(record["requires"].split()) if record["requires"] else None
             record["ref"] = ref
 
             log.debug(f"task: {record}")
