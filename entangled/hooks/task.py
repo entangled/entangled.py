@@ -87,8 +87,8 @@ class Hook(HookBase):
             }
 
             record["runner"] = record["runner"] or runner
-            record["creates"] = ensure_list(record["creates"].split()) if record["creates"] else None
-            record["requires"] = ensure_list(record["requires"].split()) if record["requires"] else None
+            record["creates"] = ensure_list(record["creates"]) if record["creates"] else None
+            record["requires"] = ensure_list(record["requires"]) if record["requires"] else None
             record["ref"] = ref
 
             log.debug(f"task: {record}")
