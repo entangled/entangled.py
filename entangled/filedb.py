@@ -103,8 +103,19 @@ class FileDB:
             set(map(Path, raw["target"])),
         )
 
+    def clear(self):
+        self._files = {}
+        self._source = set()
+        self._target = set()
+
     @property
     def managed(self) -> set[Path]:
+        """List all managed files. These are files that can be reconstructed
+        from the sources, at least when things are in a consistent state.
+
+        For example: markdown sources cannot be reconstructed, so are not
+        listed here. However, generated code is first constructed from
+        the markdown, so is considered to be managed."""
         return self._target
 
     def write(self):

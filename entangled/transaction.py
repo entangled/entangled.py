@@ -30,6 +30,10 @@ class Action:
         a file that is not managed by Entangled."""
         raise NotImplementedError()
 
+    def add_to_db(self, _: FileDB):
+        """Only perform the corresponding database action."""
+        raise NotImplementedError()
+
     def run(self, _: FileDB):
         """Run the action, if `interact` is `True` then confirmation is
         asked in case of a conflict."""
@@ -54,6 +58,11 @@ class Create(Action):
             return f"{self.target} is not managed by Entangled"
         return None
 
+    def add_to_db(self, db: FileDB):
+        db.update(self.target, self.sources)
+        if self.sources != []:
+            db.managed.add(self.target)
+
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
         # Write to tmp file then replace with file name
@@ -67,9 +76,7 @@ class Create(Action):
                 os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
         os.replace(f.name, self.target)
-        db.update(self.target, self.sources)
-        if self.sources != []:
-            db.managed.add(self.target)
+        self.add_to_db(db)
 
     def __str__(self):
         return f"create `{self.target}`"
@@ -98,6 +105,9 @@ class Write(Action):
                 return f"`{self.target}` seems to be newer than `{newest_src.path}`"
         return None
 
+    def add_to_db(self, db: FileDB):
+        db.update(self.target, self.sources)
+
     def run(self, db: FileDB):
         # Write to tmp file then replace with file name
         tmp_dir = Path() / ".entangled" / "tmp"
@@ -110,7 +120,7 @@ class Write(Action):
                 os.chmod(f.name, self.mode)
             os.fsync(f.fileno())
         os.replace(f.name, self.target)
-        db.update(self.target, self.sources)
+        self.add_to_db(db)
 
     def __str__(self):
         return f"write `{self.target}`"
@@ -126,13 +136,16 @@ class Delete(Action):
             )
         return None
 
+    def add_to_db(self, db: FileDB):
+        del db[self.target]
+
     def run(self, db: FileDB):
         self.target.unlink()
         parent = self.target.parent
         while list(parent.iterdir()) == []:
             parent.rmdir()
             parent = parent.parent
-        del db[self.target]
+        self.add_to_db(db)
 
     def __str__(self):
         return f"delete `{self.target}`"
@@ -190,17 +203,27 @@ class Transaction:
         for f in self.updates:
             self.db.update(f)
 
+    def updatedb(self):
+        for a in self.actions:
+            a.add_to_db(self.db)
+        for f in self.updates:
+            self.db.update(f)
+
 
 class TransactionMode(Enum):
     SHOW = 1
     FAIL = 2
     CONFIRM = 3
     FORCE = 4
+    RESETDB = 5
 
 
 @contextmanager
 def transaction(mode: TransactionMode = TransactionMode.FAIL):
     with file_db() as db:
+        if mode == TransactionMode.RESETDB:
+            db.clear()
+
         tr = Transaction(db)
 
         logging.debug("Open transaction")
@@ -212,17 +235,25 @@ def transaction(mode: TransactionMode = TransactionMode.FAIL):
             case TransactionMode.SHOW:
                 logging.info("nothing is done")
                 return
+
+            case TransactionMode.RESETDB:
+                logging.info("rebuilding database")
+                tr.updatedb()
+                return
+
             case TransactionMode.FAIL:
                 if not tr.all_ok():
                     logging.error(
                         "conflicts found, breaking off (use `--force` to run anyway)"
                     )
                     return
+
             case TransactionMode.CONFIRM:
                 if not tr.all_ok():
                     reply = input("Ok to continue? (y/n) ")
                     if not (reply == "y" or reply == "yes"):
                         return
+
             case TransactionMode.FORCE:
                 logging.warning("conflicts found, but continuing anyway")
 

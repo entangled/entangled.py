@@ -12,6 +12,17 @@ from ..hooks import get_hooks
 from ..errors.user import UserError
 
 
+def get_input_files() -> list[Path]:
+    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+    exclude_file_list = list(
+        chain.from_iterable(map(Path(".").glob, config.ignore_list))
+    )
+    input_file_list = [
+        path for path in include_file_list if not path in exclude_file_list
+    ]
+    return input_file_list
+
+
 @argh.arg(
     "-a",
     "--annotate",
@@ -20,7 +31,8 @@ from ..errors.user import UserError
 )
 @argh.arg("--force", help="force overwrite on conflict")
 @argh.arg("-s", "--show", help="only show, don't act")
-def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False):
+@argh.arg("-r", "--reset-db", help="resets database")
+def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False, reset_db = False):
     """Tangle codes from Markdown"""
     config.read()
 
@@ -33,13 +45,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
     else:
         annotation_method = AnnotationMethod[annotate.upper()]
 
-    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-    exclude_file_list = list(
-        chain.from_iterable(map(Path(".").glob, config.ignore_list))
-    )
-    input_file_list = [
-        path for path in include_file_list if not path in exclude_file_list
-    ]
+    input_file_list = get_input_files()
 
     refs = ReferenceMap()
     hooks = get_hooks()
@@ -47,6 +53,8 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
 
     if show:
         mode = TransactionMode.SHOW
+    elif reset_db:
+        mode = TransactionMode.RESETDB
     elif force:
         mode = TransactionMode.FORCE
     else:
