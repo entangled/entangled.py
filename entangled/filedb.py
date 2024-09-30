@@ -166,12 +166,17 @@ class FileDB:
             db = FileDB.read()
             undead = list(filter(lambda p: not p.exists(), db.files))
             for path in undead:
-                logging.warning(
-                    "File `%s` in DB doesn't exist. Removing entry from DB.", path
-                )
-                del db[path]
-            if len(undead) > 0:
-                db.write()
+                if path in db.managed:
+                    logging.warning(
+                        "File `%s` in DB seems not to exist, but this file is managed.\n"
+                        "This may happen every now and then with certain editors that "
+                        "delete a file before writing.", path
+                    )
+                else:
+                    logging.warning(
+                        "File `%s` is in database but doesn't seem to exist.\n"
+                        "Run `entangled tangle -r` to recreate the database.", path
+                    )
             return db
 
         FileDB.path().parent.mkdir(parents=True, exist_ok=True)
