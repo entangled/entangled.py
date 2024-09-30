@@ -9,6 +9,7 @@ from ..config import config
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
 from ..errors.user import UserError
+from .tangle import get_input_files
 
 
 def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
@@ -32,14 +33,8 @@ def stitch(*, force: bool = False, show: bool = False):
     from ..markdown_reader import read_markdown_file
     from ..code_reader import CodeReader
     from ..hooks import get_hooks
-
-    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
-    exclude_file_list = list(
-        chain.from_iterable(map(Path(".").glob, config.ignore_list))
-    )
-    input_file_list = [
-        path for path in include_file_list if not path in exclude_file_list
-    ]
+    
+    input_file_list = get_input_files()
     hooks = get_hooks()
 
     if show:
