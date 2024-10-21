@@ -26,4 +26,11 @@ templates: list[Template] = [
         "python, mkdocs",
         "Fast, simple project documentation for Python",
     ),
+    Template(
+        "pandoc",
+        "Pandoc",
+        "gh:entangled/template-pandoc",
+        "pandoc",
+        "Supports HTML and PDF output, numbered equations and citations."
+    )
 ]
