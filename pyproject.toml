@@ -5,7 +5,7 @@ description = "Literate Programming toolbox"
 authors = [{ name = "Johan Hidding", email = "j.hidding@esciencecenter.nl" }]
 requires-python = "~=3.11"
 readme = "README.md"
-license = "Apache 2"
+license = "Apache-2.0"
 dependencies = [
     "mawk>=0.1.4,<0.2",
     "watchdog>=3.0.0,<4",
