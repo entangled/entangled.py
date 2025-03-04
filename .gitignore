@@ -3,5 +3,4 @@ __pycache__
 .coverage
 coverage.*
 dist
-poetry.lock
 site
