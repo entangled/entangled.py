@@ -34,13 +34,18 @@ class Hook(HookBase):
         attrs = yaml.safe_load(header)
         if attrs is None:
             return
+        if not isinstance(attrs, dict):
+            log.warning("quarto attributes do not evaluate to dictionary; skipping")
+            log.warning(f"tried to parse: {header}")
+            return
 
-        if "id" in attrs:
+        if "id" in attrs.keys():
             code.properties.append(Id(attrs["id"]))
 
-        if "classes" in attrs:
+        if "classes" in attrs.keys():
             code.properties.extend(Class(c) for c in attrs["classes"])
-        
-        code.properties.extend(Attribute(k, v) for k, v in attrs.items())
+
+        code.properties.extend(Attribute(k, v) for k, v in attrs.items()
+                                               if k not in ("id", "classes"))
 
         log.debug("quarto attributes: %s", attrs)

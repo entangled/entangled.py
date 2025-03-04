@@ -36,7 +36,6 @@ dev = [
     "mkdocs>=1.4.3,<2",
     "mkdocs-material>=9.1.13,<10",
     "mkdocstrings[python]>=0.21.2,<0.22",
-    "twine>=4.0.2,<5",
     "pytest-asyncio>=0.21.1,<0.22",
     "ruff>=0.4.4,<0.5",
     "types-pyyaml>=6.0.12.20240311,<7",
