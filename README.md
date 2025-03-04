@@ -154,6 +154,9 @@ identifiers = ["java"]
 comment = { open = "//" }
 ```
 
+## Working in VSCode
+The [EntangleD-VSCode](https://github.com/deephbz/entangled-vscode) extension provides code block navigation, reference&symbol search, NOWEB high-lighting functionalities.
+
 ## Working with Git
 
 When using Entangled in conjunction with Git, there are a few tricks that you may want to know about.
