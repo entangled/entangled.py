@@ -2,7 +2,7 @@ from entangled.markdown_reader import read_markdown_file
 from entangled.tangle import tangle_ref
 from entangled.code_reader import CodeReader
 
-from pathlib import Path
+from pathlib import Path, PurePath
 import os
 from shutil import copytree, move
 from contextlib import chdir
@@ -13,7 +13,7 @@ def test_tangle_ref(data, tmp_path):
     with chdir(tmp_path / "os_interop"):
         refs, _ = read_markdown_file(Path("doc/index.md"))
         tangled, deps = tangle_ref(refs, "src/euler_number.c")
-        assert deps == {"doc/index.md"}
+        assert deps == {PurePath("doc/index.md")}
         with open("src/euler_number.c", "r") as f:
             assert f.read().strip() == tangled.strip()
 

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
 from itertools import chain
+from pathlib import PurePath
 
 from .config import Language, AnnotationMethod, config
 from .properties import Property, get_attribute
@@ -17,7 +18,7 @@ def length(iter: Iterable[Any]) -> int:
 @dataclass
 class ReferenceId:
     name: str
-    file: str
+    file: PurePath
     ref_count: int
 
     def __hash__(self):
@@ -71,7 +72,7 @@ class ReferenceMap:
 
         return (self.map[r] for r in self.index[n])
 
-    def new_id(self, filename: str, name: str) -> ReferenceId:
+    def new_id(self, filename: PurePath, name: str) -> ReferenceId:
         c = length(filter(lambda r: r.file == filename, self.index[name]))
         return ReferenceId(name, filename, c)
 
