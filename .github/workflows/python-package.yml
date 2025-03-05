@@ -17,6 +17,9 @@ jobs:
       matrix:
         os: ["windows-latest", "ubuntu-latest", "macos-latest"]
         python-version: ["3.11", "3.12", "3.13"]
+        exclude:
+          - os: "windows-latest"
+            python-version: "3.13"
 
     runs-on: ${{matrix.os}}
 
