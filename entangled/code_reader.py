@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import mawk
 import re
@@ -18,9 +18,9 @@ class Frame:
 class CodeReader(mawk.RuleSet):
     """Reads an annotated code file."""
 
-    def __init__(self, path: str, refs: ReferenceMap):
+    def __init__(self, path: PurePath, refs: ReferenceMap):
         self.location = TextLocation(path, 0)
-        self.stack: list[Frame] = [Frame(ReferenceId("#root#", "", -1), "")]
+        self.stack: list[Frame] = [Frame(ReferenceId("#root#", PurePath("-"), -1), "")]
         self.refs: ReferenceMap = refs
 
     @property
@@ -56,7 +56,7 @@ class CodeReader(mawk.RuleSet):
 
         self.stack.append(
             Frame(
-                ReferenceId(m["ref_name"], m["source"], ref_count), m["indent"], content
+                ReferenceId(m["ref_name"], PurePath(m["source"]), ref_count), m["indent"], content
             )
         )
         return []

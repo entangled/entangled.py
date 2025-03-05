@@ -95,7 +95,7 @@ class AnnotatedTangler(Tangler):
         if self.cb.header is not None:
             result.append(self.cb.header)
         result.append(
-            f"{self.cb.language.comment.open} ~/~ begin <<{self.ref.file}#{self.ref.name}>>[{count}]{self.close_comment}"
+            f"{self.cb.language.comment.open} ~/~ begin <<{self.ref.file.as_posix()}#{self.ref.name}>>[{count}]{self.close_comment}"
         )
         return result
 

@@ -1,6 +1,6 @@
 from typing import Optional
 from copy import copy
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import re
 import mawk
@@ -20,8 +20,8 @@ class MarkdownLexer(mawk.RuleSet):
     content."""
     def __init__(
         self,
-        filename: str
-    ):
+        filename: Path
+    ): 
         self.location = TextLocation(filename)
         self.raw_content: list[RawContent] = []
         self.inside_codeblock: bool = False
@@ -122,13 +122,13 @@ def read_markdown_file(
     -> tuple[ReferenceMap, list[Content]]:
 
     with open(path, "r") as f:
-        path_str = str(path.resolve().relative_to(Path.cwd()))
-        return read_markdown_string(f.read(), path_str, refs, hooks)
+        rel_path = path.resolve().relative_to(Path.cwd())
+        return read_markdown_string(f.read(), rel_path, refs, hooks)
 
 
 def read_markdown_string(
         text: str,
-        path_str: str = "-",
+        path_str: Path = Path("-"),
         refs: ReferenceMap | None = None,
         hooks: list[HookBase] | None = None) \
         -> tuple[ReferenceMap, list[Content]]:

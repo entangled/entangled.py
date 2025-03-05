@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from pathlib import PurePath
 
 
 @dataclass
 class TextLocation:
-    filename: str
+    filename: PurePath
     line_number: int = 0
 
     def __str__(self):
