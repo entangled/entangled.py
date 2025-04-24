@@ -32,5 +32,12 @@ templates: list[Template] = [
         "gh:entangled/template-pandoc",
         "pandoc",
         "Supports HTML and PDF output, numbered equations and citations."
+    ),
+    Template(
+        "one-pager",
+        "One-page README",
+        "gh:entangled/template-one-pager",
+        "none",
+        "Everything in a single README, to be rendered on Github/Gitlab/etc."
     )
 ]
