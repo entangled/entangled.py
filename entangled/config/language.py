@@ -43,7 +43,7 @@ languages = [
     Language("Make", ["make", "makefile"], Comment("#")),
     Language("Gnuplot", ["gnuplot"], Comment("#")),
     Language("TOML", ["toml"], Comment("#")),
-    Language("Yaml", ["yaml"], Comment("#")),
+    Language("YAML", ["yaml"], Comment("#")),
     Language("F#", ["fsharp"], Comment("//")),
     Language("Javascript", ["javascript", "js", "ecma"], Comment("//")),
     Language("Go", ["go", "golang"], Comment("//")),
