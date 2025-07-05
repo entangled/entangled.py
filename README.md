@@ -195,6 +195,8 @@ Entangled has a system of *hooks*: these add actions to the tangling process:
 - `brei` trigger actions (or tasks) using [Brei](https://entangled.github.io/brei), which is automatically installed along with Entangled. This is now prefered over the `build` hook.
 - `quarto_attributes` add attributes to the code block in Quatro style with `#|` comments at the top of the code block.
 - `shebang` takes the first line if it starts with `#!` and puts it at the top of the file.
+- `addlicense` takes the first line if it contains `SPDX-License-Identifier`
+and puts it at the top of the file.
 
 ### `build` hook
 
