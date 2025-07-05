@@ -223,6 +223,7 @@ dependencies = [
     { name = "rich" },
     { name = "rich-argparse" },
     { name = "tomlkit" },
+    { name = "types-pyyaml" },
     { name = "watchdog" },
 ]
 
@@ -254,6 +255,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.3.5,<14" },
     { name = "rich-argparse", specifier = ">=1.4.0,<2" },
     { name = "tomlkit", specifier = ">=0.12.1,<0.13" },
+    { name = "types-pyyaml", specifier = ">=6.0.1,<7" },
     { name = "watchdog", specifier = ">=3.0.0,<4" },
 ]
 

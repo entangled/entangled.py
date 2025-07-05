@@ -2,7 +2,7 @@ import logging
 from importlib.metadata import entry_points
 
 from .base import HookBase, PrerequisitesFailed
-from . import build, task, quarto_attributes, shebang, addlicense
+from . import build, task, quarto_attributes, shebang, spdx_license
 from ..config import config
 from ..construct import construct
 from typing import TypeVar
@@ -21,7 +21,7 @@ hooks: dict[str, type[HookBase]] = {
     "build": build.Hook,
     "brei": task.Hook,
     "shebang": shebang.Hook,
-    "addlicense": addlicense.Hook,
+    "spdx_license": spdx_license.Hook,
     "quarto_attributes": quarto_attributes.Hook,
 }
 
