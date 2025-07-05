@@ -1,10 +1,10 @@
 .PHONY: test
 
 test:
-	poetry run coverage run --source=entangled -m pytest
-	poetry run coverage xml
-	poetry run coverage report
-	poetry run mypy
+	uv run coverage run --source=entangled -m pytest
+	uv run coverage xml
+	uv run coverage report
+	uv run mypy
 
 docs:
-	poetry run mkdocs build
+	uv run mkdocs build
