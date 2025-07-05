@@ -1,10 +1,10 @@
 .PHONY: test
 
 test:
-	hatch run coverage run --source=entangled -m pytest
-	hatch run coverage xml
-	hatch run coverage report
-	hatch run mypy
+	uv run coverage run --source=entangled -m pytest
+	uv run coverage xml
+	uv run coverage report
+	uv run mypy
 
 docs:
-	hatch run mkdocs build
+	uv run mkdocs build
