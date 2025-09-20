@@ -8,6 +8,7 @@ from pathlib import Path
 import hashlib
 import json
 import os
+import time
 import logging
 
 from filelock import FileLock
@@ -33,8 +34,18 @@ class FileStat:
     size: int
 
     @staticmethod
-    def from_path(path: Path, deps: Optional[list[Path]]):
-        stat = os.stat(path)
+    def from_path(path: Path, deps: Optional[list[Path]]) -> FileStat | None:
+        stat: os.stat_result | None = None
+        for _ in range(5):
+            try:
+                stat = os.stat(path)
+            except FileNotFoundError:
+                logging.warning("File `%s` not found.", path)
+                time.sleep(0.1)
+
+        if stat is None:
+            return None
+
         size = stat.st_size
         with open(path, "r") as f:
             digest = hexdigest(f.read())
