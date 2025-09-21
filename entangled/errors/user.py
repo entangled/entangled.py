@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Callable
+from pathlib import Path
 
 from ..text_location import TextLocation
 
@@ -29,6 +30,14 @@ class HelpfulUserError(UserError):
 
     def __str__(self):
         return f"error: {self.msg}"
+
+
+@dataclass
+class FileError(UserError):
+    filename: Path
+
+    def __str__(self):
+        return f"file not found `{self.filename}`"
 
 
 @dataclass

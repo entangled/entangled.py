@@ -15,6 +15,7 @@ from filelock import FileLock
 
 from .version import __version__
 from .utility import normal_relative, ensure_parent
+from .errors.user import FileError
 
 
 def hexdigest(s: str) -> str:
@@ -34,7 +35,7 @@ class FileStat:
     size: int
 
     @staticmethod
-    def from_path(path: Path, deps: Optional[list[Path]]) -> FileStat | None:
+    def from_path(path: Path, deps: Optional[list[Path]]) -> FileStat:
         stat: os.stat_result | None = None
         for _ in range(5):
             try:
@@ -44,7 +45,7 @@ class FileStat:
                 time.sleep(0.1)
 
         if stat is None:
-            return None
+            raise FileError(path)
 
         size = stat.st_size
         with open(path, "r") as f:
