@@ -6,7 +6,7 @@ from ..text_location import TextLocation
 
 
 class UserError(Exception):
-    def __str__(self):
+    def __str__(self) -> str:
         return "Unknown user error."
 
 
@@ -26,7 +26,7 @@ class HelpfulUserError(UserError):
     Make sure to also execute e.func() in your error handling."""
 
     msg: str
-    func: Callable = lambda: None
+    func: Callable[[], Any] = lambda: None
 
     def __str__(self):
         return f"error: {self.msg}"
