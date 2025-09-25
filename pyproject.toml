@@ -19,6 +19,7 @@ dependencies = [
         "pexpect>=4.9.0,<5",
         "pyyaml>=6.0.1,<7",
         "types-PyYAML>=6.0.1,<7",
+        "repl-session>=0.1.0",
 ]
 
 [project.urls]
@@ -42,6 +43,7 @@ dev = [
         "types-pyyaml>=6.0.12.20240311,<7",
         "types-pygments>=2.18.0.20240506,<3",
         "types-colorama>=0.4.15.20240311,<0.5",
+        "python-lsp-server>=1.13.1",
 ]
 
 [tool.hatch.build.targets.sdist]
