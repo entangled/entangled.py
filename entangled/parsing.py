@@ -1,4 +1,4 @@
-"""Monadic recursive descent parser combinator. This is used to custom 
+"""Monadic recursive descent parser combinator. This is used to custom
 light weight parsing within Entangled, mainly parsing the class, id and
 attribute properties of code blocks in markdown."""
 
@@ -10,10 +10,9 @@ from typing import (
     TypeVarTuple,
     Generic,
     Callable,
-    Union,
     Any,
-    Optional,
     ParamSpec,
+    override,
 )
 import re
 
@@ -31,6 +30,7 @@ class Failure(Exception):
 
     msg: str
 
+    @override
     def __str__(self):
         return self.msg
 
@@ -52,10 +52,13 @@ class Expected(Failure):
     def expected(self):
         return self.msg
 
+    @override
     def __str__(self):
         if len(self.inp) > 20:
             inp = f"{self.inp[:20]} ..."
-        return f'expected: {self.expected}, got: "{self.inp}"'
+        else:
+            inp = self.inp
+        return f'expected: {self.expected}, got: "{inp}"'
 
 
 @dataclass
@@ -65,6 +68,7 @@ class ChoiceFailure(Expected):
     failures: list[Failure]
 
     @property
+    @override
     def expected(self):
         return " | ".join(str(f) for f in self.failures)
 
@@ -183,7 +187,7 @@ def choice(*options: Parser[Any]) -> Parser[Any]:
     return _choice
 
 
-def optional(p: Parser[T], default: Optional[U] = None) -> Parser[Union[T, U]]:
+def optional[T, U](p: Parser[T], default: U | None = None) -> Parser[T | U]:
     return choice(p, pure(default))
 
 

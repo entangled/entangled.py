@@ -1,17 +1,12 @@
-from typing import Iterable, Optional, TypeVar, TypeGuard, Union
-from dataclasses import is_dataclass
-from contextlib import contextmanager
-import os
+from collections.abc import Iterable
+from typing import TypeVar, TypeGuard
 from pathlib import Path
-
-import typing
-import types
 
 
 T = TypeVar("T")
 
 
-def first(it: Iterable[T]) -> Optional[T]:
+def first(it: Iterable[T]) -> T | None:
     try:
         return next(iter(it))
     except StopIteration:
@@ -27,8 +22,8 @@ def ensure_parent(path: Path) -> Path:
     return path
 
 
-def cat_maybes(it: Iterable[Optional[T]]) -> Iterable[T]:
-    def pred(x: Optional[T]) -> TypeGuard[T]:
+def cat_maybes(it: Iterable[T | None]) -> Iterable[T]:
+    def pred(x: T | None) -> TypeGuard[T]:
         return x is not None
 
     return filter(pred, it)

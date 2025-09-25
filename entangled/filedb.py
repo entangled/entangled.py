@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from contextlib import contextmanager
@@ -29,13 +29,13 @@ def hexdigest(s: str) -> str:
 @dataclass
 class FileStat:
     path: Path
-    deps: Optional[list[Path]]
+    deps: list[Path] | None
     modified: datetime
     hexdigest: str
     size: int
 
     @staticmethod
-    def from_path(path: Path, deps: Optional[list[Path]]) -> FileStat:
+    def from_path(path: Path, deps: list[Path] | None) -> FileStat:
         stat: os.stat_result | None = None
         for _ in range(5):
             try:
@@ -79,7 +79,7 @@ class FileStat:
         }
 
 
-def stat(path: Path, deps: Optional[list[Path]] = None) -> FileStat:
+def stat(path: Path, deps: list[Path] | None = None) -> FileStat:
     path = normal_relative(path)
     deps = None if deps is None else [normal_relative(d) for d in deps]
     return FileStat.from_path(path, deps)
@@ -134,7 +134,7 @@ class FileDB:
         logging.debug("Writing FileDB")
         raw = {
             "version": __version__,
-            "files": sorted([stat.to_json() for stat in self._files.values()], key=lambda s: s["path"]),
+            "files": [stat.to_json() for stat in sorted(self._files.values(), key=lambda s: s.path)],
             "source": list(sorted(map(str, self._source))),
             "target": list(sorted(map(str, self._target))),
         }
@@ -147,7 +147,7 @@ class FileDB:
     def has_changed(self, path: Path) -> bool:
         return stat(path) != self[path]
 
-    def update(self, path: Path, deps: Optional[list[Path]] = None):
+    def update(self, path: Path, deps: list[Path] | None = None):
         """Update the given path to a new stat."""
         path = normal_relative(path)
         if path in self.managed and deps is None:
@@ -180,13 +180,13 @@ class FileDB:
             for path in undead:
                 if path in db.managed:
                     logging.warning(
-                        "File `%s` in DB seems not to exist, but this file is managed.\n"
-                        "This may happen every now and then with certain editors that "
+                        "File `%s` in DB seems not to exist, but this file is managed.\n" +
+                        "This may happen every now and then with certain editors that " +
                         "delete a file before writing.", path
                     )
                 else:
                     logging.warning(
-                        "File `%s` is in database but doesn't seem to exist.\n"
+                        "File `%s` is in database but doesn't seem to exist.\n" +
                         "Run `entangled tangle -r` to recreate the database.", path
                     )
             return db
@@ -198,7 +198,7 @@ class FileDB:
 
 
 @contextmanager
-def file_db(readonly=False):
+def file_db(readonly: bool = False):
     lock = FileLock(ensure_parent(Path.cwd() / ".entangled" / "filedb.lock"))
     with lock:
         db = FileDB.initialize()

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+from typing import override
+from msgspec import Struct
 
-
-from ..properties import Property
-from ..document import ReferenceMap, ReferenceId, CodeBlock
+from ..document import ReferenceMap, CodeBlock
 from ..transaction import Transaction
 
 
@@ -10,13 +10,13 @@ from ..transaction import Transaction
 class PrerequisitesFailed(Exception):
     msg: str
 
+    @override
     def __str__(self):
         return self.msg
 
 
 class HookBase:
-    @dataclass
-    class Config:
+    class Config(Struct):
         pass
 
     def __init__(self, config: Config):
@@ -24,7 +24,7 @@ class HookBase:
 
     def check_prerequisites(self):
         """When prerequisites aren't met, raise PrerequisitesFailed."""
-        return
+        pass
 
     def on_read(self, code: CodeBlock):
         """Called when the Markdown is being read, before the assembling of

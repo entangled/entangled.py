@@ -1,17 +1,18 @@
-from typing import Optional
 from copy import copy
-from pathlib import Path, PurePath
+from pathlib import Path
 
 import re
+from typing import override
 import mawk
 import logging
 
 from .config import config
 from .utility import first
-from .document import TextLocation, CodeBlock, ReferenceMap, Content, PlainText, RawContent
-from .properties import read_properties, get_attribute, get_classes, get_id
+from .text_location import TextLocation
+from .document import CodeBlock, ReferenceMap, Content, PlainText, RawContent
+from .properties import Property, read_properties, get_attribute, get_classes, get_id
 from .hooks.base import HookBase
-from .errors.user import ParseError, IndentationError
+from .errors.user import IndentationError
 from . import parsing
 
 
@@ -21,12 +22,15 @@ class MarkdownLexer(mawk.RuleSet):
     def __init__(
         self,
         filename: Path
-    ): 
-        self.location = TextLocation(filename)
+    ):
+        self.location: TextLocation = TextLocation(filename)
         self.raw_content: list[RawContent] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
-        self.ignore = False
+        self.current_codeblock_indent: str = ""
+        self.current_codeblock_location: TextLocation | None = None
+        self.current_codeblock_properties: list[Property] = []
+        self.ignore: bool = False
 
     def flush_plain_text(self):
         self.raw_content.append(PlainText("\n".join(self.current_content)))
@@ -36,18 +40,18 @@ class MarkdownLexer(mawk.RuleSet):
     def on_next_line(self, _):
         self.location.line_number += 1
 
-    @mawk.on_match(config.markers.begin_ignore)
+    @mawk.on_match(config.get.markers.begin_ignore)
     def on_begin_ignore(self, _):
         self.ignore = True
         logging.debug("ignoring markdown block %s", self.location)
 
-    @mawk.on_match(config.markers.end_ignore)
+    @mawk.on_match(config.get.markers.end_ignore)
     def on_end_ignore(self, _):
         self.ignore = False
         logging.debug("end of ignore")
 
-    @mawk.on_match(config.markers.open)
-    def on_open_codeblock(self, m: re.Match) -> Optional[list[str]]:
+    @mawk.on_match(config.get.markers.open)
+    def on_open_codeblock(self, m: re.Match[str]) -> list[str] | None:
         if self.ignore:
             return None
         if self.inside_codeblock:
@@ -66,8 +70,8 @@ class MarkdownLexer(mawk.RuleSet):
             logging.error("Continuing parsing rest of document.")
         return []
 
-    @mawk.on_match(config.markers.close)
-    def on_close_codeblock(self, m: re.Match):
+    @mawk.on_match(config.get.markers.close)
+    def on_close_codeblock(self, m: re.Match[str]) -> list[str] | None:
         if self.ignore:
             return
         if not self.inside_codeblock:
@@ -90,6 +94,7 @@ class MarkdownLexer(mawk.RuleSet):
             for line in self.current_content
         )
 
+        assert self.current_codeblock_location
         code = CodeBlock(
             self.current_codeblock_properties,
             self.current_codeblock_indent,
@@ -106,11 +111,12 @@ class MarkdownLexer(mawk.RuleSet):
         return []
 
     @mawk.always
-    def add_line(self, line: str):
+    def add_line(self, line: str) -> list[str]:
         self.current_content.append(line)
         return []
 
-    def on_eof(self):
+    @override
+    def on_eof(self) -> list[str]:
         self.flush_plain_text()
         return []
 
@@ -128,12 +134,13 @@ def read_markdown_file(
 
 def read_markdown_string(
         text: str,
-        path_str: Path = Path("-"),
+        path_str: Path | None = None,
         refs: ReferenceMap | None = None,
         hooks: list[HookBase] | None = None) \
         -> tuple[ReferenceMap, list[Content]]:
+    path_str = path_str or Path("-")
     md = MarkdownLexer(path_str)
-    md.run(text)
+    _ = md.run(text)
 
     hooks = hooks if hooks is not None else []
     refs = refs if refs is not None else ReferenceMap()

@@ -26,7 +26,7 @@ def logger():
     return logging.getLogger("entangled")
 
 
-def configure(debug=False):
+def configure(debug: bool = False):
     global LOGGING_SETUP
     if LOGGING_SETUP:
         return

@@ -3,7 +3,8 @@ properties: id, class and attribute."""
 
 from __future__ import annotations
 
-from typing import Optional, Union, ClassVar, Iterable
+from typing import ClassVar
+from collections.abc import Iterable
 from dataclasses import dataclass
 import re
 
@@ -63,7 +64,7 @@ class Attribute(Parsable):
         return choice(Attribute._pattern1, Attribute._pattern2) >> starmap(Attribute)
 
 
-Property = Union[Attribute, Class, Id]
+Property = Attribute | Class | Id
 
 
 def read_properties(inp: str) -> list[Property]:
@@ -78,7 +79,7 @@ def read_properties(inp: str) -> list[Property]:
     return result
 
 
-def get_id(props: list[Property]) -> Optional[str]:
+def get_id(props: list[Property]) -> str | None:
     """Get the first given Id in a property list."""
     try:
         return next(p.value for p in props if isinstance(p, Id))
@@ -91,7 +92,7 @@ def get_classes(props: list[Property]) -> Iterable[str]:
     return (p.value for p in props if isinstance(p, Class))
 
 
-def get_attribute(props: list[Property], key: str) -> Optional[str]:
+def get_attribute(props: list[Property], key: str) -> str | None:
     """Get the value of an Attribute in a property list."""
     try:
         return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)

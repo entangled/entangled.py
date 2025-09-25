@@ -1,4 +1,5 @@
-from typing import Optional, Iterable
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from contextlib import contextmanager
@@ -7,6 +8,7 @@ from enum import Enum
 import os
 import tempfile
 import logging
+from typing import override
 
 try:
     import rich
@@ -21,23 +23,26 @@ from .errors.internal import InternalError
 
 
 @dataclass
-class Action:
+class Action(ABC):
     target: Path
 
-    def conflict(self, _: FileDB) -> Optional[str]:
+    @abstractmethod
+    def conflict(self, db: FileDB) -> str | None:
         """Indicate wether the action might have conflicts. This could be
         inconsistency in the modification times of files, or overwriting
         a file that is not managed by Entangled."""
-        raise NotImplementedError()
+        ...
 
-    def add_to_db(self, _: FileDB):
+    @abstractmethod
+    def add_to_db(self, db: FileDB):
         """Only perform the corresponding database action."""
-        raise NotImplementedError()
+        ...
 
-    def run(self, _: FileDB):
+    @abstractmethod
+    def run(self, db: FileDB):
         """Run the action, if `interact` is `True` then confirmation is
         asked in case of a conflict."""
-        raise NotImplementedError()
+        ...
 
 
 @dataclass
@@ -46,7 +51,8 @@ class Create(Action):
     sources: list[Path]
     mode: int | None
 
-    def conflict(self, _) -> Optional[str]:
+    @override
+    def conflict(self, db: FileDB) -> str | None:
         if self.target.exists():
             # Check if file contents are the same as what we want to write or is empty
             # then it is safe to take ownership.
@@ -58,18 +64,20 @@ class Create(Action):
             return f"{self.target} is not managed by Entangled"
         return None
 
+    @override
     def add_to_db(self, db: FileDB):
         db.update(self.target, self.sources)
         if self.sources != []:
             db.managed.add(self.target)
 
+    @override
     def run(self, db: FileDB):
         self.target.parent.mkdir(parents=True, exist_ok=True)
         # Write to tmp file then replace with file name
         tmp_dir = Path() / ".entangled" / "tmp"
         tmp_dir.mkdir(exist_ok=True, parents=True)
         with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-            f.write(self.content)
+            _ = f.write(self.content)
             # Flush and sync contents to disk
             f.flush()
             if self.mode is not None:
@@ -78,6 +86,7 @@ class Create(Action):
         os.replace(f.name, self.target)
         self.add_to_db(db)
 
+    @override
     def __str__(self):
         return f"create `{self.target}`"
 
@@ -95,7 +104,8 @@ class Write(Action):
     sources: list[Path]
     mode: int | None
 
-    def conflict(self, db: FileDB) -> Optional[str]:
+    @override
+    def conflict(self, db: FileDB) -> str | None:
         st = stat(self.target)
         if st != db[self.target]:
             return f"`{self.target}` seems to have changed outside the control of Entangled"
@@ -105,15 +115,17 @@ class Write(Action):
                 return f"`{self.target}` seems to be newer than `{newest_src.path}`"
         return None
 
+    @override
     def add_to_db(self, db: FileDB):
         db.update(self.target, self.sources)
 
+    @override
     def run(self, db: FileDB):
         # Write to tmp file then replace with file name
         tmp_dir = Path() / ".entangled" / "tmp"
         tmp_dir.mkdir(exist_ok=True, parents=True)
         with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-            f.write(assure_final_newline(self.content))
+            _ = f.write(assure_final_newline(self.content))
             # Flush and sync contents to disk
             f.flush()
             if self.mode is not None:
@@ -122,13 +134,15 @@ class Write(Action):
         os.replace(f.name, self.target)
         self.add_to_db(db)
 
+    @override
     def __str__(self):
         return f"write `{self.target}`"
 
 
 @dataclass
 class Delete(Action):
-    def conflict(self, db: FileDB) -> Optional[str]:
+    @override
+    def conflict(self, db: FileDB) -> str | None:
         st = stat(self.target)
         if st != db[self.target]:
             return (
@@ -136,9 +150,11 @@ class Delete(Action):
             )
         return None
 
+    @override
     def add_to_db(self, db: FileDB):
         del db[self.target]
 
+    @override
     def run(self, db: FileDB):
         self.target.unlink()
         parent = self.target.parent
@@ -147,6 +163,7 @@ class Delete(Action):
             parent = parent.parent
         self.add_to_db(db)
 
+    @override
     def __str__(self):
         return f"delete `{self.target}`"
 

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Iterable, Any
+from typing import Optional, Union, Iterable, Any, override
 from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
@@ -11,7 +11,7 @@ from .errors.internal import InternalError
 from .text_location import TextLocation
 
 
-def length(iter: Iterable[Any]) -> int:
+def length[T](iter: Iterable[T]) -> int:
     return sum(1 for _ in iter)
 
 
@@ -21,7 +21,8 @@ class ReferenceId:
     file: PurePath
     ref_count: int
 
-    def __hash__(self):
+    @override
+    def __hash__(self) -> int:
         return hash((self.name, self.file, self.ref_count))
 
 
@@ -36,13 +37,13 @@ class CodeBlock:
     indent: str
     source: str
     origin: TextLocation
-    language: Optional[Language] = None
-    header: Optional[str] = None
-    mode: Optional[int] = None
+    language: Language | None = None
+    header: str | None = None
+    mode: int | None = None
 
 
-Content = Union[PlainText, ReferenceId]
-RawContent = Union[PlainText, CodeBlock]
+Content = PlainText | ReferenceId
+RawContent = PlainText | CodeBlock
 
 
 @dataclass
