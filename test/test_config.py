@@ -51,7 +51,7 @@ def test_new_language(tmp_path):
         Path("test.md").write_text(md_source)
         sleep(0.1)
         config.read(force=True)
-        assert config.annotation == AnnotationMethod.NAKED
+        assert config.get.annotation == AnnotationMethod.NAKED
         tangle()
         sleep(0.1)
         assert Path("test.fish").exists()
@@ -105,10 +105,10 @@ def test_pyproject_toml(tmp_path):
         sleep(0.1)
         config.read(force=True)
 
-        assert config.config == default
+        assert config.get == default
 
         Path("pyproject.toml").write_text(config_in_pyproject)
         sleep(0.1)
         config.read(force=True)
 
-        assert config.watch_list == ["docs/*.md"]
+        assert config.get.watch_list == ["docs/*.md"]

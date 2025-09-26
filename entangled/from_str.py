@@ -17,11 +17,11 @@ def enc_hook(obj: Any) -> str:
     if isinstance(obj, FromStr):
         return obj.to_str()
     else:
-        raise ValueError(f"Object should implement `FromStr`, got: `{type(obj)}`.")
+        raise NotImplementedError(f"Object should implement `FromStr`, got: `{type(obj)}`.")
 
 
 def dec_hook(cls: type, obj: Any) -> Any:
     if issubclass(cls, FromStr) and isinstance(obj, str):
         return cls.from_str(obj)
     else:
-        raise ValueError(f"Unsupported type, couldn't decode `{obj}` to `{cls}`.")
+        raise NotImplementedError(f"Unsupported type, couldn't decode `{obj}` to `{cls}`.")

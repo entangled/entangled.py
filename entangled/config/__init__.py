@@ -7,7 +7,7 @@ from __future__ import annotations
 import threading
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +26,7 @@ from ..logging import logger
 log = logger()
 
 
-class AnnotationMethod(Enum):
+class AnnotationMethod(StrEnum):
     """Annotation methods.
 
     - `STANDARD` is the default. Comments tell where a piece of code
@@ -37,9 +37,9 @@ class AnnotationMethod(Enum):
     - `SUPPLEMENTED` adds extra information to the comment lines.
     """
 
-    STANDARD = 1
-    NAKED = 2
-    SUPPLEMENTED = 3
+    STANDARD = "standard"
+    NAKED = "naked"
+    SUPPLEMENTED = "supplemented"
 
 
 class Markers(Struct):
@@ -76,7 +76,7 @@ class Config(Struct):
 
     This class is made thread-local to make it possible to test in parallel."""
 
-    version: Version
+    version: str
     languages: list[Language] = field(default_factory=list)
     markers: Markers = field(default_factory=lambda: copy(markers))
     watch_list: list[str] = field(default_factory=lambda: ["**/*.md"])
@@ -100,7 +100,7 @@ class Config(Struct):
                 self.language_index[i] = l
 
 
-default = Config(Version.from_str("2.0"))
+default = Config("2.0")  # Version.from_str("2.0"))
 
 
 def read_config_from_toml(
