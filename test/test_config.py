@@ -10,22 +10,19 @@ from contextlib import chdir
 from time import sleep
 from pathlib import Path
 
-# from entangled import from_str
 
-# def construct[T](cls: type[T], obj: Any) -> T:
-#     return msgspec.convert(obj, type=cls, dec_hook=from_str.dec_hook)
+def construct[T](cls: type[T], obj: object) -> T:
+    return msgspec.convert(obj, type=cls)
 
 
-# def test_config_constructable():
-#     assert construct(Version, {"test": "1.2.3"}) == Version((1, 2, 3))
-#     assert construct(
-#         Language,
-#         {"name": "French", "identifiers": ["fr"], "comment": {"open": "excusez moi"}},
-#     ) == Language("French", ["fr"], Comment("excusez moi"))
-#     assert construct(Config, {"version": "2.0"}) == Config(version=Version((2, 0)))
-#     assert construct(Config, {"version": "2.0", "annotation": "naked"}) == Config(
-#         version=Version((2, 0)), annotation=AnnotationMethod.NAKED
-#     )
+def test_config_constructable():
+    assert construct(
+        Language,
+        {"name": "French", "identifiers": ["fr"], "comment": {"open": "excusez moi"}},
+    ) == Language("French", ["fr"], Comment("excusez moi"))
+    cfg1 = construct(Config, {"version": "2.0", "annotation": "naked"})
+    assert cfg1.version == Version(numbers=(2, 0))
+    assert cfg1.annotation == AnnotationMethod.NAKED
 
 
 config_with_language = """

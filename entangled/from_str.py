@@ -17,7 +17,7 @@ def enc_hook(obj: Any) -> str:
     if isinstance(obj, FromStr):
         return obj.to_str()
     else:
-        raise NotImplementedError(f"Object should implement `FromStr`, got: `{type(obj)}`.")
+        raise NotImplementedError # (f"Object should implement `FromStr`, got: `{type(obj)}`.")
 
 
 def dec_hook(cls: type, obj: Any) -> Any:

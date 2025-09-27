@@ -4,6 +4,7 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
+from functools import cached_property
 import threading
 from contextlib import contextmanager
 from copy import copy, deepcopy
@@ -56,7 +57,7 @@ markers = Markers(
 )
 
 
-class Config(Struct):
+class Config(Struct, dict=True):
     """Main config class.
 
     Attributes:
@@ -76,7 +77,7 @@ class Config(Struct):
 
     This class is made thread-local to make it possible to test in parallel."""
 
-    version: str
+    _version: str = field(name = "version")
     languages: list[Language] = field(default_factory=list)
     markers: Markers = field(default_factory=lambda: copy(markers))
     watch_list: list[str] = field(default_factory=lambda: ["**/*.md"])
@@ -89,6 +90,10 @@ class Config(Struct):
     brei: Program = field(default_factory=Program)
 
     language_index: dict[str, Language] = field(default_factory=dict)
+
+    @cached_property
+    def version(self) -> Version:
+        return Version.from_str(self._version)
 
     def __post_init__(self):
         self.languages = languages + self.languages
