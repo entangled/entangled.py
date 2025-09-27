@@ -73,15 +73,15 @@ class MarkdownLexer(mawk.RuleSet):
     @mawk.on_match(config.get.markers.close)
     def on_close_codeblock(self, m: re.Match[str]) -> list[str] | None:
         if self.ignore:
-            return
+            return None
         if not self.inside_codeblock:
-            return
+            return None
 
         if len(m["indent"]) < len(self.current_codeblock_indent):
             raise IndentationError(self.location)
 
         if m["indent"] != self.current_codeblock_indent:
-            return  # treat this as code-block content
+            return None  # treat this as code-block content
 
         language_class = first(get_classes(self.current_codeblock_properties))
         language = config.get_language(language_class) if language_class else None
