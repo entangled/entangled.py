@@ -1,4 +1,4 @@
-from typing import Optional, TypeVar, Generic, Union
+from typing import TypeVar, Generic, override
 from dataclasses import dataclass, field
 from textwrap import indent
 from contextlib import contextmanager
@@ -7,10 +7,10 @@ from copy import copy
 import re
 import mawk
 
+from .config import AnnotationMethod
+from .text_location import TextLocation
 from .document import (
     ReferenceMap,
-    AnnotationMethod,
-    TextLocation,
     ReferenceId,
     CodeBlock,
 )
@@ -26,7 +26,7 @@ class Visitor(Generic[T]):
     _visited: dict[T, int] = field(default_factory=dict)
 
     def in_order(self) -> list[T]:
-        return [k for k, v in sorted(self._visited.items(), key=lambda kv: kv[1])]
+        return [k for k, _ in sorted(self._visited.items(), key=lambda kv: kv[1])]
 
     @contextmanager
     def visit(self, x: T):
@@ -56,14 +56,15 @@ class Tangler(mawk.RuleSet):
     def lineno(self, _):
         self.location.line_number += 1
 
-    def on_begin(self):
+    @override
+    def on_begin(self) -> list[str]:
         if self.cb.header is not None:
             return [self.cb.header]
         else:
             return []
 
     @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
-    def on_noweb(self, m: re.Match):
+    def on_noweb(self, m: re.Match[str]) -> list[str]:
         try:
             result, deps = tangle_ref(self.refs, m["refname"], type(self), self.visited)
 
@@ -73,7 +74,7 @@ class Tangler(mawk.RuleSet):
         self.deps.update(deps)
         return [indent(result, m["indent"])]
 
-    def run(self):
+    def tangle(self):
         return super().run(self.cb.source)
 
 
@@ -83,15 +84,18 @@ class AnnotatedTangler(Tangler):
 
     def __post_init__(self):
         super().__post_init__()
+        assert self.cb.language
         self.close_comment = (
             ""
             if self.cb.language.comment.close is None
             else f" {self.cb.language.comment.close}"
         )
 
-    def on_begin(self):
+    @override
+    def on_begin(self) -> list[str]:
+        assert self.cb.language
         count = "init" if self.init else str(self.ref.ref_count)
-        result = []
+        result: list[str] = []
         if self.cb.header is not None:
             result.append(self.cb.header)
         result.append(
@@ -99,6 +103,7 @@ class AnnotatedTangler(Tangler):
         )
         return result
 
+    @override
     def on_eof(self):
         return [f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"]
 
@@ -114,10 +119,10 @@ def tangle_ref(
     refs: ReferenceMap,
     ref_name: str,
     annotation: type[Tangler] | AnnotationMethod | None = None,
-    _visited: Optional[Visitor[str]] = None,
+    _visited: Visitor[str] | None = None,
 ) -> tuple[str, set[str]]:
     if annotation is None:
-        annotation = config.annotation
+        annotation = config.get.annotation
 
     if ref_name in refs.alias:
         ref_name = refs.alias[ref_name]
@@ -135,11 +140,11 @@ def tangle_ref(
 
     with v.visit(ref_name):
         init = True
-        result = []
-        deps = set()
+        result: list[str] = []
+        deps: set[str] = set()
         for ref in refs.index[ref_name]:
             t = tangler(refs, ref, init, v)
-            result.append(t.run())
+            result.append(t.tangle())
             deps.update(t.deps)
             init = False
 

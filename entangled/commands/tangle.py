@@ -1,4 +1,3 @@
-from typing import Optional
 from itertools import chain
 from pathlib import Path
 
@@ -13,10 +12,10 @@ from ..errors.user import UserError
 
 
 def get_input_files() -> list[Path]:
-    include_file_list = chain.from_iterable(map(Path(".").glob, config.watch_list))
+    include_file_list = chain.from_iterable(map(Path(".").glob, config.get.watch_list))
     input_file_list = [
         path for path in include_file_list
-        if not any(path.match(pat) for pat in config.ignore_list)
+        if not any(path.match(pat) for pat in config.get.ignore_list)
     ]
     return input_file_list
 
@@ -30,7 +29,7 @@ def get_input_files() -> list[Path]:
 @argh.arg("--force", help="force overwrite on conflict")
 @argh.arg("-s", "--show", help="only show, don't act")
 @argh.arg("-r", "--reset-db", help="resets database")
-def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = False, reset_db = False):
+def tangle(*, annotate: str | None = None, force: bool = False, show: bool = False, reset_db: bool = False):
     """Tangle codes from Markdown"""
     config.read()
 
@@ -39,7 +38,7 @@ def tangle(*, annotate: Optional[str] = None, force: bool = False, show: bool = 
     from ..tangle import tangle_ref
 
     if annotate is None:
-        annotation_method = config.annotation
+        annotation_method = config.get.annotation
     else:
         annotation_method = AnnotationMethod[annotate.upper()]
 

@@ -6,10 +6,12 @@ directory.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from msgspec import field
 from pathlib import Path
 from subprocess import run, SubprocessError, DEVNULL
 import logging
+from typing import final, override
 
 from entangled.config.language import Language
 
@@ -40,8 +42,8 @@ EXEC_CMDS = {
 }
 
 
+@final
 class Hook(HookBase):
-    @dataclass
     class Config(HookBase.Config):
         runners: dict[str, str] = field(default_factory=dict)
 
@@ -60,19 +62,22 @@ class Hook(HookBase):
         def to_makefile(self, config: Hook.Config):
             dep_str = " ".join(self.dependencies)
             exec_cmd = config.runners[self.language.name].format(script=self.scriptfile)
-            return f"{self.target}: {self.scriptfile} {dep_str}\n" f"\t{exec_cmd}"
+            return f"{self.target}: {self.scriptfile} {dep_str}\n" + f"\t{exec_cmd}"
 
     def __init__(self, config: Hook.Config):
+        super().__init__(config)
         self.recipes: list[Hook.Recipe] = []
         self.config = config
 
+    @override
     def check_prerequisites(self):
         """Check that `make` is installed."""
         try:
-            run(["make", "--version"], stdout=DEVNULL)
+            _ = run(["make", "--version"], stdout=DEVNULL)
         except (SubprocessError, FileNotFoundError):
             raise PrerequisitesFailed("GNU Make needs to be installed")
 
+    @override
     def pre_tangle(self, refs: ReferenceMap):
         """Add a CodeBlock's target attribute to the list of targets."""
         for (ref, cb) in refs.map.items():
@@ -95,6 +100,7 @@ class Hook(HookBase):
             deps = (get_attribute(cb.properties, "deps") or "").split()
             self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
 
+    @override
     def post_tangle(self, refs: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
         targets = " ".join([r.target for r in self.recipes])
@@ -103,4 +109,4 @@ class Hook(HookBase):
             rules="\n\n".join(r.to_makefile(self.config) for r in self.recipes),
         )
         Path(".entangled/build").mkdir(exist_ok=True, parents=True)
-        Path(".entangled/build/Makefile").write_text(makefile)
+        _ = Path(".entangled/build/Makefile").write_text(makefile)

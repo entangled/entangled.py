@@ -1,19 +1,16 @@
-from typing import Optional
-from dataclasses import dataclass
+from msgspec import Struct
 
 
-@dataclass
-class Comment:
+class Comment(Struct):
     """Comment method for a language. For example: `Comment("/*", "*/")` works
     for C/C++ etc, `Comment("#")` works for Python, and so on.
     """
 
     open: str
-    close: Optional[str] = None
+    close: str | None = None
 
 
-@dataclass
-class Language:
+class Language(Struct):
     """Language information. Given a language we may have any number of short-hands
     to indicate a code block is written in that language. If a language supports
     line directives this can be used to redirect compiler messages directly to the
@@ -22,7 +19,7 @@ class Language:
     name: str
     identifiers: list[str]
     comment: Comment
-    line_directive: Optional[str] = None
+    line_directive: str | None = None
 
 
 languages = [

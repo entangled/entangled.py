@@ -4,21 +4,21 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
+from functools import cached_property
 import threading
 from contextlib import contextmanager
-from copy import copy
-from dataclasses import dataclass, field
-from enum import Enum
+from copy import copy, deepcopy
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, ClassVar, Optional, TypeVar
+from typing import Any
 
+import msgspec
+from msgspec import Struct, field
 import tomllib
-from entangled.errors.internal import InternalError
-
-from entangled.errors.user import UserError
 
 from brei import Program
-from ..construct import construct
+
+from entangled import from_str
 from .language import Language, languages
 from .version import Version
 from ..logging import logger
@@ -27,7 +27,7 @@ from ..logging import logger
 log = logger()
 
 
-class AnnotationMethod(Enum):
+class AnnotationMethod(StrEnum):
     """Annotation methods.
 
     - `STANDARD` is the default. Comments tell where a piece of code
@@ -38,13 +38,12 @@ class AnnotationMethod(Enum):
     - `SUPPLEMENTED` adds extra information to the comment lines.
     """
 
-    STANDARD = 1
-    NAKED = 2
-    SUPPLEMENTED = 3
+    STANDARD = "standard"
+    NAKED = "naked"
+    SUPPLEMENTED = "supplemented"
 
 
-@dataclass
-class Markers:
+class Markers(Struct):
     """Markers can be used to configure the Markdown dialect. Currently not used."""
 
     open: str
@@ -58,8 +57,7 @@ markers = Markers(
 )
 
 
-@dataclass
-class Config(threading.local):
+class Config(Struct, dict=True):
     """Main config class.
 
     Attributes:
@@ -79,35 +77,40 @@ class Config(threading.local):
 
     This class is made thread-local to make it possible to test in parallel."""
 
-    version: Version
+    _version: str = field(name = "version")
     languages: list[Language] = field(default_factory=list)
     markers: Markers = field(default_factory=lambda: copy(markers))
     watch_list: list[str] = field(default_factory=lambda: ["**/*.md"])
     ignore_list: list[str] = field(default_factory=list)
-    annotation_format: Optional[str] = None
+    annotation_format: str | None = None
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=lambda: ["shebang"])
-    hook: dict = field(default_factory=dict)
+    hook: dict[str, Any] = field(default_factory=dict)
     brei: Program = field(default_factory=Program)
+
+    language_index: dict[str, Language] = field(default_factory=dict)
+
+    @cached_property
+    def version(self) -> Version:
+        return Version.from_str(self._version)
 
     def __post_init__(self):
         self.languages = languages + self.languages
         self.make_language_index()
 
     def make_language_index(self):
-        self.language_index = dict()
         for l in self.languages:
             for i in l.identifiers:
                 self.language_index[i] = l
 
 
-default = Config(Version.from_str("2.0"))
+default = Config("2.0")  # Version.from_str("2.0"))
 
 
 def read_config_from_toml(
-    path: Path, section: Optional[str] = None
-) -> Optional[Config]:
+    path: Path, section: str | None = None
+) -> Config | None:
     """Read a config from given `path` in given `section`. The path should refer to
     a TOML file that should decode to a `Config` object. If `section` is given, only
     that section is decoded to a `Config` object. The `section` string may contain
@@ -127,7 +130,8 @@ def read_config_from_toml(
             if section is not None:
                 for s in section.split("."):
                     json = json[s]
-            return construct(Config, json)
+            return msgspec.convert(json, type=Config, dec_hook=from_str.dec_hook)
+
     except ValueError as e:
         log.error("Could not read config: %s", e)
         return None
@@ -147,30 +151,35 @@ def read_config():
     return default
 
 
-class ConfigWrapper:
-    def __init__(self, config = None):
-        self.config = config
+class ConfigWrapper(threading.local):
+    def __init__(self, config: Config | None = None):
+        self.config: Config | None = config
 
-    def read(self, force=False):
+    def read(self, force: bool = False):
         if self.config is None or force:
             self.config = read_config()
 
-    def __getattr__(self, attr):
+    @property
+    def get(self) -> Config:
         if self.config is None:
-            raise InternalError("Config not loaded.")
-        return getattr(self.config, attr)
+            raise ValueError(f"No config loaded.")
+        return self.config
 
     @contextmanager
     def __call__(self, **kwargs):
-        backup = {k: getattr(self.config, k) for k in kwargs}
+        backup = self.config
+        new_config = deepcopy(self.config)
         for k, v in kwargs.items():
-            setattr(self.config, k, v)
-        yield
-        for k in kwargs.keys():
-            setattr(self.config, k, backup[k])
+            setattr(new_config, k, v)
+        self.config = new_config
 
-    def get_language(self, lang_name: str) -> Optional[Language]:
-        assert self.config
+        yield
+
+        self.config = backup
+
+    def get_language(self, lang_name: str) -> Language | None:
+        if self.config is None:
+            raise ValueError(f"No config loaded.")
         return self.config.language_index.get(lang_name, None)
 
 

@@ -4,9 +4,8 @@ from importlib.metadata import entry_points
 from .base import HookBase, PrerequisitesFailed
 from . import build, task, quarto_attributes, shebang, spdx_license
 from ..config import config
-from ..construct import construct
 from typing import TypeVar
-
+import msgspec
 
 AbstractHook = TypeVar("AbstractHook", bound=HookBase)
 
@@ -27,11 +26,11 @@ hooks: dict[str, type[HookBase]] = {
 
 
 def get_hooks() -> list[HookBase]:
-    active_hooks = []
-    for h in config.hooks:
+    active_hooks: list[HookBase] = []
+    for h in config.get.hooks:
         if h in hooks | external_hooks:
             try:
-                hook_cfg = construct(hooks[h].Config, config.hook.get(h, {}))
+                hook_cfg = msgspec.convert(config.get.hook.get(h, {}), type=hooks[h].Config)
                 hook_instance = hooks[h](hook_cfg)
                 hook_instance.check_prerequisites()
                 active_hooks.append(hook_instance)

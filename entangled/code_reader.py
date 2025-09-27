@@ -4,7 +4,8 @@ from pathlib import Path, PurePath
 import mawk
 import re
 
-from .document import ReferenceId, TextLocation, ReferenceMap
+from .text_location import TextLocation
+from .document import ReferenceId, ReferenceMap
 from .errors.user import IndentationError
 
 
@@ -19,7 +20,7 @@ class CodeReader(mawk.RuleSet):
     """Reads an annotated code file."""
 
     def __init__(self, path: PurePath, refs: ReferenceMap):
-        self.location = TextLocation(path, 0)
+        self.location: TextLocation = TextLocation(path, 0)
         self.stack: list[Frame] = [Frame(ReferenceId("#root#", PurePath("-"), -1), "")]
         self.refs: ReferenceMap = refs
 
@@ -34,7 +35,7 @@ class CodeReader(mawk.RuleSet):
     @mawk.on_match(
         r"^(?P<indent>\s*).* ~/~ begin <<(?P<source>[^#<>]+)#(?P<ref_name>[^#<>]+)>>\[(?P<ref_count>init|\d+)\]"
     )
-    def on_block_begin(self, m: re.Match):
+    def on_block_begin(self, m: re.Match[str]) -> list[str]:
         ref_name = m["ref_name"]
 
         # When there are lines above the first ref, say a shebang, swap
@@ -62,15 +63,15 @@ class CodeReader(mawk.RuleSet):
         return []
 
     @mawk.on_match(r"^(?P<indent>\s*).* ~/~ end")
-    def on_block_end(self, m: re.Match):
+    def on_block_end(self, m: re.Match[str]) -> list[str]:
         if m["indent"] != self.current.indent:
             raise IndentationError(self.location)
         self.refs[self.current.ref].source = "\n".join(self.current.content)
-        self.stack.pop()
+        _ = self.stack.pop()
         return []
 
     @mawk.always
-    def otherwise(self, line: str):
+    def otherwise(self, line: str) -> list[str]:
         if line.strip() == "":
             self.current.content.append("")
             return []

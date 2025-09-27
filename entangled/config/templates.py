@@ -1,8 +1,7 @@
-from dataclasses import dataclass
+from msgspec import Struct
 
 
-@dataclass
-class Template:
+class Template(Struct):
     """Officially supported templates. Templates are pulled from external GitHub
     repositories: `entangled new <template name>`. These templates are the ones
     we officially support. Other templates can be used with valid copier URL

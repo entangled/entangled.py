@@ -1,10 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from itertools import takewhile
+from typing import final, override
 import yaml
 
 from ..properties import Attribute, Class, Id
-from ..document import ReferenceId, ReferenceMap, CodeBlock
+from ..document import CodeBlock
 from .base import HookBase
 from ..logging import logger
 
@@ -12,14 +11,13 @@ from ..logging import logger
 log = logger()
 
 
+@final
 class Hook(HookBase):
-    @dataclass
-    class Config(HookBase.Config):
-        pass
-
     def __init__(self, config: Hook.Config):
+        super().__init__(config)
         self.config = config
 
+    @override
     def on_read(self, code: CodeBlock):
         log.debug("quarto filter: %s", code)
 

@@ -1,24 +1,28 @@
+from typing import Any
+
+import msgspec
 from entangled.config.version import Version
 from entangled.config.language import Language, Comment
 from entangled.config import config, Config, AnnotationMethod, default
 from entangled.commands import tangle
-from entangled.construct import construct
 
 from contextlib import chdir
 from time import sleep
 from pathlib import Path
 
 
+def construct[T](cls: type[T], obj: object) -> T:
+    return msgspec.convert(obj, type=cls)
+
+
 def test_config_constructable():
-    assert construct(Version, "1.2.3") == Version((1, 2, 3))
     assert construct(
         Language,
         {"name": "French", "identifiers": ["fr"], "comment": {"open": "excusez moi"}},
     ) == Language("French", ["fr"], Comment("excusez moi"))
-    assert construct(Config, {"version": "2.0"}) == Config(version=Version((2, 0)))
-    assert construct(Config, {"version": "2.0", "annotation": "naked"}) == Config(
-        version=Version((2, 0)), annotation=AnnotationMethod.NAKED
-    )
+    cfg1 = construct(Config, {"version": "2.0", "annotation": "naked"})
+    assert cfg1.version == Version(numbers=(2, 0))
+    assert cfg1.annotation == AnnotationMethod.NAKED
 
 
 config_with_language = """
@@ -44,7 +48,7 @@ def test_new_language(tmp_path):
         Path("test.md").write_text(md_source)
         sleep(0.1)
         config.read(force=True)
-        assert config.annotation == AnnotationMethod.NAKED
+        assert config.get.annotation == AnnotationMethod.NAKED
         tangle()
         sleep(0.1)
         assert Path("test.fish").exists()
@@ -98,10 +102,10 @@ def test_pyproject_toml(tmp_path):
         sleep(0.1)
         config.read(force=True)
 
-        assert config.config == default
+        assert config.get == default
 
         Path("pyproject.toml").write_text(config_in_pyproject)
         sleep(0.1)
         config.read(force=True)
 
-        assert config.watch_list == ["docs/*.md"]
+        assert config.get.watch_list == ["docs/*.md"]

@@ -29,12 +29,12 @@ def rich_status():
     config_table.add_column("name")
     config_table.add_column("value")
     config_table.add_row(
-        "Watch list", ", ".join(f"'{pat}'" for pat in config.watch_list)
+        "Watch list", ", ".join(f"'{pat}'" for pat in config.get.watch_list)
     )
     config_table.add_row(
-        "Ignore list", ", ".join(f"'{pat}'" for pat in config.ignore_list)
+        "Ignore list", ", ".join(f"'{pat}'" for pat in config.get.ignore_list)
     )
-    config_table.add_row("Hooks enabled", ", ".join(config.hooks))
+    config_table.add_row("Hooks enabled", ", ".join(config.get.hooks))
 
     console = Console(color_system="auto")
     group = Group(
@@ -53,4 +53,3 @@ def rich_status():
 def status():
     config.read()
     rich_status()
-
