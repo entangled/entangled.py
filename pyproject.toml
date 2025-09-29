@@ -3,7 +3,7 @@ name = "entangled-cli"
 version = "2.2.0"
 description = "Literate Programming toolbox"
 authors = [{ name = "Johan Hidding", email = "j.hidding@esciencecenter.nl" }]
-requires-python = "~=3.12"
+requires-python = ">=3.12,<4"
 readme = "README.md"
 license = "Apache-2.0"
 dependencies = [
@@ -19,7 +19,7 @@ dependencies = [
         "pexpect>=4.9.0,<5",
         "pyyaml>=6.0.1,<7",
         "types-PyYAML>=6.0.1,<7",
-        "repl-session>=0.1.0",
+        "repl-session>=0.2.0",
         "msgspec>=0.19.0",
 ]
 
@@ -63,6 +63,3 @@ testpaths = ["test"]
 
 [tool.mypy]
 packages = ["entangled"]
-
-[tool.uv.sources]
-repl-session = { path = "../repl-session", editable = true }
