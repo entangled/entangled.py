@@ -43,6 +43,7 @@ negative charge
 """
 
 
+@pytest.mark.timeout(5)
 def test_cycles():
     refs, _ = read_markdown_string(md_source)
 
