@@ -333,6 +333,7 @@ dev = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "mypy" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -353,7 +354,7 @@ requires-dist = [
     { name = "msgspec", specifier = ">=0.19.0" },
     { name = "pexpect", specifier = ">=4.9.0,<5" },
     { name = "pyyaml", specifier = ">=6.0.1,<7" },
-    { name = "repl-session", specifier = ">=0.1.0" },
+    { name = "repl-session", editable = "../repl-session" },
     { name = "rich", specifier = ">=13.3.5,<14" },
     { name = "rich-argparse", specifier = ">=1.4.0,<2" },
     { name = "tomlkit", specifier = ">=0.12.1,<0.13" },
@@ -367,7 +368,8 @@ dev = [
     { name = "mkdocs", specifier = ">=1.4.3,<2" },
     { name = "mkdocs-material", specifier = ">=9.1.13,<10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.21.2,<0.22" },
-    { name = "mypy", specifier = ">=1.3.0,<2" },
+    { name = "mypy", specifier = ">=1.18,<2" },
+    { name = "pyright", specifier = ">=1.1.405" },
     { name = "pytest", specifier = ">=7.3.1,<8" },
     { name = "pytest-asyncio", specifier = ">=0.21.1,<0.22" },
     { name = "pytest-cov", specifier = ">=4.0.0,<5" },
@@ -780,6 +782,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nodeenv"
+version = "1.9.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437, upload-time = "2024-06-04T18:44:11.171Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314, upload-time = "2024-06-04T18:44:08.352Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -981,6 +992,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pyright"
+version = "1.1.405"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fb/6c/ba4bbee22e76af700ea593a1d8701e3225080956753bee9750dcc25e2649/pyright-1.1.405.tar.gz", hash = "sha256:5c2a30e1037af27eb463a1cc0b9f6d65fec48478ccf092c1ac28385a15c55763", size = 4068319, upload-time = "2025-09-04T03:37:06.776Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/1a/524f832e1ff1962a22a1accc775ca7b143ba2e9f5924bb6749dce566784a/pyright-1.1.405-py3-none-any.whl", hash = "sha256:a2cb13700b5508ce8e5d4546034cb7ea4aedb60215c6c33f56cec7f53996035a", size = 5905038, upload-time = "2025-09-04T03:37:04.913Z" },
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1161,16 +1185,30 @@ wheels = [
 
 [[package]]
 name = "repl-session"
-version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.2.0"
+source = { editable = "../repl-session" }
 dependencies = [
     { name = "argh" },
     { name = "msgspec" },
     { name = "pexpect" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6c/94/723bbe9e265f6381c12811a93ead96ed67886fdfaf4be6985e99de85c4d4/repl_session-0.1.0.tar.gz", hash = "sha256:5b65b321569fd10b14c684f5ac01c4d44f3d5acf9f9e4def16d059138cd443e5", size = 9336, upload-time = "2025-09-21T12:50:47.721Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/3f/3df702022b6947683c88581f7a9336750f2306a2cb916a57d82cd1512081/repl_session-0.1.0-py3-none-any.whl", hash = "sha256:3cc75d1c23a31a97b8e376a072ef9524fb500f81f93a4bd7a788295066126d47", size = 10279, upload-time = "2025-09-21T12:50:46.365Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "argh", specifier = ">=0.30.5" },
+    { name = "msgspec", specifier = ">=0.19.0" },
+    { name = "pexpect", specifier = ">=4.9.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "basedpyright", specifier = ">=1.31.4" },
+    { name = "entangled-cli", specifier = ">=2.1.13" },
+    { name = "mkdocs-macros-plugin", specifier = ">=1.3.9" },
+    { name = "mkdocs-material", specifier = ">=9.6.20" },
+    { name = "python-lsp-server", specifier = ">=1.13.1" },
+    { name = "ruff", specifier = ">=0.13.2" },
+    { name = "ty", specifier = ">=0.0.1a21" },
 ]
 
 [[package]]

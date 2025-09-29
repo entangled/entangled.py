@@ -1,0 +1,15 @@
+version = "2.0"
+watch_list = ["README.md"]
+hooks = ["quarto_attributes", "repl"]
+
+[markers]
+open="^(?P<indent>\\s*)```(?P<properties>.*)$"
+close="^(?P<indent>\\s*)```\\s*$"
+
+[hook.repl.config.Python]
+command = "python -q"
+first_prompt = ">>> "
+change_prompt = "import sys; sys.ps1 = '{key}>>> '; sys.ps2 = '{key}+++ '"
+prompt = "{key}>>> "
+continuation_prompt = "{key}\\+\\+\\+ "
+environment = { NO_COLOR = "1" }
