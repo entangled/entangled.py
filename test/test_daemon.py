@@ -1,9 +1,12 @@
 from pathlib import Path
 import time
 import os
+import threading
+import pytest
+import sys
+
 from entangled.config import config
 from entangled.filedb import stat
-import threading
 from entangled.commands.watch import _watch
 from entangled.main import configure
 
@@ -33,6 +36,10 @@ def wait_for_stat_diff(md_stat, filename, timeout=5):
     return False
 
 
+@pytest.mark.skipif(
+    sys.platform=="win32" and sys.version.startswith("3.13"),
+    reason="threading.Event seems to be broken")
+@pytest.mark.timeout(30)
 def test_daemon(tmp_path: Path):
     config.read(force=True)
     with chdir(tmp_path):
