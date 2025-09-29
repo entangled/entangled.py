@@ -46,6 +46,7 @@ dev = [
         "types-colorama>=0.4.15.20240311,<0.5",
         "python-lsp-server>=1.13.1",
         "pyright>=1.1.405",
+        "types-pexpect>=4.9.0.20250916",
 ]
 
 [tool.hatch.build.targets.sdist]
