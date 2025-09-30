@@ -1,8 +1,5 @@
-from typing import Optional
 from pathlib import Path
-from itertools import chain
 from threading import Event
-import os
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
@@ -32,7 +29,7 @@ class EventHandler(FileSystemEventHandler):
         self.update_watched()
 
 
-def _watch(_stop_event: Optional[Event] = None, _start_event: Optional[Event] = None):
+def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
     """Keep a loop running, watching for changes. This interface is separated
     from the CLI one, so that it can be tested using threading instead of
     subprocess."""

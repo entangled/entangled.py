@@ -1,10 +1,13 @@
 from copy import copy
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import re
 from typing import override
 import mawk
 import logging
+
+from entangled.config.language import Language
 
 from .config import config
 from .utility import first
@@ -14,6 +17,35 @@ from .properties import Property, read_properties, get_attribute, get_classes, g
 from .hooks.base import HookBase
 from .errors.user import IndentationError
 from . import parsing
+
+
+@dataclass
+class PartialCodeBlock:
+    indent: str
+    open_line: str
+    origin: TextLocation
+    properties: list[Property] = field(default_factory=list)
+    close_line: str | None = None
+    source: str | None = None
+    language: Language | None = None
+    header: str | None = None
+    mode: int | None = None
+
+    def finalize(self) -> CodeBlock:
+        assert self.close_line is not None
+        assert self.source is not None
+
+        return CodeBlock(
+            properties = self.properties,
+            indent = self.indent,
+            open_line = self.open_line,
+            close_line = self.close_line,
+            source = self.source,
+            origin = self.origin,
+            language = self.language,
+            header = self.header,
+            mode = self.mode
+        )
 
 
 class MarkdownLexer(mawk.RuleSet):
@@ -27,13 +59,12 @@ class MarkdownLexer(mawk.RuleSet):
         self.raw_content: list[RawContent] = []
         self.inside_codeblock: bool = False
         self.current_content: list[str] = []
-        self.current_codeblock_indent: str = ""
-        self.current_codeblock_location: TextLocation | None = None
-        self.current_codeblock_properties: list[Property] = []
+        self.current_codeblock: PartialCodeBlock | None = None
         self.ignore: bool = False
 
     def flush_plain_text(self):
-        self.raw_content.append(PlainText("\n".join(self.current_content)))
+        if self.current_content:
+            self.raw_content.append(PlainText("\n".join(self.current_content)))
         self.current_content = []
 
     @mawk.always
@@ -57,16 +88,18 @@ class MarkdownLexer(mawk.RuleSet):
         if self.inside_codeblock:
             return None
         logging.debug("triggered on codeblock: %s", m.group(0))
-        self.current_codeblock_indent = m["indent"]
-        self.current_codeblock_location = copy(self.location)
-        self.current_content.append(m[0])
+        self.current_codeblock = PartialCodeBlock(
+            indent = m["indent"],
+            origin = copy(self.location),
+            open_line = m[0].removeprefix(m["indent"])
+        )
         try:
-            self.current_codeblock_properties = read_properties(m["properties"])
-            logging.debug("properties: %s", self.current_codeblock_properties)
+            self.current_codeblock.properties.extend(read_properties(m["properties"]))
+            logging.debug("properties: %s", self.current_codeblock.properties)
             self.flush_plain_text()
             self.inside_codeblock = True
         except parsing.Failure as f:
-            logging.error("Parsing error at %s: %s", self.location, f)
+            logging.error("%s: Parsing error: %s", self.location, f)
             logging.error("Continuing parsing rest of document.")
         return []
 
@@ -74,39 +107,32 @@ class MarkdownLexer(mawk.RuleSet):
     def on_close_codeblock(self, m: re.Match[str]) -> list[str] | None:
         if self.ignore:
             return None
-        if not self.inside_codeblock:
+        if not self.inside_codeblock or self.current_codeblock is None:
             return None
 
-        if len(m["indent"]) < len(self.current_codeblock_indent):
+        if len(m["indent"]) < len(self.current_codeblock.indent):
             raise IndentationError(self.location)
 
-        if m["indent"] != self.current_codeblock_indent:
+        if m["indent"] != self.current_codeblock.indent:
             return None  # treat this as code-block content
 
-        language_class = first(get_classes(self.current_codeblock_properties))
+        language_class = first(get_classes(self.current_codeblock.properties))
         language = config.get_language(language_class) if language_class else None
         if language_class and not language:
-            logging.warning(f"Language `{language_class}` unknown at `{self.location}`.")
+            logging.warning(f"`{self.location}`: language `{language_class}` unknown.")
+        self.current_codeblock.language = language
 
-
-        content = "\n".join(
-            line.removeprefix(self.current_codeblock_indent)
+        self.current_codeblock.source = "\n".join(
+            line.removeprefix(self.current_codeblock.indent)
             for line in self.current_content
         )
 
-        assert self.current_codeblock_location
-        code = CodeBlock(
-            self.current_codeblock_properties,
-            self.current_codeblock_indent,
-            content,
-            self.current_codeblock_location,
-            language
-        )
+        self.current_codeblock.close_line = m[0].removeprefix(self.current_codeblock.indent)
 
-        self.raw_content.append(code)
+        self.raw_content.append(self.current_codeblock.finalize())
         self.current_content = []
 
-        self.current_content.append(m[0])
+        self.current_codeblock = None
         self.inside_codeblock = False
         return []
 

@@ -8,7 +8,7 @@ import sys
 from entangled.config import config
 from entangled.filedb import stat
 from entangled.commands.watch import _watch
-from entangled.main import configure
+from entangled.logging import configure
 
 from contextlib import chdir
 

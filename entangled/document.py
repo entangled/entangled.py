@@ -1,3 +1,4 @@
+from textwrap import indent
 from typing import Optional, Union, Iterable, Any, override
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -35,11 +36,21 @@ class PlainText:
 class CodeBlock:
     properties: list[Property]
     indent: str
+    open_line: str
+    close_line: str
     source: str
     origin: TextLocation
     language: Language | None = None
     header: str | None = None
     mode: int | None = None
+
+    @property
+    def text(self) -> str:
+        return self.open_line + "\n" + self.source + "\n" + self.close_line
+
+    @property
+    def indented_text(self) -> str:
+        return indent(self.text, self.indent)
 
 
 Content = PlainText | ReferenceId
@@ -85,6 +96,9 @@ class ReferenceMap:
 
     def __contains__(self, key: str) -> bool:
         return key in self.index
+
+    def get_codeblock(self, key: ReferenceId) -> CodeBlock:
+        return self.map[key]
 
     @singledispatchmethod
     def __getitem__(self, key):
