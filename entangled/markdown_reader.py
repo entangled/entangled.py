@@ -152,7 +152,21 @@ def read_markdown_file(
     refs: ReferenceMap | None = None,
     hooks: list[HookBase] | None = None) \
     -> tuple[ReferenceMap, list[Content]]:
+    """
+    Read a Markdown file.
 
+    Args:
+        path: Path to the file.
+        refs: If given, references are added to this existing reference map.
+        hooks: List of hooks to be processed.
+
+    Returns:
+        A reference map and a list of content.
+
+    This splits the Markdown file into code blocks and other text. The resulting
+    content is a list of `PlainText | ReferenceId`. Each `ReferenceId` can be
+    looked up in the reference map.
+    """
     with open(path, "r") as f:
         rel_path = path.resolve().relative_to(Path.cwd())
         return read_markdown_string(f.read(), rel_path, refs, hooks)
@@ -164,6 +178,19 @@ def read_markdown_string(
         refs: ReferenceMap | None = None,
         hooks: list[HookBase] | None = None) \
         -> tuple[ReferenceMap, list[Content]]:
+    """
+    Parse Markdown from a string.
+
+    Args:
+        text: Input string.
+        path: Path to the file from which the string was read, used for printing
+              error messages.
+        refs: If given, references are added to this existing reference map.
+        hooks: List of hooks to be processed.
+
+    Returns:
+        A reference map and a list of content.
+    """
     path_str = path_str or Path("-")
     md = MarkdownLexer(path_str)
     _ = md.run(text)

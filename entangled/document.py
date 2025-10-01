@@ -111,3 +111,50 @@ class ReferenceMap:
     @__getitem__.register
     def _(self, key: str) -> Iterable[CodeBlock]:
         return self.by_name(key)
+
+
+def content_to_text(r: ReferenceMap, c: Content) -> str:
+    """
+    Reconstruct original plain text from a piece of content.
+
+    Args:
+        r: the reference map.
+        c: the content.
+
+    Returns:
+        A string, usually not terminated by a newline.
+    """
+    match c:
+        case PlainText(s): return s
+        case ReferenceId(): return r.get_codeblock(c).indented_text
+
+
+def document_to_text(r: ReferenceMap, cs: list[Content]) -> str:
+    """
+    Reconstruct original plain text content from a reference map and
+    list of content.
+
+    Args:
+        r: the reference map.
+        cs: a list of content.
+
+    Returns:
+        A string, including a final newline.
+
+    Usually this is the reconstructed content of a Markdown file. Most
+    editors have a convention to end a file with a newline, but this
+    newline is usually stripped when we read a file.
+
+    Context:
+        In Python `"foo".splitlines()` gives the same as `"foo\n".splitlines()`,
+        with the exception of `"\n".splitlines()` giving `['']`, while
+        `"".splitlines()` returns `[]`.
+
+        As an alternative, we could keep line endings by splitting with `keepends=True`,
+        and joining with `"".join(...)`.
+    """
+    text = "\n".join(content_to_text(r, c) for c in cs)
+    if text[-1] != "\n":
+        return text + "\n"
+    else:
+        return text
