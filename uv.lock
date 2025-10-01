@@ -319,7 +319,7 @@ requires-dist = [
     { name = "brei", specifier = ">=0.2.3,<0.3" },
     { name = "copier", specifier = ">=9,<10" },
     { name = "filelock", specifier = ">=3.12.0,<4" },
-    { name = "mawk", specifier = ">=0.1.4,<0.2" },
+    { name = "mawk", specifier = ">=0.1.7,<0.2" },
     { name = "msgspec", specifier = ">=0.19.0" },
     { name = "pexpect", specifier = ">=4.9.0,<5" },
     { name = "pyyaml", specifier = ">=6.0.1,<7" },
@@ -521,11 +521,11 @@ wheels = [
 
 [[package]]
 name = "mawk"
-version = "0.1.4"
+version = "0.1.7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/45/42/0cb0d6d02649f50e2a8918a350152d8d139839cf74befeeeb83668302e48/mawk-0.1.4.tar.gz", hash = "sha256:4e115b2f7eae97406bf2360bafba22efee03d29ff298436a69db506b1535d2f1", size = 7216, upload-time = "2023-06-04T12:53:42.815Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/50/b47b5b2697c4a11fcf4e9308bf635c35e033961efa8a8712536997258ce5/mawk-0.1.7.tar.gz", hash = "sha256:41b2a5185e6c5aa3d4cbd860a1a9196ad01763ded84a54234e3b92037f40136f", size = 7490, upload-time = "2025-10-01T15:20:20.104Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/29/b4ddddd1ae74ce2651e7eedf1871a6b2240433eeec070622f81b985d5e70/mawk-0.1.4-py3-none-any.whl", hash = "sha256:8ab7ce0808d10769f8aa05af8448046c290af5f529db874b44a8fd56056c4462", size = 7941, upload-time = "2023-06-04T12:53:41.112Z" },
+    { url = "https://files.pythonhosted.org/packages/30/4d/1cf26c06f9d11008bad7ccc88728deccf27d58dac4576c4d09d7d96d2831/mawk-0.1.7-py3-none-any.whl", hash = "sha256:ca03b3409b48a23192a669af14385409a52400b6eaf1e599332ca4e3243604be", size = 8374, upload-time = "2025-10-01T15:20:19.076Z" },
 ]
 
 [[package]]
