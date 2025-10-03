@@ -69,8 +69,8 @@ def tangle(*, annotate: str | None = None, force: bool = False, show: bool = Fal
 
             for tgt in refs.targets:
                 result, deps = tangle_ref(refs, tgt, annotation_method)
-                mode = next(refs[tgt]).mode
-                t.write(Path(tgt), result, list(map(Path, deps)), mode)
+                mask = next(iter(refs.by_name(tgt))).mode
+                t.write(Path(tgt), result, list(map(Path, deps)), mask)
 
             for h in hooks:
                 h.on_tangle(t, refs)

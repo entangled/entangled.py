@@ -66,7 +66,7 @@ class CodeReader(mawk.RuleSet):
     def on_block_end(self, m: re.Match[str]) -> list[str]:
         if m["indent"] != self.current.indent:
             raise IndentationError(self.location)
-        self.refs[self.current.ref].source = "\n".join(self.current.content)
+        self.refs.get_codeblock(self.current.ref).source = "\n".join(self.current.content)
         _ = self.stack.pop()
         return []
 

@@ -44,7 +44,7 @@ class Hook(HookBase):
         ref: ReferenceId
 
         def to_brei_task(self, refs: ReferenceMap):
-            cb = refs[self.ref]
+            cb = refs.get_codeblock(self.ref)
             if (path := get_attribute(cb.properties, "file")) is None:
                 script, _ = tangle_ref(refs, self.ref.name, AnnotationMethod.NAKED)
             else:
