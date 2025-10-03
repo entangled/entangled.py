@@ -1,13 +1,13 @@
 from textwrap import indent
-from typing import Optional, Union, Iterable, Any, override
+from collections.abc import Iterable
+from typing import override
 from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import singledispatchmethod
-from itertools import chain
 from pathlib import PurePath
 
-from .config import Language, AnnotationMethod, config
-from .properties import Property, get_attribute
+from .config.language import Language
+from .properties import Property
 from .errors.internal import InternalError
 from .text_location import TextLocation
 
@@ -101,7 +101,7 @@ class ReferenceMap:
         return self.map[key]
 
     @singledispatchmethod
-    def __getitem__(self, key):
+    def __getitem__(self, key: ReferenceId | str) -> CodeBlock | Iterable[CodeBlock]:
         raise NotImplementedError(f"Invalid key: {type(key)}")
 
     @__getitem__.register
@@ -129,7 +129,7 @@ def content_to_text(r: ReferenceMap, c: Content) -> str:
         case ReferenceId(): return r.get_codeblock(c).indented_text
 
 
-def document_to_text(r: ReferenceMap, cs: list[Content]) -> str:
+def document_to_text(r: ReferenceMap, cs: Iterable[Content]) -> str:
     """
     Reconstruct original plain text content from a reference map and
     list of content.

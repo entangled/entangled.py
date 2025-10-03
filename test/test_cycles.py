@@ -4,7 +4,7 @@ import pytest
 from entangled.tangle import tangle_ref
 from entangled.markdown_reader import read_markdown_string
 from entangled.errors.user import CyclicReference
-from entangled.document import AnnotationMethod
+from entangled.config import AnnotationMethod
 
 
 md_source = """
