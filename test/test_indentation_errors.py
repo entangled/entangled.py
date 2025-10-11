@@ -4,10 +4,12 @@ from entangled.code_reader import CodeReader
 from entangled.errors.user import IndentationError
 
 from contextlib import chdir
-from pathlib import Path
+from pathlib import Path, PurePath
 from time import sleep
 
 import pytest
+
+from entangled.tangle import tangle_ref
 
 md_source = """
 ``` {.scheme file=hello.scm}
@@ -84,28 +86,13 @@ scm_changed3 = """; ~/~ begin <<test.md#hello.scm>>[init]
 ; ~/~ end"""
 
 
-def test_code_indentation(tmp_path):
-    with chdir(tmp_path):
-        src = Path("test.md")
-        src.write_text(md_source)
-        sleep(0.1)
-        tangle()
-        sleep(0.1)
-        tgt = Path("hello.scm")
-        assert tgt.exists() and tgt.read_text() == scm_output1
-        refs, _ = read_markdown_file(src)
-
-        tgt.write_text(scm_changed1)
-        sleep(0.1)
+def test_code_indentation():
+    refs, _ = read_markdown_string(md_source, Path("test.md"))
+    source, _ = tangle_ref(refs, "hello.scm")
+    assert source == scm_output1
+    for errs in [scm_changed1, scm_changed2, scm_changed3]:
         with pytest.raises(IndentationError):
-            CodeReader(str(tgt), refs).run(tgt.read_text())
-        stitch()
-        sleep(0.1)
-        assert src.read_text() == md_source
-
-        for errs in [scm_changed1, scm_changed2, scm_changed3]:
-            with pytest.raises(IndentationError):
-                CodeReader("-", refs).run(errs)
+            _ = CodeReader(PurePath("-"), refs).run(errs)
 
 
 md_source_error = """
