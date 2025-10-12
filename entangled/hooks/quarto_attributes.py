@@ -66,7 +66,7 @@ def amend_code_properties(code_block: CodeBlock):
             return
         props.extend(Class(c) for c in classes)
 
-    props.extend(Attribute(str(k), str(v)) for k, v in attrs.items()
+    props.extend(Attribute(str(k), v) for k, v in attrs.items()
                  if k not in ("id", "classes"))
 
     code_block.source = body

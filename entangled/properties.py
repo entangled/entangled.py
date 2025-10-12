@@ -3,7 +3,7 @@ properties: id, class and attribute."""
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Any, ClassVar
 from collections.abc import Iterable
 from dataclasses import dataclass
 import re
@@ -49,7 +49,7 @@ class Class(Parsable):
 @dataclass
 class Attribute(Parsable):
     key: str
-    value: str
+    value: Any
 
     _pattern1: ClassVar[Parser] = matching(
         r"([a-zA-Z]\S*)\s*=\s*\"([^\"\\]*(?:\\.[^\"\\]*)*)\""
@@ -92,7 +92,7 @@ def get_classes(props: list[Property]) -> Iterable[str]:
     return (p.value for p in props if isinstance(p, Class))
 
 
-def get_attribute(props: list[Property], key: str) -> str | None:
+def get_attribute(props: list[Property], key: str) -> Any:
     """Get the value of an Attribute in a property list."""
     try:
         return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)
