@@ -3,65 +3,57 @@ properties: id, class and attribute."""
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any, cast, override
 from collections.abc import Iterable
 from dataclasses import dataclass
-import re
+
 
 from .parsing import (
     Parser,
     many,
-    choice,
     tokenize,
     matching,
-    Parsable,
-    starmap,
-    Failure,
+    splat,
 )
 
 
 @dataclass
-class Id(Parsable):
+class Id:
     value: str
-    _pattern: ClassVar[Parser] = matching(r"#([a-zA-Z]\S*)")
 
+    @override
     def __str__(self):
         return f"#{self.value}"
 
-    @staticmethod
-    def __parser__():
-        return Id._pattern >> starmap(Id)
+
+id_p: Parser[Id] = cast(Parser[tuple[str]], matching(r"#([a-zA-Z]\S*)")) >> splat(Id)
 
 
 @dataclass
-class Class(Parsable):
+class Class:
     value: str
-    _pattern: ClassVar[Parser] = matching(r"\.?([a-zA-Z]\S*)")
 
+    @override
     def __str__(self):
         return f".{self.value}"
 
-    @staticmethod
-    def __parser__():
-        return Class._pattern >> starmap(Class)
+
+class_p: Parser[Class] = cast(Parser[tuple[str]], matching(r"\.?([a-zA-Z]\S*)")) >> splat(Class)
 
 
 @dataclass
-class Attribute(Parsable):
+class Attribute:
     key: str
-    value: Any
+    value: Any  # pyright: ignore[reportExplicitAny]
 
-    _pattern1: ClassVar[Parser] = matching(
-        r"([a-zA-Z]\S*)\s*=\s*\"([^\"\\]*(?:\\.[^\"\\]*)*)\""
-    )
-    _pattern2: ClassVar[Parser] = matching(r"([a-zA-Z]\S*)\s*=\s*(\S+)")
-
+    @override
     def __str__(self):
-        return f'{self.key}="{self.value}"'
+        return f'{self.key}="{self.value}"'  # pyright: ignore[reportAny]
 
-    @staticmethod
-    def __parser__():
-        return choice(Attribute._pattern1, Attribute._pattern2) >> starmap(Attribute)
+
+attribute_p: Parser[Attribute] = cast(Parser[tuple[str, str]],
+        matching(r"([a-zA-Z]\S*)\s*=\s*\"([^\"\\]*(?:\\.[^\"\\]*)*)\"") |
+        matching(r"([a-zA-Z]\S*)\s*=\s*(\S+)")) >> splat(Attribute)
 
 
 Property = Attribute | Class | Id
@@ -75,7 +67,7 @@ def read_properties(inp: str) -> list[Property]:
     """
     # Explicit typing is needed to convince MyPy of correctness
     # parsers: list[Parser[Property]] = [Id, Class, Attribute]
-    result, _ = many(tokenize(choice(Id, Attribute, Class))).read(inp)
+    result, _ = many(tokenize(id_p | attribute_p | class_p)).read(inp)
     return result
 
 
@@ -92,9 +84,9 @@ def get_classes(props: list[Property]) -> Iterable[str]:
     return (p.value for p in props if isinstance(p, Class))
 
 
-def get_attribute(props: list[Property], key: str) -> Any:
+def get_attribute(props: list[Property], key: str) -> Any:  # pyright: ignore[reportExplicitAny, reportAny]
     """Get the value of an Attribute in a property list."""
     try:
-        return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)
+        return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)  # pyright: ignore[reportAny]
     except StopIteration:
         return None

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from contextlib import contextmanager
@@ -10,15 +9,8 @@ import tempfile
 import logging
 from typing import override
 
-try:
-    import rich
-
-    WITH_RICH = True
-except ImportError:
-    WITH_RICH = False
-
 from .utility import cat_maybes
-from .filedb import FileDB, stat, file_db, hexdigest
+from .filedb import FileDB, stat, filedb, hexdigest
 from .errors.internal import InternalError
 
 
@@ -91,11 +83,11 @@ class Create(Action):
         return f"create `{self.target}`"
 
 
-def assure_final_newline(str) -> str:
-    if str[-1] != "\n":
-        return str + "\n"
+def assure_final_newline(s: str) -> str:
+    if s[-1] != "\n":
+        return s + "\n"
     else:
-        return str
+        return s
 
 
 @dataclass
@@ -237,7 +229,7 @@ class TransactionMode(Enum):
 
 @contextmanager
 def transaction(mode: TransactionMode = TransactionMode.FAIL):
-    with file_db() as db:
+    with filedb() as db:
         if mode == TransactionMode.RESETDB:
             db.clear()
 

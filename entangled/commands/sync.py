@@ -4,7 +4,7 @@ from pathlib import Path
 
 import logging
 
-from ..filedb import file_db
+from ..filedb import filedb
 from ..config import config
 from .stitch import stitch, get_input_files
 from .tangle import tangle
@@ -18,7 +18,7 @@ def _stitch_then_tangle():
 def sync_action() -> Optional[Callable[[], None]]:
     input_file_list = get_input_files()
 
-    with file_db(readonly=True) as db:
+    with filedb(readonly=True) as db:
         changed = set(db.changed())
 
         if not all(f in db for f in input_file_list):

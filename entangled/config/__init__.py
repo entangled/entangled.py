@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
+from itertools import chain
 
 import msgspec
 from msgspec import Struct, field
@@ -186,3 +187,12 @@ class ConfigWrapper(threading.local):
 config = ConfigWrapper()
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""
+
+
+def get_input_files() -> list[Path]:
+    include_file_list = chain.from_iterable(map(Path(".").glob, config.get.watch_list))
+    input_file_list = [
+        path for path in include_file_list
+        if not any(path.match(pat) for pat in config.get.ignore_list)
+    ]
+    return input_file_list

@@ -4,24 +4,14 @@ attribute properties of code blocks in markdown."""
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import (
-    TypeVar,
-    TypeVarTuple,
-    Generic,
+    Never,
     Callable,
-    Any,
-    ParamSpec,
     override,
 )
 import re
-
-
-T = TypeVar("T")
-Ts = TypeVarTuple("Ts")
-U = TypeVar("U")
-P = ParamSpec("P")
-T_co = TypeVar("T_co", covariant=True)
 
 
 @dataclass
@@ -73,68 +63,61 @@ class ChoiceFailure(Expected):
         return " | ".join(str(f) for f in self.failures)
 
 
-class Parser(Generic[T]):
+class Parser[T](ABC):
     """Base class for parsers."""
 
-    def read(self, _: str) -> tuple[T, str]:
-        """Read a string and return an object the remainder of the string."""
+    @abstractmethod
+    def read(self, inp: str) -> tuple[T, str]:
+        """Read a string and return an object and the remainder of the string."""
         raise NotImplementedError()
 
-    def __rshift__(self, f: Callable[[T], Parser[U]]) -> Parser[U]:
+    def __rshift__[U](self, f: Callable[[T], Parser[U]]) -> Parser[U]:
         return bind(self, f)
 
-    def then(self, p: Parser[U]) -> Parser[U]:
+    def then[U](self, p: Parser[U]) -> Parser[U]:
         return bind(self, lambda _: p)
 
-
-def starmap(f: Callable[..., U]) -> Callable[[tuple], Parser[U]]:
-    return lambda args: pure(f(*args))
-
-
-class ParserMeta(Generic[T], Parser[T], type):
-    def read(cls, inp: str) -> tuple[T, str]:
-        return cls.__parser__().read(inp)  # type: ignore
+    def __or__[U](self, other: Parser[U]) -> Choice[T, U]:
+        return Choice(self, other)
 
 
-class Parsable(Generic[T], metaclass=ParserMeta):
-    """Base class for Parsable objects. Parsables need to define a
-    `__parser__()` method that should return a `Parser[Self]`. That
-    way a Parsable class is also a `Parser` object for itself.
-    This allows for nicely expressive grammars."""
-
-    pass
+def splat[*Args, U](f: Callable[[*Args], U]) -> Callable[[tuple[*Args]], Parser[U]]:
+    def wrapper(args: tuple[*Args]) -> Parser[U]:
+        return pure(f(*args))
+    return wrapper
 
 
 @dataclass
-class ParserWrapper(Generic[T], Parser[T]):
+class ParserWrapper[T](Parser[T]):
     """Wrapper class for functional parser."""
 
     f: Callable[[str], tuple[T, str]]
 
+    @override
     def read(self, inp: str) -> tuple[T, str]:
         return self.f(inp)
 
 
-def fmap(f: Callable[[T], U]) -> Callable[[T], Parser[U]]:
+def fmap[T, U](f: Callable[[T], U]) -> Callable[[T], Parser[U]]:
     """Map a parser action over a function."""
     return lambda x: pure(f(x))
 
 
-def parser(f: Callable[[str], tuple[T, str]]) -> Parser[T]:
+def parser[T](f: Callable[[str], tuple[T, str]]) -> Parser[T]:
     """Parser decorator."""
     return ParserWrapper(f)
 
 
-def pure(x: T) -> Parser[T]:
+def pure[T](x: T) -> Parser[T]:
     """Parser that always succeeds and returns value `x`."""
     return parser(lambda inp: (x, inp))
 
 
-def fail(msg: str) -> Parser[Any]:
+def fail(msg: str) -> Parser[Never]:
     """Parser that always fails with a message `msg`."""
 
     @parser
-    def _fail(_: str) -> tuple[Any, str]:
+    def _fail(_: str) -> tuple[Never, str]:
         raise Failure(msg)
 
     return _fail
@@ -148,7 +131,7 @@ def item(inp: str) -> tuple[str, str]:
     return inp[0], inp[1:]
 
 
-def bind(p: Parser[T], f: Callable[[T], Parser[U]]) -> Parser[U]:
+def bind[T, U](p: Parser[T], f: Callable[[T], Parser[U]]) -> Parser[U]:
     """Fundamental monadic combinator. First parses `p`, then passes
     the value to `f`, giving a new parser that also knows the result
     of the first one."""
@@ -169,29 +152,37 @@ def bind(p: Parser[T], f: Callable[[T], Parser[U]]) -> Parser[U]:
 
 # seq = Sequence(pure(()))
 
+@dataclass
+class Choice[T, U](Parser[T | U]):
+    first: Parser[T]
+    second: Parser[U]
 
-def choice(*options: Parser[Any]) -> Parser[Any]:
-    @parser
-    def _choice(inp: str) -> tuple[Any, str]:
-        failures = []
+    @override
+    def read(self, inp: str) -> tuple[T | U, str]:
+        failures: list[Failure]
 
-        for o in options:
-            try:
-                return o.read(inp)
-            except Failure as f:
-                failures.append(f)
-                continue
+        try:
+            return self.first.read(inp)
+        except ChoiceFailure as f:
+            failures = f.failures
+        except Failure as f:
+            failures = [f]
+
+        try:
+            return self.second.read(inp)
+        except ChoiceFailure as f:
+            failures.extend(f.failures)
+        except Failure as f:
+            failures.append(f)
 
         raise ChoiceFailure("", inp, failures)
 
-    return _choice
+
+def optional[T, U](p: Parser[T], default: U = None) -> Choice[T, U]:
+    return p | pure(default)
 
 
-def optional[T, U](p: Parser[T], default: U | None = None) -> Parser[T | U]:
-    return choice(p, pure(default))
-
-
-def many(p: Parser[T]) -> Parser[list[T]]:
+def many[T](p: Parser[T]) -> Parser[list[T]]:
     @parser
     def _many(inp: str) -> tuple[list[T], str]:
         result: list[T] = []
@@ -206,11 +197,11 @@ def many(p: Parser[T]) -> Parser[list[T]]:
     return _many
 
 
-def matching(regex: str) -> Parser[tuple[str | Any, ...]]:
+def matching(regex: str) -> Parser[tuple[str, ...]]:
     pattern = re.compile(f"^{regex}")
 
     @parser
-    def _matching(inp: str) -> tuple[tuple[str | Any, ...], str]:
+    def _matching(inp: str) -> tuple[tuple[str, ...], str]:
         if m := pattern.match(inp):
             return m.groups(), inp[m.end() :]
         raise Expected(f"/^{regex}/", inp)
@@ -230,8 +221,8 @@ def fullmatch(regex: str) -> Parser[str]:
     return _fullmatch
 
 
-space = matching(r"\s+")
+space: Parser[str] = fullmatch(r"\s+")
 
 
-def tokenize(p: Parser[T]) -> Parser[T]:
+def tokenize[T](p: Parser[T]) -> Parser[T]:
     return optional(space).then(p)

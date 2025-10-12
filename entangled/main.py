@@ -5,7 +5,7 @@ import sys
 import traceback
 from rich_argparse import RichHelpFormatter
 
-from .commands import new, status, stitch, sync, tangle, watch, brei
+from .commands import new, status, stitch, sync, tangle, watch, brei, reset
 from .errors.internal import bug_contact
 from .errors.user import HelpfulUserError, UserError
 from .version import __version__
@@ -22,7 +22,7 @@ def cli():
         _ = parser.add_argument(
             "-v", "--version", action="store_true", help="show version number"
         )
-        _ = argh.add_commands(parser, [new, brei, status, stitch, sync, tangle, watch],
+        _ = argh.add_commands(parser, [new, brei, reset, status, stitch, sync, tangle, watch],
             func_kwargs={"formatter_class": RichHelpFormatter})
         args = parser.parse_args()
 

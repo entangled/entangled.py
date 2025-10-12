@@ -1,4 +1,4 @@
-from entangled.filedb import file_db, stat
+from entangled.filedb import filedb, stat
 from time import sleep
 from pathlib import Path
 import pytest
@@ -33,14 +33,14 @@ def test_stat(example_files: Path):
 
 def test_filedb(example_files: Path):
     with chdir(example_files):
-        with file_db() as db:
+        with filedb() as db:
             for n in "abcd":
                 db.update(Path(n))
 
         with open(example_files / "d", "w") as f:
             f.write("mars")
 
-        with file_db() as db:
+        with filedb() as db:
             assert db.changed() == [Path("d")]
             db.update(Path("d"))
             assert db.changed() == []

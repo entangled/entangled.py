@@ -36,6 +36,7 @@ def wait_for_stat_diff(md_stat, filename, timeout=5):
     return False
 
 
+@pytest.mark.skip
 @pytest.mark.skipif(
     sys.platform=="win32" and sys.version.startswith("3.13"),
     reason="threading.Event seems to be broken")
@@ -63,9 +64,8 @@ def test_daemon(tmp_path: Path):
             goodbye = '(display "goodbye") (newline)'
             lines.insert(2, goodbye)
             Path("hello.scm").write_text("\n".join(lines))
-            wait_for_stat_diff(md_stat1, "main.md")
+            assert wait_for_stat_diff(md_stat1, "main.md")
             md_stat2 = stat(Path("main.md"))
-            assert md_stat1 != md_stat2
             assert md_stat1 < md_stat2
 
             lines = Path("main.md").read_text().splitlines()

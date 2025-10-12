@@ -1,12 +1,13 @@
 from __future__ import annotations
-from collections.abc import Iterable
-from dataclasses import dataclass
 from datetime import datetime
 from contextlib import contextmanager
 from pathlib import Path
+from typing import override
+
+import msgspec
+from msgspec import Struct
 
 import hashlib
-import json
 import os
 import time
 import logging
@@ -26,10 +27,9 @@ def hexdigest(s: str) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-@dataclass
-class FileStat:
-    path: Path
-    deps: list[Path] | None
+class FileStat(Struct):
+    path: str
+    deps: list[str] | None
     modified: datetime
     hexdigest: str
     size: int
@@ -51,32 +51,17 @@ class FileStat:
         with open(path, "r") as f:
             digest = hexdigest(f.read())
 
-        return FileStat(path, deps, datetime.fromtimestamp(stat.st_mtime), digest, size)
+        return FileStat(
+            path.as_posix(),
+            [d.as_posix() for d in deps] if deps else None,
+            datetime.fromtimestamp(stat.st_mtime), digest, size)
 
     def __lt__(self, other: FileStat) -> bool:
         return self.modified < other.modified
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, FileStat) and self.hexdigest == other.hexdigest
-
-    @staticmethod
-    def from_json(data) -> FileStat:
-        return FileStat(
-            Path(data["path"]),
-            None if data["deps"] is None else [Path(d) for d in data["deps"]],
-            datetime.fromisoformat(data["modified"]),
-            data["hexdigest"],
-            data["size"],
-        )
-
-    def to_json(self):
-        return {
-            "path": str(self.path),
-            "deps": None if self.deps is None else [str(p) for p in self.deps],
-            "modified": self.modified.isoformat(),
-            "hexdigest": self.hexdigest,
-            "size": self.size,
-        }
 
 
 def stat(path: Path, deps: list[Path] | None = None) -> FileStat:
@@ -85,8 +70,7 @@ def stat(path: Path, deps: list[Path] | None = None) -> FileStat:
     return FileStat.from_path(path, deps)
 
 
-@dataclass
-class FileDB:
+class FileDB(Struct):
     """Persistent storage for file stats of both Markdown and generated
     files. We can use this to detect conflicts.
 
@@ -97,28 +81,15 @@ class FileDB:
     All files are stored in a single dictionary, the distinction between
     source and target files is made in two separate indices."""
 
-    _files: dict[Path, FileStat]
-    _source: set[Path]
-    _target: set[Path]
-
-    @staticmethod
-    def path():
-        return Path(".") / ".entangled" / "filedb.json"
-
-    @staticmethod
-    def read() -> FileDB:
-        logging.debug("Reading FileDB")
-        raw = json.load(open(FileDB.path()))
-        return FileDB(
-            {stat.path: stat for stat in (FileStat.from_json(r) for r in raw["files"])},
-            set(map(Path, raw["source"])),
-            set(map(Path, raw["target"])),
-        )
+    version: str
+    files: dict[str, FileStat]
+    source: set[str]
+    target: set[str]
 
     def clear(self):
-        self._files = {}
-        self._source = set()
-        self._target = set()
+        self.files = {}
+        self.source = set()
+        self.target = set()
 
     @property
     def managed(self) -> set[Path]:
@@ -128,21 +99,11 @@ class FileDB:
         For example: markdown sources cannot be reconstructed, so are not
         listed here. However, generated code is first constructed from
         the markdown, so is considered to be managed."""
-        return self._target
-
-    def write(self):
-        logging.debug("Writing FileDB")
-        raw = {
-            "version": __version__,
-            "files": [stat.to_json() for stat in sorted(self._files.values(), key=lambda s: s.path)],
-            "source": list(sorted(map(str, self._source))),
-            "target": list(sorted(map(str, self._target))),
-        }
-        json.dump(raw, open(FileDB.path(), "w"), indent=2, sort_keys=True)
+        return {Path(p) for p in self.target}
 
     def changed(self) -> list[Path]:
         """List all target files that have changed w.r.t. the database."""
-        return [p for p, s in self._files.items() if s != stat(p)]
+        return [Path(p) for p, s in self.files.items() if s != stat(Path(p))]
 
     def has_changed(self, path: Path) -> bool:
         return stat(path) != self[path]
@@ -151,57 +112,60 @@ class FileDB:
         """Update the given path to a new stat."""
         path = normal_relative(path)
         if path in self.managed and deps is None:
-            deps = self[path].deps
-        self._files[path] = stat(path, deps)
+            known_deps = self[path].deps
+            if known_deps is not None:
+                deps = [Path(p) for p in known_deps]
+        self.files[path.as_posix()] = stat(path, deps)
 
     def __contains__(self, path: Path) -> bool:
-        return path in self._files
+        return path.as_posix() in self.files
 
     def __getitem__(self, path: Path) -> FileStat:
-        return self._files[path]
+        return self.files[path.as_posix()]
 
     def __delitem__(self, path: Path):
-        if path in self._target:
-            self._target.remove(path)
-        del self._files[path]
+        if path in self.target:
+            self.target.remove(str(path))
+        del self.files[str(path)]
 
-    @property
-    def files(self) -> Iterable[Path]:
-        return self._files.keys()
+    def __iter__(self):
+        return (Path(p) for p in self.files)
 
     def check(self, path: Path, content: str) -> bool:
-        return hexdigest(content) == self._files[path].hexdigest
+        return hexdigest(content) == self.files[str(path)].hexdigest
 
-    @staticmethod
-    def initialize() -> FileDB:
-        if FileDB.path().exists():
-            db = FileDB.read()
-            undead = list(filter(lambda p: not p.exists(), db.files))
-            for path in undead:
-                if path in db.managed:
-                    logging.warning(
-                        "File `%s` in DB seems not to exist, but this file is managed.\n" +
-                        "This may happen every now and then with certain editors that " +
-                        "delete a file before writing.", path
-                    )
-                else:
-                    logging.warning(
-                        "File `%s` is in database but doesn't seem to exist.\n" +
-                        "Run `entangled tangle -r` to recreate the database.", path
-                    )
-            return db
 
-        FileDB.path().parent.mkdir(parents=True, exist_ok=True)
-        data = {"version": __version__, "files": [], "source": [], "target": []}
-        json.dump(data, open(FileDB.path(), "w"))
-        return FileDB.read()
+FILEDB_PATH =  Path(".") / ".entangled" / "filedb.json"
+FILEDB_LOCK_PATH = Path(".") / ".entangled" / "filedb.lock"
+
+
+def read_filedb() -> FileDB:
+    if not FILEDB_PATH.exists():
+        return FileDB(__version__, {}, set(), set())
+
+    logging.debug("Reading FileDB")
+    db = msgspec.json.decode(FILEDB_PATH.open("br").read(), type=FileDB)
+    if db.version != __version__:
+        logging.debug(f"FileDB was written with version {db.version}, running version {__version__}; updating.")
+    db.version = __version__
+
+    undead = list(filter(lambda p: not p.exists(), db))
+    for path in undead:
+        logging.warning(f"undead file `{path}` (found in db but not on drive)")
+
+    return db
+
+
+def write_filedb(db: FileDB):
+    logging.debug("Writing FileDB")
+    _ = FILEDB_PATH.open("wb").write(msgspec.json.encode(db, order="sorted"))
 
 
 @contextmanager
-def file_db(readonly: bool = False):
-    lock = FileLock(ensure_parent(Path.cwd() / ".entangled" / "filedb.lock"))
+def filedb(readonly: bool = False):
+    lock = FileLock(ensure_parent(FILEDB_LOCK_PATH))
     with lock:
-        db = FileDB.initialize()
+        db = read_filedb()
         yield db
         if not readonly:
-            db.write()
+            write_filedb(db)

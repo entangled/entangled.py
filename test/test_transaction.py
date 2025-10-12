@@ -2,12 +2,12 @@ from contextlib import chdir
 from pathlib import Path
 
 from entangled.transaction import Transaction, Create, Write, Delete
-from entangled.filedb import file_db
+from entangled.filedb import filedb
 
 
 def test_transaction(tmp_path: Path):
     with chdir(tmp_path):
-        with file_db() as db:
+        with filedb() as db:
             t = Transaction(db)
             t.write(Path("a"), "hello", [])
             t.write(Path("b"), "goodbye", [Path("a")])
@@ -20,7 +20,7 @@ def test_transaction(tmp_path: Path):
         with open(Path("a"), "w") as f:
             f.write("ciao")
 
-        with file_db() as db:
+        with filedb() as db:
             assert Path("a") in db
             assert Path("b") in db
             assert list(db.changed()) == [Path("a")]
@@ -33,7 +33,7 @@ def test_transaction(tmp_path: Path):
             assert isinstance(t.actions[0], Write)
             assert not t.all_ok()
 
-        with file_db() as db:
+        with filedb() as db:
             t = Transaction(db)
             t.write(Path("a"), "goodbye", [])
             assert isinstance(t.actions[0], Write)
