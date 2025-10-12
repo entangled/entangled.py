@@ -108,10 +108,15 @@ class FileDB(Struct):
     def has_changed(self, path: Path) -> bool:
         return stat(path) != self[path]
 
+    def update_target(self, path: Path, deps: list[Path]):
+        self.update(path, deps)
+        self.target.add(path.as_posix())
+
     def update(self, path: Path, deps: list[Path] | None = None):
         """Update the given path to a new stat."""
         path = normal_relative(path)
         if path in self.managed and deps is None:
+            logging.warning(f"updating managed file {path} without deps given.")
             known_deps = self[path].deps
             if known_deps is not None:
                 deps = [Path(p) for p in known_deps]

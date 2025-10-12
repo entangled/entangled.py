@@ -18,7 +18,7 @@ def test_transaction(tmp_path: Path):
             assert Path("b").exists()
 
         with open(Path("a"), "w") as f:
-            f.write("ciao")
+            _ = f.write("ciao")
 
         with filedb() as db:
             assert Path("a") in db

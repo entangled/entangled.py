@@ -15,11 +15,17 @@ from .errors.internal import InternalError
 
 
 @dataclass
+class Conflict:
+    target: Path
+    description: str
+
+
+@dataclass
 class Action(ABC):
     target: Path
 
     @abstractmethod
-    def conflict(self, db: FileDB) -> str | None:
+    def conflict(self, db: FileDB) -> Conflict | None:
         """Indicate wether the action might have conflicts. This could be
         inconsistency in the modification times of files, or overwriting
         a file that is not managed by Entangled."""
@@ -44,23 +50,23 @@ class Create(Action):
     mode: int | None
 
     @override
-    def conflict(self, db: FileDB) -> str | None:
+    def conflict(self, db: FileDB) -> Conflict | None:
         if self.target.exists():
             # Check if file contents are the same as what we want to write or is empty
             # then it is safe to take ownership.
             md_stat = stat(self.target)
-            fileHexdigest = md_stat.hexdigest
-            contentHexdigest = hexdigest(self.content)
-            if (contentHexdigest == fileHexdigest) or (md_stat.size == 0):
+            file_digest = md_stat.hexdigest
+            content_digest = hexdigest(self.content)
+            if (content_digest == file_digest) or (md_stat.size == 0):
                 return None
-            return f"{self.target} is not managed by Entangled"
+            return Conflict(self.target, "not managed by Entangled")
         return None
 
     @override
     def add_to_db(self, db: FileDB):
-        db.update(self.target, self.sources)
-        if self.sources != []:
-            db.managed.add(self.target)
+        db.update_target(self.target, self.sources)
+        if not self.sources:
+            logging.warning(f"Creating file `{self.target}` but no sources listed.")
 
     @override
     def run(self, db: FileDB):
@@ -97,14 +103,14 @@ class Write(Action):
     mode: int | None
 
     @override
-    def conflict(self, db: FileDB) -> str | None:
+    def conflict(self, db: FileDB) -> Conflict | None:
         st = stat(self.target)
         if st != db[self.target]:
-            return f"`{self.target}` seems to have changed outside the control of Entangled"
+            return Conflict(self.target, "changed outside the control of Entangled")
         if self.sources:
             newest_src = max(stat(s) for s in self.sources)
             if st > newest_src:
-                return f"`{self.target}` seems to be newer than `{newest_src.path}`"
+                return Conflict(self.target, f"newer than `{newest_src.path}`")
         return None
 
     @override
@@ -134,12 +140,10 @@ class Write(Action):
 @dataclass
 class Delete(Action):
     @override
-    def conflict(self, db: FileDB) -> str | None:
+    def conflict(self, db: FileDB) -> Conflict | None:
         st = stat(self.target)
         if st != db[self.target]:
-            return (
-                f"{self.target} seems to have changed outside the control of Entangled"
-            )
+            return Conflict(self.target, "changed outside the control of Entangled")
         return None
 
     @override
@@ -192,7 +196,7 @@ class Transaction:
         for p in orphans:
             self.actions.append(Delete(p))
 
-    def check_conflicts(self) -> list[str]:
+    def check_conflicts(self) -> list[Conflict]:
         return list(cat_maybes(a.conflict(self.db) for a in self.actions))
 
     def all_ok(self) -> bool:
