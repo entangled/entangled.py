@@ -3,7 +3,7 @@ from argh.utils import get_subparsers
 import argparse
 
 from pathlib import Path
-from brei.cli import RichHelpFormatter
+from rich_argparse import RichHelpFormatter
 from rich.console import Console
 from rich.table import Table
 
