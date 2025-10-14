@@ -178,7 +178,7 @@ class Choice[T, U](Parser[T | U]):
         raise ChoiceFailure("", inp, failures)
 
 
-def optional[T, U](p: Parser[T], default: U = None) -> Choice[T, U]:
+def optional[T, U](p: Parser[T], default: U | None = None) -> Choice[T, U | None]:
     return p | pure(default)
 
 
