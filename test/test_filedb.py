@@ -1,8 +1,11 @@
-from entangled.filedb import file_db, stat
+from entangled.io.stat import stat
+from entangled.io.filedb import filedb
 from time import sleep
 from pathlib import Path
 import pytest
 from contextlib import chdir
+
+from entangled.io.virtual import FileCache
 
 
 @pytest.fixture(scope="session")
@@ -24,23 +27,26 @@ def example_files(tmp_path_factory: pytest.TempPathFactory):
 def test_stat(example_files: Path):
     with chdir(example_files):
         stat_a = stat(example_files / "a")
+        assert stat_a
         stat_b = stat(example_files / "b")
+        assert stat_b
         stat_c = stat(example_files / "c")
-        assert stat_a == stat_b
-        assert stat_c != stat_b
-        assert stat_a < stat_b
+        assert stat_c
+        assert stat_a.stat == stat_b.stat
+        assert stat_c.stat != stat_b.stat
+        assert stat_a.stat < stat_b.stat
 
 
 def test_filedb(example_files: Path):
     with chdir(example_files):
-        with file_db() as db:
+        fs = FileCache()
+        with filedb() as db:
             for n in "abcd":
-                db.update(Path(n))
+                db.update(fs, Path(n))
 
-        with open(example_files / "d", "w") as f:
-            f.write("mars")
+        fs.write(Path("d"), "mars")
 
-        with file_db() as db:
-            assert db.changed() == [Path("d")]
-            db.update(Path("d"))
-            assert db.changed() == []
+        with filedb() as db:
+            assert list(db.changed_files(fs)) == [Path("d")]
+            db.update(fs, Path("d"))
+            assert list(db.changed_files(fs)) == []

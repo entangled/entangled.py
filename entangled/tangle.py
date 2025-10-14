@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from textwrap import indent
 from contextlib import contextmanager
 from copy import copy
+from pathlib import PurePath
 
 import re
 import mawk
@@ -43,14 +44,14 @@ class Tangler(mawk.RuleSet):
     ref: ReferenceId
     init: bool
     visited: Visitor[str]
-    deps: set[str] = field(init=False)
+    deps: set[PurePath] = field(init=False)
     cb: CodeBlock = field(init=False)
     location: TextLocation = field(init=False)
 
     def __post_init__(self):
-        self.cb = self.refs[self.ref]
+        self.cb = self.refs.get_codeblock(self.ref)
         self.location = copy(self.cb.origin)
-        self.deps = set((self.cb.origin.filename,))
+        self.deps = { self.cb.origin.filename }
 
     @mawk.always
     def lineno(self, _):
@@ -105,6 +106,7 @@ class AnnotatedTangler(Tangler):
 
     @override
     def on_eof(self):
+        assert self.cb.language
         return [f"{self.cb.language.comment.open} ~/~ end{self.close_comment}"]
 
 
@@ -120,7 +122,7 @@ def tangle_ref(
     ref_name: str,
     annotation: type[Tangler] | AnnotationMethod | None = None,
     _visited: Visitor[str] | None = None,
-) -> tuple[str, set[str]]:
+) -> tuple[str, set[PurePath]]:
     if annotation is None:
         annotation = config.get.annotation
 
@@ -141,7 +143,7 @@ def tangle_ref(
     with v.visit(ref_name):
         init = True
         result: list[str] = []
-        deps: set[str] = set()
+        deps: set[PurePath] = set()
         for ref in refs.index[ref_name]:
             t = tangler(refs, ref, init, v)
             result.append(t.tangle())

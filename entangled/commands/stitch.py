@@ -6,9 +6,9 @@ import argh  # type: ignore
 
 from ..config import config
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
-from ..transaction import transaction, TransactionMode
+from ..io import transaction, TransactionMode
 from ..errors.user import UserError
-from .tangle import get_input_files
+from ..config import get_input_files
 
 
 def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
@@ -52,7 +52,7 @@ def stitch(*, force: bool = False, show: bool = False):
             content[path] = c
 
         with transaction(mode) as t:
-            for path in t.db.managed:
+            for path in t.db.managed_files:
                 logging.debug("reading `%s`", path)
                 t.update(path)
                 with open(path, "r") as f:

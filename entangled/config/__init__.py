@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
+from itertools import chain
 
 import msgspec
 from msgspec import Struct, field
@@ -86,7 +87,7 @@ class Config(Struct, dict=True):
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
     hooks: list[str] = field(default_factory=lambda: ["shebang"])
-    hook: dict[str, Any] = field(default_factory=dict)
+    hook: dict[str, Any] = field(default_factory=dict)  # pyright: ignore[reportExplicitAny]
     brei: Program = field(default_factory=Program)
 
     language_index: dict[str, Language] = field(default_factory=dict)
@@ -126,10 +127,10 @@ def read_config_from_toml(
         return None
     try:
         with open(path, "rb") as f:
-            json: Any = tomllib.load(f)
+            json: Any = tomllib.load(f)  # pyright: ignore[reportExplicitAny]
             if section is not None:
                 for s in section.split("."):
-                    json = json[s]
+                    json = json[s]  # pyright: ignore[reportAny]
             return msgspec.convert(json, type=Config, dec_hook=from_str.dec_hook)
 
     except ValueError as e:
@@ -162,7 +163,7 @@ class ConfigWrapper(threading.local):
     @property
     def get(self) -> Config:
         if self.config is None:
-            raise ValueError(f"No config loaded.")
+            raise ValueError("No config loaded.")
         return self.config
 
     @contextmanager
@@ -179,10 +180,19 @@ class ConfigWrapper(threading.local):
 
     def get_language(self, lang_name: str) -> Language | None:
         if self.config is None:
-            raise ValueError(f"No config loaded.")
+            raise ValueError("No config loaded.")
         return self.config.language_index.get(lang_name, None)
 
 
 config = ConfigWrapper()
 """The `config.config` variable is changed when the `config` module is loaded.
 Config is read from `entangled.toml` file."""
+
+
+def get_input_files() -> list[Path]:
+    include_file_list = chain.from_iterable(map(Path(".").glob, config.get.watch_list))
+    input_file_list = [
+        path for path in include_file_list
+        if not any(path.match(pat) for pat in config.get.ignore_list)
+    ]
+    return input_file_list

@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Awaitable, Optional
+from collections.abc import Awaitable
+from typing import Any
 import argh  # type: ignore
 import asyncio
 import textwrap
@@ -11,15 +12,15 @@ from ..logging import logger
 log = logger()
 
 
-async def main(target_strs: list[str], force_run: bool, throttle: Optional[int]):
+async def main(target_strs: list[str], force_run: bool, throttle: int | None):
     if not Path(".entangled").exists():
         Path(".entangled").mkdir()
 
-    db = await resolve_tasks(config.brei, Path(".entangled/brei_history"))
+    db = await resolve_tasks(config.get.brei, Path(".entangled/brei_history"))
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
     db.force_run = force_run
-    jobs: list[Awaitable] = [db.run(Phony(t), db=db) for t in target_strs]
+    jobs: list[Awaitable[Any]] = [db.run(Phony(t), db=db) for t in target_strs]
     with db.persistent_history():
         results = await asyncio.gather(*jobs)
 
@@ -35,8 +36,7 @@ async def main(target_strs: list[str], force_run: bool, throttle: Optional[int])
 @argh.arg("targets", nargs="+", help="name of target to run")
 @argh.arg("-B", "--force-run", help="rebuild all dependencies")
 @argh.arg("-j", "--throttle", help="limit number of concurrent jobs")
-def brei(targets: list[str], *, force_run: bool = False, throttle: Optional[int] = None):
+def brei(targets: list[str], *, force_run: bool = False, throttle: int | None = None):
     """Build one of the configured targets."""
     config.read()
     asyncio.run(main(targets, force_run, throttle))
-

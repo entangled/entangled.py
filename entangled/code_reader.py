@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from pathlib import Path, PurePath
+from pathlib import PurePath
 
 import mawk
 import re

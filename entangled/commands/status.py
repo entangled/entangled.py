@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import Iterable
-from ..status import find_watch_dirs, list_input_files, list_dependent_files
+from collections.abc import Iterable
+from ..status import list_input_files, list_dependent_files
 from ..config import config
 from pathlib import Path
 
@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.tree import Tree
 
+
 def tree_from_files(files: Iterable[Path]):
     tree = Tree(label=".")
     dirs = {Path("."): tree}
@@ -17,12 +18,14 @@ def tree_from_files(files: Iterable[Path]):
         for p in reversed(f.parents):
             if p not in dirs:
                 dirs[p] = dirs[p.parent].add(p.name, style="repr.path")
-        dirs[f.parent].add(f.name, style="repr.filename")
+        _ = dirs[f.parent].add(f.name, style="repr.filename")
     return tree
+
 
 def files_panel(file_list: Iterable[Path], title: str) -> Panel:
     tree = tree_from_files(file_list)
     return Panel(tree, title=title, border_style="dark_cyan")
+
 
 def rich_status():
     config_table = Table()
