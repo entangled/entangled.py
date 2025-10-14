@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
@@ -10,18 +11,46 @@ import logging
 from typing import override
 
 from .utility import cat_maybes
-from .filedb import FileDB, stat, filedb, hexdigest
+from .filedb import FileDB, FileStat, stat, filedb, hexdigest
 from .errors.internal import InternalError
 
 
-@dataclass
+def assure_final_newline(s: str) -> str:
+    if s[-1] != "\n":
+        return s + "\n"
+    else:
+        return s
+
+
+def atomic_write(target: Path, content: str, mode: int | None):
+    """
+    Writes a file by first writing to a temporary location and then moving
+    the file to the target path.
+    """
+    tmp_dir = Path() / ".entangled" / "tmp"
+    tmp_dir.mkdir(exist_ok=True, parents=True)
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
+        _ = f.write(assure_final_newline(content))
+        # Flush and sync contents to disk
+        f.flush()
+        if mode is not None:
+            os.chmod(f.name, mode)
+        os.fsync(f.fileno())
+    os.replace(f.name, target)
+
+
+@dataclass(frozen=True)
 class Conflict:
     target: Path
     description: str
 
+    @override
+    def __str__(self):
+        return f"`{self.target}` {self.description}"
 
-@dataclass
-class Action(ABC):
+
+@dataclass(frozen=True)
+class Action(metaclass=ABCMeta):
     target: Path
 
     @abstractmethod
@@ -42,15 +71,40 @@ class Action(ABC):
         asked in case of a conflict."""
         ...
 
+    @cached_property
+    def target_stat(self) -> FileStat | None:
+        if not self.target.exists():
+            return None
+        return stat(self.target)
 
-@dataclass
-class Create(Action):
+
+@dataclass(frozen=True)
+class WriterBase(Action, metaclass=ABCMeta):
     content: str
     sources: list[Path]
     mode: int | None
 
+    @cached_property
+    def content_digest(self) -> str:
+        return hexdigest(self.content)
+
+    @override
+    def add_to_db(self, db: FileDB):
+        db.update_target(self.target, self.sources)
+
+    @override
+    def run(self, db: FileDB):
+        self.target.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(self.target, self.content, self.mode)
+        self.add_to_db(db)
+
+
+class Create(WriterBase):
     @override
     def conflict(self, db: FileDB) -> Conflict | None:
+        if not self.sources:
+            logging.warning(f"Creating file `{self.target}` but no sources listed.")
+
         if self.target.exists():
             # Check if file contents are the same as what we want to write or is empty
             # then it is safe to take ownership.
@@ -63,86 +117,30 @@ class Create(Action):
         return None
 
     @override
-    def add_to_db(self, db: FileDB):
-        db.update_target(self.target, self.sources)
-        if not self.sources:
-            logging.warning(f"Creating file `{self.target}` but no sources listed.")
-
-    @override
-    def run(self, db: FileDB):
-        self.target.parent.mkdir(parents=True, exist_ok=True)
-        # Write to tmp file then replace with file name
-        tmp_dir = Path() / ".entangled" / "tmp"
-        tmp_dir.mkdir(exist_ok=True, parents=True)
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-            _ = f.write(self.content)
-            # Flush and sync contents to disk
-            f.flush()
-            if self.mode is not None:
-                os.chmod(f.name, self.mode)
-            os.fsync(f.fileno())
-        os.replace(f.name, self.target)
-        self.add_to_db(db)
-
-    @override
     def __str__(self):
         return f"create `{self.target}`"
 
 
-def assure_final_newline(s: str) -> str:
-    if s[-1] != "\n":
-        return s + "\n"
-    else:
-        return s
-
-
-@dataclass
-class Write(Action):
-    content: str
-    sources: list[Path]
-    mode: int | None
-
+class Write(WriterBase):
     @override
     def conflict(self, db: FileDB) -> Conflict | None:
-        st = stat(self.target)
-        if st != db[self.target]:
+        if self.target_stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
-        if self.sources:
+        if self.sources and self.target_stat:
             newest_src = max(stat(s) for s in self.sources)
-            if st > newest_src:
+            if self.target_stat > newest_src:
                 return Conflict(self.target, f"newer than `{newest_src.path}`")
         return None
-
-    @override
-    def add_to_db(self, db: FileDB):
-        db.update(self.target, self.sources)
-
-    @override
-    def run(self, db: FileDB):
-        # Write to tmp file then replace with file name
-        tmp_dir = Path() / ".entangled" / "tmp"
-        tmp_dir.mkdir(exist_ok=True, parents=True)
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-            _ = f.write(assure_final_newline(self.content))
-            # Flush and sync contents to disk
-            f.flush()
-            if self.mode is not None:
-                os.chmod(f.name, self.mode)
-            os.fsync(f.fileno())
-        os.replace(f.name, self.target)
-        self.add_to_db(db)
 
     @override
     def __str__(self):
         return f"write `{self.target}`"
 
 
-@dataclass
 class Delete(Action):
     @override
     def conflict(self, db: FileDB) -> Conflict | None:
-        st = stat(self.target)
-        if st != db[self.target]:
+        if self.target_stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
         return None
 
