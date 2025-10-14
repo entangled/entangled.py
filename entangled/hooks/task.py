@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, final, override
 
 from ..config import AnnotationMethod
-from ..transaction import Transaction
+from ..io import Transaction
 
 from ..document import CodeBlock, ReferenceId, ReferenceMap
 from ..properties import Class, Property, get_attribute, get_classes

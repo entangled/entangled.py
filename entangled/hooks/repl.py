@@ -10,7 +10,7 @@ from msgspec import Struct, field
 from pathlib import Path
 
 from ..logging import logger
-from ..transaction import Transaction
+from ..io import Transaction
 from ..document import CodeBlock, ReferenceMap
 from ..properties import Class, get_attribute, get_id
 

@@ -52,7 +52,7 @@ def test_new_language(tmp_path):
         tangle()
         sleep(0.1)
         assert Path("test.fish").exists()
-        assert Path("test.fish").read_text() == "echo hello world"
+        assert Path("test.fish").read_text() == "echo hello world\n"
 
 
 config_with_more = """

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from .config import config
-from .filedb import filedb
+from .io import filedb
 
 from itertools import chain
 from pathlib import Path
@@ -22,7 +22,7 @@ def find_watch_dirs():
     input_file_list = list_input_files()
     markdown_dirs = set(p.parent for p in input_file_list)
     with filedb(readonly=True) as db:
-        code_dirs = set(p.parent for p in db.managed)
+        code_dirs = set(p.parent for p in db.managed_files)
     return code_dirs.union(markdown_dirs)
 
 
@@ -37,5 +37,5 @@ def list_input_files():
 
 def list_dependent_files():
     with filedb(readonly=True) as db:
-        result = list(db.managed)
+        result = list(db.managed_files)
     return result

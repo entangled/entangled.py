@@ -6,7 +6,7 @@ from rich.highlighter import RegexHighlighter
 
 from .version import __version__
 
-LOGGING_SETUP = False
+logging_setup = False
 
 
 class BackTickHighlighter(RegexHighlighter):
@@ -27,8 +27,8 @@ def logger():
 
 
 def configure(debug: bool = False):
-    global LOGGING_SETUP
-    if LOGGING_SETUP:
+    global logging_setup
+    if logging_setup:
         return
 
     if debug:
@@ -49,4 +49,4 @@ def configure(debug: bool = False):
     # log.propagate = False
     log.debug(f"Entangled {__version__} (https://entangled.github.io/)")
 
-    LOGGING_SETUP = True
+    logging_setup = True

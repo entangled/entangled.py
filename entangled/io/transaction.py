@@ -1,42 +1,19 @@
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from contextlib import contextmanager
 from enum import Enum
 
-import os
-import tempfile
 import logging
 from typing import override
 
-from .utility import cat_maybes
-from .filedb import FileDB, FileStat, stat, filedb, hexdigest
-from .errors.internal import InternalError
+from ..utility import cat_maybes
+from ..errors.internal import InternalError
 
-
-def assure_final_newline(s: str) -> str:
-    if s[-1] != "\n":
-        return s + "\n"
-    else:
-        return s
-
-
-def atomic_write(target: Path, content: str, mode: int | None):
-    """
-    Writes a file by first writing to a temporary location and then moving
-    the file to the target path.
-    """
-    tmp_dir = Path() / ".entangled" / "tmp"
-    tmp_dir.mkdir(exist_ok=True, parents=True)
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
-        _ = f.write(assure_final_newline(content))
-        # Flush and sync contents to disk
-        f.flush()
-        if mode is not None:
-            os.chmod(f.name, mode)
-        os.fsync(f.fileno())
-    os.replace(f.name, target)
+from .stat import Stat, hexdigest
+from .virtual import FileCache
+from .filedb import FileDB, filedb
 
 
 @dataclass(frozen=True)
@@ -54,67 +31,56 @@ class Action(metaclass=ABCMeta):
     target: Path
 
     @abstractmethod
-    def conflict(self, db: FileDB) -> Conflict | None:
+    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
         """Indicate wether the action might have conflicts. This could be
         inconsistency in the modification times of files, or overwriting
         a file that is not managed by Entangled."""
         ...
 
     @abstractmethod
-    def add_to_db(self, db: FileDB):
+    def add_to_db(self, fs: FileCache, db: FileDB):
         """Only perform the corresponding database action."""
         ...
 
     @abstractmethod
-    def run(self, db: FileDB):
+    def run(self, fs: FileCache):
         """Run the action, if `interact` is `True` then confirmation is
         asked in case of a conflict."""
         ...
 
-    @cached_property
-    def target_stat(self) -> FileStat | None:
-        if not self.target.exists():
+    def target_stat(self, fs: FileCache) -> Stat | None:
+        if self.target not in fs:
             return None
-        return stat(self.target)
+        return fs[self.target].stat
 
 
 @dataclass(frozen=True)
 class WriterBase(Action, metaclass=ABCMeta):
     content: str
-    sources: list[Path]
     mode: int | None
+    sources: list[Path]
 
     @cached_property
     def content_digest(self) -> str:
         return hexdigest(self.content)
 
     @override
-    def add_to_db(self, db: FileDB):
-        db.update_target(self.target, self.sources)
-
-    @override
-    def run(self, db: FileDB):
-        self.target.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(self.target, self.content, self.mode)
-        self.add_to_db(db)
+    def run(self, fs: FileCache):
+        fs.write(self.target, self.content, self.mode)
 
 
 class Create(WriterBase):
     @override
-    def conflict(self, db: FileDB) -> Conflict | None:
-        if not self.sources:
-            logging.warning(f"Creating file `{self.target}` but no sources listed.")
-
-        if self.target.exists():
-            # Check if file contents are the same as what we want to write or is empty
-            # then it is safe to take ownership.
-            md_stat = stat(self.target)
-            file_digest = md_stat.hexdigest
-            content_digest = hexdigest(self.content)
-            if (content_digest == file_digest) or (md_stat.size == 0):
+    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+        if self.target in fs:
+            if (self.content_digest == fs[self.target].stat.hexdigest):
                 return None
             return Conflict(self.target, "not managed by Entangled")
         return None
+
+    @override
+    def add_to_db(self, fs: FileCache, db: FileDB):
+        return db.create_target(fs, self.target)
 
     @override
     def __str__(self):
@@ -123,14 +89,19 @@ class Create(WriterBase):
 
 class Write(WriterBase):
     @override
-    def conflict(self, db: FileDB) -> Conflict | None:
-        if self.target_stat != db[self.target]:
+    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+        if self.target not in fs:
+            return None
+        if fs[self.target].stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
-        if self.sources and self.target_stat:
-            newest_src = max(stat(s) for s in self.sources)
-            if self.target_stat > newest_src:
-                return Conflict(self.target, f"newer than `{newest_src.path}`")
+        if self.sources:
+            if all(fs[s].stat < fs[self.target].stat for s in self.sources):
+                return Conflict(self.target, "newer than sources: " + ", ".join(f"`{s}`" for s in self.sources))
         return None
+
+    @override
+    def add_to_db(self, fs: FileCache, db: FileDB):
+        db.update(fs, self.target)
 
     @override
     def __str__(self):
@@ -139,23 +110,18 @@ class Write(WriterBase):
 
 class Delete(Action):
     @override
-    def conflict(self, db: FileDB) -> Conflict | None:
-        if self.target_stat != db[self.target]:
+    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+        if fs[self.target].stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
         return None
 
     @override
-    def add_to_db(self, db: FileDB):
+    def add_to_db(self, fs: FileCache, db: FileDB):
         del db[self.target]
 
     @override
-    def run(self, db: FileDB):
-        self.target.unlink()
-        parent = self.target.parent
-        while list(parent.iterdir()) == []:
-            parent.rmdir()
-            parent = parent.parent
-        self.add_to_db(db)
+    def run(self, fs: FileCache):
+        del fs[self.target]
 
     @override
     def __str__(self):
@@ -164,7 +130,13 @@ class Delete(Action):
 
 @dataclass
 class Transaction:
+    """
+    Collects a set of file mutations, checking for consistency. All file IO outside of
+    the `entangled.io` module should pass through this class, used with the context
+    manager function `transaction`.
+    """
     db: FileDB
+    fs: FileCache = field(default_factory=FileCache)
     updates: list[Path] = field(default_factory=list)
     actions: list[Action] = field(default_factory=list)
     passed: set[Path] = field(default_factory=set)
@@ -178,15 +150,15 @@ class Transaction:
         self.passed.add(path)
         if path not in self.db:
             logging.debug("creating target `%s`", path)
-            self.actions.append(Create(path, content, sources, mode))
+            self.actions.append(Create(path, content, mode, sources))
         elif not self.db.check(path, content):
             logging.debug("target `%s` changed", path)
-            self.actions.append(Write(path, content, sources, mode))
+            self.actions.append(Write(path, content, mode, sources))
         else:
             logging.debug("target `%s` unchanged", path)
 
     def clear_orphans(self):
-        orphans = self.db.managed - self.passed
+        orphans = self.db.managed_files - self.passed
         if not orphans:
             return
 
@@ -195,10 +167,10 @@ class Transaction:
             self.actions.append(Delete(p))
 
     def check_conflicts(self) -> list[Conflict]:
-        return list(cat_maybes(a.conflict(self.db) for a in self.actions))
+        return list(cat_maybes(a.conflict(self.fs, self.db) for a in self.actions))
 
     def all_ok(self) -> bool:
-        return all(a.conflict(self.db) is None for a in self.actions)
+        return all(a.conflict(self.fs, self.db) is None for a in self.actions)
 
     def print_plan(self):
         if not self.actions:
@@ -210,18 +182,28 @@ class Transaction:
 
     def run(self):
         for a in self.actions:
-            a.run(self.db)
+            a.run(self.fs)
+            a.add_to_db(self.fs, self.db)
         for f in self.updates:
-            self.db.update(f)
+            self.db.update(self.fs, f)
 
     def updatedb(self):
         for a in self.actions:
-            a.add_to_db(self.db)
+            a.add_to_db(self.fs, self.db)
         for f in self.updates:
-            self.db.update(f)
+            self.db.update(self.fs, f)
 
 
 class TransactionMode(Enum):
+    """
+    Selects the mode of transaction:
+
+    - `SHOW` only show what would be done
+    - `FAIL` fail with an error message if any conflicts are found
+    - `CONFIRM` in the evennt of conflicts, ask the user for confirmation
+    - `FORCE` print a warning on conflicts but execute anyway
+    - `RESETDB` recreate the filedb in case it got corrupted
+    """
     SHOW = 1
     FAIL = 2
     CONFIRM = 3

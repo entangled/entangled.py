@@ -97,7 +97,7 @@ class Hook(HookBase):
                 refs.index[script_file_name].append(ref)
                 refs.targets.add(script_file_name)
 
-            deps = (get_attribute(cb.properties, "deps") or "").split()
+            deps = [str(s) for s in (get_attribute(cb.properties, "deps") or "").split()]
             self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
 
     @override

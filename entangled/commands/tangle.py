@@ -5,7 +5,7 @@ import logging
 
 from ..document import ReferenceMap
 from ..config import config, AnnotationMethod, get_input_files
-from ..transaction import transaction, TransactionMode
+from ..io import transaction, TransactionMode
 from ..hooks import get_hooks
 from ..errors.user import UserError
 

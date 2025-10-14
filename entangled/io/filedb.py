@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from filelock import FileLock
 from ..version import __version__
 from ..utility import normal_relative, ensure_parent
 from .virtual import FileCache
-from .stat import Stat
+from .stat import Stat, hexdigest
 
 
 class FileDB(Struct):
@@ -44,6 +45,10 @@ class FileDB(Struct):
         the markdown, so is considered to be managed."""
         return {Path(p) for p in self.targets}
 
+    def changed_files(self, fs: FileCache) -> Generator[Path]:
+        return (Path(p) for p, known_stat in self.files.items()
+                if fs[Path(p)].stat != known_stat)
+
     def create_target(self, fs: FileCache, path: Path):
         path = normal_relative(path)
         self.update(fs, path)
@@ -69,7 +74,7 @@ class FileDB(Struct):
         return (Path(p) for p in self.files)
 
     def check(self, path: Path, content: str) -> bool:
-        return hexdigest(content) == self.files[str(path)].hexdigest
+        return hexdigest(content) == self.files[path.as_posix()].hexdigest
 
 
 FILEDB_PATH =  Path(".") / ".entangled" / "filedb.json"
@@ -78,7 +83,7 @@ FILEDB_LOCK_PATH = Path(".") / ".entangled" / "filedb.lock"
 
 def read_filedb() -> FileDB:
     if not FILEDB_PATH.exists():
-        return FileDB(__version__, {}, set(), set())
+        return FileDB(__version__, {}, set())
 
     logging.debug("Reading FileDB")
     db = msgspec.json.decode(FILEDB_PATH.open("br").read(), type=FileDB)

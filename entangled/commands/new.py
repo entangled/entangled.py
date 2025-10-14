@@ -1,6 +1,5 @@
-from typing import Optional
-
 import argh  # type: ignore
+from argh.utils import get_subparsers
 import argparse
 
 from pathlib import Path
@@ -45,7 +44,7 @@ def print_help() -> None:
     """
     parser = argparse.ArgumentParser(formatter_class=RichHelpFormatter)
     argh.add_commands(parser, [new], func_kwargs={"formatter_class": RichHelpFormatter})
-    argh.utils.get_subparsers(parser).choices["new"].print_help()
+    get_subparsers(parser).choices["new"].print_help()
 
 
 @argh.arg(
@@ -96,9 +95,9 @@ def print_help() -> None:
     help="Initialize a new project at this path",
 )
 def new(
-    template: Optional[str],
-    project_path: Optional[Path], *,
-    answers_file: Optional[str] = None,
+    template: str | None,
+    project_path: Path | None, *,
+    answers_file: str | None = None,
     data: str = "",
     defaults: bool = False,
     pretend: bool = False,
@@ -135,7 +134,7 @@ def new(
             copy_this_template = template_option.url
             break
 
-    data_dict: dict = {}
+    data_dict: dict[str, str] = {}
     if data:
         try:
             for d in data.split(";"):

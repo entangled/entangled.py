@@ -6,7 +6,7 @@ This command will read the markdown sources, then pretend to be tangling
 without actually writing out to source files.
 """
 
-from ..transaction import TransactionMode, transaction
+from ..io import TransactionMode, transaction
 from ..config import config, get_input_files
 from ..hooks import  get_hooks
 from ..document import ReferenceMap

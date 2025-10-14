@@ -125,8 +125,10 @@ def content_to_text(r: ReferenceMap, c: Content) -> str:
         A string, usually not terminated by a newline.
     """
     match c:
-        case PlainText(s): return s
-        case ReferenceId(): return r.get_codeblock(c).indented_text
+        case PlainText(s):
+            return s
+        case ReferenceId():
+            return r.get_codeblock(c).indented_text
 
 
 def document_to_text(r: ReferenceMap, cs: Iterable[Content]) -> str:
