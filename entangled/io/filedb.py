@@ -1,7 +1,9 @@
 from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
+import json
 from pathlib import Path
+from typing import Any
 
 import msgspec
 from msgspec import Struct
@@ -9,6 +11,8 @@ from msgspec import Struct
 import logging
 
 from filelock import FileLock
+
+from entangled.errors.user import HelpfulUserError
 
 from ..version import __version__
 from ..utility import normal_relative, ensure_parent
@@ -81,15 +85,22 @@ FILEDB_PATH =  Path(".") / ".entangled" / "filedb.json"
 FILEDB_LOCK_PATH = Path(".") / ".entangled" / "filedb.lock"
 
 
+def new_db() -> FileDB:
+    return FileDB(__version__, {}, set())
+
+
 def read_filedb() -> FileDB:
     if not FILEDB_PATH.exists():
-        return FileDB(__version__, {}, set())
+        return new_db()
 
     logging.debug("Reading FileDB")
-    db = msgspec.json.decode(FILEDB_PATH.open("br").read(), type=FileDB)
-    if db.version != __version__:
-        logging.debug(f"FileDB was written with version {db.version}, running version {__version__}; updating.")
-    db.version = __version__
+    raw: Any = json.load(open(FILEDB_PATH, "rb"))   # pyright: ignore[reportExplicitAny, reportAny]
+    if raw["version"] != __version__:
+        raise HelpfulUserError(
+            f"File database was created with a different version of Entangled ({raw["version"]}).\n" +
+            f"Run `entangled reset` to regenerate the database to version {__version__}.")
+
+    db = msgspec.convert(raw, type=FileDB)
 
     undead = list(filter(lambda p: not p.exists(), db))
     for path in undead:
@@ -104,10 +115,10 @@ def write_filedb(db: FileDB):
 
 
 @contextmanager
-def filedb(readonly: bool = False):
+def filedb(readonly: bool = False, writeonly: bool = False):
     lock = FileLock(ensure_parent(FILEDB_LOCK_PATH))
     with lock:
-        db = read_filedb()
+        db = read_filedb() if not writeonly else new_db()
         yield db
         if not readonly:
             write_filedb(db)

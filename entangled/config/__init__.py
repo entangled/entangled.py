@@ -195,4 +195,4 @@ def get_input_files() -> list[Path]:
         path for path in include_file_list
         if not any(path.match(pat) for pat in config.get.ignore_list)
     ]
-    return input_file_list
+    return sorted(input_file_list)

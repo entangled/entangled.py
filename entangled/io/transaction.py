@@ -96,7 +96,8 @@ class Write(WriterBase):
             return Conflict(self.target, "changed outside the control of Entangled")
         if self.sources:
             if all(fs[s].stat < fs[self.target].stat for s in self.sources):
-                return Conflict(self.target, "newer than sources: " + ", ".join(f"`{s}`" for s in self.sources))
+                return Conflict(self.target, "newer than all of its sources: " + ", ".join(
+                    f"`{s}`" for s in set(self.sources)))
         return None
 
     @override
@@ -213,7 +214,7 @@ class TransactionMode(Enum):
 
 @contextmanager
 def transaction(mode: TransactionMode = TransactionMode.FAIL):
-    with filedb() as db:
+    with filedb(writeonly = (mode == TransactionMode.RESETDB)) as db:
         if mode == TransactionMode.RESETDB:
             db.clear()
 
