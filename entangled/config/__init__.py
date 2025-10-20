@@ -44,6 +44,19 @@ class AnnotationMethod(StrEnum):
     SUPPLEMENTED = "supplemented"
 
 
+class NamespaceDefault(StrEnum):
+    """Default namespace behaviour.
+
+    - `GLOBAL` is the default. Identifiers are all collected into the
+      global namespace.
+    - `PRIVATE` means that identifiers are only accessible within the
+      same file.
+    """
+
+    GLOBAL = "global"
+    PRIVATE = "private"
+
+
 class Markers(Struct):
     """Markers can be used to configure the Markdown dialect. Currently not used."""
 
@@ -86,6 +99,9 @@ class Config(Struct, dict=True):
     annotation_format: str | None = None
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
+
+    namespace_default: NamespaceDefault = NamespaceDefault.GLOBAL
+
     hooks: list[str] = field(default_factory=lambda: ["shebang"])
     hook: dict[str, Any] = field(default_factory=dict)  # pyright: ignore[reportExplicitAny]
     brei: Program = field(default_factory=Program)

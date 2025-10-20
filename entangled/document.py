@@ -19,12 +19,13 @@ def length[T](iter: Iterable[T]) -> int:
 @dataclass
 class ReferenceId:
     name: str
+    namespace: list[str]
     file: PurePath
     ref_count: int
 
     @override
     def __hash__(self) -> int:
-        return hash((self.name, self.file, self.ref_count))
+        return hash((self.name, self.namespace, self.file, self.ref_count))
 
 
 @dataclass
@@ -84,9 +85,9 @@ class ReferenceMap:
 
         return (self.map[r] for r in self.index[n])
 
-    def new_id(self, filename: PurePath, name: str) -> ReferenceId:
+    def new_id(self, filename: PurePath, namespace: list[str], name: str) -> ReferenceId:
         c = length(filter(lambda r: r.file == filename, self.index[name]))
-        return ReferenceId(name, filename, c)
+        return ReferenceId(name, namespace, filename, c)
 
     def __setitem__(self, key: ReferenceId, value: CodeBlock):
         if key in self.map:
