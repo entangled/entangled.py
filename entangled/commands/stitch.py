@@ -46,17 +46,16 @@ def stitch(*, force: bool = False, show: bool = False):
     refs = ReferenceMap()
     content: dict[Path, list[Content]] = {}
     try:
-        for path in input_file_list:
-            logging.debug("reading `%s`", path)
-            _, c = read_markdown_file(path, refs=refs, hooks=hooks)
-            content[path] = c
-
         with transaction(mode) as t:
+            for path in input_file_list:
+                logging.debug("reading `%s`", path)
+                _, c = read_markdown_file(t, path, refs=refs, hooks=hooks)
+                content[path] = c
+
             for path in t.db.managed_files:
                 logging.debug("reading `%s`", path)
                 t.update(path)
-                with open(path, "r") as f:
-                    CodeReader(path, refs).run(f.read())
+                _ = CodeReader(path, refs).run(t.read(path))
 
             for path in input_file_list:
                 t.write(path, stitch_markdown(refs, content[path]), [])

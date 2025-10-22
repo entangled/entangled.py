@@ -25,7 +25,7 @@ def atomic_write(target: Path, content: str, mode: int | None):
     """
     tmp_dir = Path() / ".entangled" / "tmp"
     tmp_dir.mkdir(exist_ok=True, parents=True)
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir) as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=tmp_dir, encoding="utf-8") as f:
         _ = f.write(assure_final_newline(content))
         # Flush and sync contents to disk
         f.flush()
@@ -53,7 +53,7 @@ class FileCache:
         """
         if key not in self._data:
             if (s := stat(key)) is None:
-                raise KeyError()
+                raise FileNotFoundError(key)
             self._data[key] = s
         return self._data[key]
 
