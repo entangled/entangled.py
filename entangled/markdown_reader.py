@@ -201,7 +201,8 @@ def read_markdown_string(
     def process(r: RawContent) -> Content:
         match r:
             case CodeBlock():
-                for h in hooks: h.on_read(r)
+                for h in hooks:
+                    h.on_read(r)
                 block_id = get_id(r.properties)
                 target_file = get_attribute(r.properties, "file")
 
@@ -211,7 +212,7 @@ def read_markdown_string(
                 ref_name = block_id or target_file
                 if ref_name is None:
                     ref_name = f"unnamed-{r.origin}"
-                ref = refs.new_id(r.origin.filename, ref_name)
+                ref = refs.new_id(r.origin.filename, (), ref_name)
 
                 refs[ref] = r
                 if target_file is not None:
@@ -221,7 +222,8 @@ def read_markdown_string(
 
                 return ref
 
-            case PlainText(): return r
+            case PlainText():
+                return r
 
     content = list(map(process, md.raw_content))
     logging.debug("found ids: %s", list(refs.map.keys()))

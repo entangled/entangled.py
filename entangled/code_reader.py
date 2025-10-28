@@ -21,7 +21,7 @@ class CodeReader(mawk.RuleSet):
 
     def __init__(self, path: PurePath, refs: ReferenceMap):
         self.location: TextLocation = TextLocation(path, 0)
-        self.stack: list[Frame] = [Frame(ReferenceId("#root#", PurePath("-"), -1), "")]
+        self.stack: list[Frame] = [Frame(ReferenceId("#root#", (), PurePath("-"), -1), "")]
         self.refs: ReferenceMap = refs
 
     @property
@@ -36,8 +36,10 @@ class CodeReader(mawk.RuleSet):
         r"^(?P<indent>\s*).* ~/~ begin <<(?P<source>[^#<>]+)#(?P<ref_name>[^#<>]+)>>\[(?P<ref_count>init|\d+)\]"
     )
     def on_block_begin(self, m: re.Match[str]) -> list[str]:
-        ref_name = m["ref_name"]
-
+        full_ref_name = m["ref_name"]
+        ref_name = full_ref_name.split("::")[-1]
+        namespace = tuple(full_ref_name.split("::")[:-1])
+        
         # When there are lines above the first ref, say a shebang, swap
         # them into the first block.
         if len(self.stack) == 1 and len(self.stack[0].content) > 0:
@@ -57,7 +59,8 @@ class CodeReader(mawk.RuleSet):
 
         self.stack.append(
             Frame(
-                ReferenceId(m["ref_name"], PurePath(m["source"]), ref_count), m["indent"], content
+                ReferenceId(m["ref_name"], namespace, PurePath(m["source"]), ref_count),
+                m["indent"], content
             )
         )
         return []

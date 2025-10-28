@@ -48,6 +48,7 @@ dev = [
         "types-pexpect>=4.9.0.20250916",
         "types-PyYAML>=6.0.1,<7",
         "pytest-timeout>=2.4.0",
+        "ty>=0.0.1a24",
 ]
 
 [tool.hatch.build.targets.sdist]

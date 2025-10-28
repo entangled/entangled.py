@@ -19,7 +19,7 @@ def length[T](iter: Iterable[T]) -> int:
 @dataclass
 class ReferenceId:
     name: str
-    namespace: list[str]
+    namespace: tuple[str,...]
     file: PurePath
     ref_count: int
 
@@ -85,7 +85,7 @@ class ReferenceMap:
 
         return (self.map[r] for r in self.index[n])
 
-    def new_id(self, filename: PurePath, namespace: list[str], name: str) -> ReferenceId:
+    def new_id(self, filename: PurePath, namespace: tuple[str,...], name: str) -> ReferenceId:
         c = length(filter(lambda r: r.file == filename, self.index[name]))
         return ReferenceId(name, namespace, filename, c)
 
@@ -130,6 +130,8 @@ def content_to_text(r: ReferenceMap, c: Content) -> str:
             return s
         case ReferenceId():
             return r.get_codeblock(c).indented_text
+
+    raise ValueError("impossible code path")
 
 
 def document_to_text(r: ReferenceMap, cs: Iterable[Content]) -> str:

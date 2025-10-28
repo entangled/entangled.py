@@ -1,7 +1,6 @@
 from __future__ import annotations
 import re
-import textwrap
-from typing import Any, final, override
+from typing import final, override, cast
 import yaml
 
 from entangled.config.language import Language
@@ -51,20 +50,22 @@ def amend_code_properties(code_block: CodeBlock):
         log.warning(f"tried to parse:\n{header}")
         return
 
-    if "id" in attrs.keys():
-        if not isinstance(attrs["id"], str):
+    attrs = cast(dict[str, object], attrs)
+    code_id = attrs.get("id", None)
+    if code_id is not None:
+        if not isinstance(code_id, str):
             log.warning(f"{code_block.origin}: Quarto id does not evaluate to string; skipping")
             log.warning(f"tried to parse:\n{header}")
             return
-        props.append(Id(attrs["id"]))
+        props.append(Id(code_id))
 
-    if "classes" in attrs.keys():
-        classes = attrs["classes"]
+    classes = attrs.get("classes", None)
+    if isinstance(classes, list):
         if not all(isinstance(c, str) for c in classes):
             log.warning(f"{code_block.origin}: Quarto classes do not evaluate to strings; skipping")
             log.warning(f"tried to parse:\n{header}")
             return
-        props.extend(Class(c) for c in classes)
+        props.extend(Class(cast(str, c)) for c in classes)
 
     props.extend(Attribute(str(k), v) for k, v in attrs.items()
                  if k not in ("id", "classes"))
