@@ -19,11 +19,6 @@ def get_path(d: object, path: str) -> object:
 def read_markdown(input: InputStream, refs: ReferenceMap | None = None) -> MarkdownStream[ReferenceMap]:
     refs = refs or ReferenceMap()
     header = yield from read_yaml_header(input)
-    if isinstance(header, dict):
-        header = cast(dict[str, object], header)
-        extra_config = msgspec.convert(header.get("entangled", None), Config)
-    elif header is None:
-        extra_config = None
 
 
     return refs
