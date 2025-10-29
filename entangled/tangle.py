@@ -9,7 +9,7 @@ import re
 import mawk
 
 from .config import AnnotationMethod
-from .text_location import TextLocation
+from .readers.text_location import TextLocation
 from .document import (
     ReferenceMap,
     ReferenceId,

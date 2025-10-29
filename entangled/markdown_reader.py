@@ -11,7 +11,7 @@ from entangled.config.language import Language
 
 from .config import config
 from .utility import first
-from .text_location import TextLocation
+from .readers.text_location import TextLocation
 from .document import CodeBlock, ReferenceMap, Content, PlainText, RawContent
 from .properties import Property, read_properties, get_attribute, get_classes, get_id
 from .hooks.base import HookBase

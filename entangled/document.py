@@ -9,7 +9,7 @@ from pathlib import PurePath
 from .config.language import Language
 from .properties import Property
 from .errors.internal import InternalError
-from .text_location import TextLocation
+from .readers.text_location import TextLocation
 
 
 def length[T](iter: Iterable[T]) -> int:

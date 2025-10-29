@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 from pathlib import Path
 
-from ..text_location import TextLocation
+from ..readers.text_location import TextLocation
 
 
 class UserError(Exception):

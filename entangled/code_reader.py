@@ -4,7 +4,7 @@ from pathlib import PurePath
 import mawk
 import re
 
-from .text_location import TextLocation
+from .readers.text_location import TextLocation
 from .document import ReferenceId, ReferenceMap
 from .errors.user import IndentationError
 
@@ -39,7 +39,7 @@ class CodeReader(mawk.RuleSet):
         full_ref_name = m["ref_name"]
         ref_name = full_ref_name.split("::")[-1]
         namespace = tuple(full_ref_name.split("::")[:-1])
-        
+
         # When there are lines above the first ref, say a shebang, swap
         # them into the first block.
         if len(self.stack) == 1 and len(self.stack[0].content) > 0:
