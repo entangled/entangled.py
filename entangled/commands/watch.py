@@ -20,7 +20,12 @@ class EventHandler(FileSystemEventHandler):
         if event.event_type == "opened":
             return
         config.read()
-        path = Path(event.src_path)
+
+        if isinstance(event.src_path, bytes):
+            path = Path(event.src_path.decode("utf-8"))
+        else:
+            path = Path(event.src_path)
+
         if path.absolute().is_relative_to(Path("./.entangled").absolute()):
             return
         if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
