@@ -8,6 +8,8 @@ import mawk
 import logging
 
 from entangled.config.language import Language
+from entangled.io.transaction import Transaction
+from entangled.io.virtual import FileCache
 
 from .config import config
 from .utility import first
@@ -146,8 +148,8 @@ class MarkdownLexer(mawk.RuleSet):
         self.flush_plain_text()
         return []
 
-
 def read_markdown_file(
+    t: Transaction,
     path: Path,
     refs: ReferenceMap | None = None,
     hooks: list[HookBase] | None = None) \
@@ -167,9 +169,8 @@ def read_markdown_file(
     content is a list of `PlainText | ReferenceId`. Each `ReferenceId` can be
     looked up in the reference map.
     """
-    with open(path, "r") as f:
-        rel_path = path.resolve().relative_to(Path.cwd())
-        return read_markdown_string(f.read(), rel_path, refs, hooks)
+    rel_path = path.resolve().relative_to(Path.cwd())
+    return read_markdown_string(t.read(rel_path), rel_path, refs, hooks)
 
 
 def read_markdown_string(

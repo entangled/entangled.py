@@ -1,4 +1,4 @@
-from entangled.markdown_reader import read_markdown_file
+from entangled.markdown_reader import read_markdown_string
 from entangled.tangle import tangle_ref
 from entangled.code_reader import CodeReader
 from pathlib import Path, PurePath
@@ -10,7 +10,7 @@ from contextlib import chdir
 def test_tangle_ref(data, tmp_path):
     copytree(data / "hello-world", tmp_path / "hello-world")
     with chdir(tmp_path / "hello-world"):
-        refs, _ = read_markdown_file(Path("hello-world.md"))
+        refs, _ = read_markdown_string(Path("hello-world.md").read_text(encoding="utf-8"), Path("hello-world.md"))
         tangled, deps = tangle_ref(refs, "hello_world.cc")
         assert deps == {PurePath("hello-world.md")}
         with open("hello_world.cc", "r") as f:

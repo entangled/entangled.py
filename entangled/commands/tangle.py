@@ -52,7 +52,7 @@ def tangle(*, annotate: str | None = None, force: bool = False, show: bool = Fal
             for path in input_file_list:
                 logging.debug("reading `%s`", path)
                 t.update(path)
-                _, _ = read_markdown_file(path, refs=refs, hooks=hooks)
+                _, _ = read_markdown_file(t, path, refs=refs, hooks=hooks)
 
             for h in hooks:
                 h.pre_tangle(refs)

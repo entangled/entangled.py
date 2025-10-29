@@ -158,6 +158,9 @@ class Transaction:
         else:
             logging.debug("target `%s` unchanged", path)
 
+    def read(self, path: Path) -> str:
+        return self.fs[path].content
+
     def clear_orphans(self):
         orphans = self.db.managed_files - self.passed
         if not orphans:

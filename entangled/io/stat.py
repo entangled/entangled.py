@@ -55,7 +55,7 @@ class FileData:
         if stat is None:
             return None
 
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             content = f.read()
             digest = hexdigest(content)
 
