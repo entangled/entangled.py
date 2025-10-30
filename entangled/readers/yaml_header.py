@@ -23,8 +23,9 @@ def read_yaml_header(input: InputStream) -> MarkdownStream[object]:
         return None
 
     yield PlainText(delimited_token.string)
+
     try:
-        return yaml.safe_load(delimited_token.content)
+        return yaml.safe_load(delimited_token.content)  # pyright: ignore[reportAny]
     except yaml.YAMLError as e:
         raise ParseError(delimited_token.origin, str(e))
 
