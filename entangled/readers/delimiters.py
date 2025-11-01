@@ -23,9 +23,22 @@ class DelimitedToken:
         Reconstructs the original input string.
         """
         return self.open_line + self.content + self.close_line
-    
 
-def delimited_token_getter(open: str, close: str) -> Callable[[InputStream], DelimitedToken | None]:
+
+def const[T, **Args](value: T) -> Callable[Args, T]:
+    def const_fn(*_1: Args.args, **_2: Args.kwargs) -> T:
+        return value
+    return const_fn
+
+
+type DelimiterGuard = Callable[[TextLocation, re.Match[str], re.Match[str]], bool]
+
+
+def delimited_token_getter(
+        open: str,
+        close: str,
+        guard: DelimiterGuard | None = None
+    ) -> Callable[[InputStream], DelimitedToken | None]:
     """
     Creates a function that reads a given `DelimitedToken` from
     the input stream or returns `None` if the stream does not start
@@ -34,6 +47,7 @@ def delimited_token_getter(open: str, close: str) -> Callable[[InputStream], Del
     Args:
         open: a regex on which the token is triggered
         close: a regex on which the enclosed content is closed
+        guard: an optional predicate for additional check on close pattern
 
     Returns:
         A `DelimitedToken` object containing the text location of
@@ -46,11 +60,12 @@ def delimited_token_getter(open: str, close: str) -> Callable[[InputStream], Del
     """
     open_pattern = re.compile(open)
     close_pattern = re.compile(close)
+    guard_fn: DelimiterGuard = guard or const(True)
 
     def get(input: InputStream) -> DelimitedToken | None:
         if not input:
             return None
-        
+
         origin, open_line = input.peek()
         open_match = open_pattern.match(open_line.rstrip())
         if not open_match:
@@ -63,7 +78,7 @@ def delimited_token_getter(open: str, close: str) -> Callable[[InputStream], Del
         # iterate directly from the inner iterator.
         for _, line in input.iterator:
             close_match = close_pattern.match(line.rstrip())
-            if not close_match:
+            if not close_match or not guard_fn(origin, open_match, close_match):
                 content += line
             else:
                 close_line = line
@@ -72,5 +87,5 @@ def delimited_token_getter(open: str, close: str) -> Callable[[InputStream], Del
                     content, close_line, close_match)
 
         raise ParseError(origin, "unexpected end of file")
-            
+
     return get

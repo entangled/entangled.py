@@ -22,6 +22,10 @@ class HookBase:
     def __init__(self, config: Config):
         pass
 
+    @staticmethod
+    def priority() -> int:
+        return 50
+
     def check_prerequisites(self):
         """When prerequisites aren't met, raise PrerequisitesFailed."""
         pass

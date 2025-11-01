@@ -82,6 +82,11 @@ class Hook(HookBase):
         self.config = config
 
     @override
+    @staticmethod
+    def priority():
+        return 10
+
+    @override
     def on_read(self, code: CodeBlock):
         log.debug("quarto filter: %s", code)
         amend_code_properties(code)

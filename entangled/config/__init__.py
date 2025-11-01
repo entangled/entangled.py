@@ -4,125 +4,23 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-from functools import cached_property
 import threading
 from contextlib import contextmanager
-from copy import copy, deepcopy
-from enum import StrEnum
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from itertools import chain
 
 import msgspec
-from msgspec import Struct, field
 import tomllib
 
-from brei import Program
-
-from entangled import from_str
-from .language import Language, languages
-from .version import Version
+from .language import Language
+from .config_data import Config
+from .config_update import ConfigUpdate
 from ..logging import logger
 
 
 log = logger()
-
-
-class AnnotationMethod(StrEnum):
-    """Annotation methods.
-
-    - `STANDARD` is the default. Comments tell where a piece of code
-       came from in enough detail to reconstruct the markdown if some
-       of the code is changed.
-    - `NAKED` adds no comments to the tangled files. Stitching is not
-       possible with this setting.
-    - `SUPPLEMENTED` adds extra information to the comment lines.
-    """
-
-    STANDARD = "standard"
-    NAKED = "naked"
-    SUPPLEMENTED = "supplemented"
-
-
-class NamespaceDefault(StrEnum):
-    """Default namespace behaviour.
-
-    - `GLOBAL` is the default. Identifiers are all collected into the
-      global namespace.
-    - `PRIVATE` means that identifiers are only accessible within the
-      same file.
-    """
-
-    GLOBAL = "global"
-    PRIVATE = "private"
-
-
-class Markers(Struct):
-    """Markers can be used to configure the Markdown dialect. Currently not used."""
-
-    open: str
-    close: str
-    begin_ignore: str = r"^\s*\~\~\~markdown\s*$"
-    end_ignore: str = r"^\s*\~\~\~\s*$"
-
-
-markers = Markers(
-    r"^(?P<indent>\s*)```\s*{(?P<properties>[^{}]*)}\s*$", r"^(?P<indent>\s*)```\s*$"
-)
-
-
-class Config(Struct, dict=True):
-    """Main config class.
-
-    Attributes:
-        version: Version of Entangled for which this config was created.
-            Entangled should read all versions lower than its own.
-        languages: List of programming languages and their comment styles.
-        markers: Regexes for detecting open and close of code blocks.
-        watch_list: List of glob-expressions indicating files to include
-            for tangling.
-        annotation: Style of annotation.
-        annotation_format: Extra annotation.
-        use_line_directives: Wether to print pragmas in source code for
-            indicating markdown source locations.
-        hooks: List of enabled hooks.
-        hook: Sub-config of hooks.
-        loom: Sub-config of loom.
-
-    This class is made thread-local to make it possible to test in parallel."""
-
-    _version: str = field(name = "version")
-    languages: list[Language] = field(default_factory=list)
-    markers: Markers = field(default_factory=lambda: copy(markers))
-    watch_list: list[str] = field(default_factory=lambda: ["**/*.md"])
-    ignore_list: list[str] = field(default_factory=list)
-    annotation_format: str | None = None
-    annotation: AnnotationMethod = AnnotationMethod.STANDARD
-    use_line_directives: bool = False
-
-    namespace_default: NamespaceDefault = NamespaceDefault.GLOBAL
-
-    hooks: list[str] = field(default_factory=lambda: ["shebang"])
-    hook: dict[str, Any] = field(default_factory=dict)  # pyright: ignore[reportExplicitAny]
-    brei: Program = field(default_factory=Program)
-
-    language_index: dict[str, Language] = field(default_factory=dict)
-
-    @cached_property
-    def version(self) -> Version:
-        return Version.from_str(self._version)
-
-    def __post_init__(self):
-        self.languages = languages + self.languages
-        self.make_language_index()
-
-    def make_language_index(self):
-        for l in self.languages:
-            for i in l.identifiers:
-                self.language_index[i] = l
-
-
-default = Config("2.0")  # Version.from_str("2.0"))
 
 
 def read_config_from_toml(
@@ -147,7 +45,8 @@ def read_config_from_toml(
             if section is not None:
                 for s in section.split("."):
                     json = json[s]  # pyright: ignore[reportAny]
-            return msgspec.convert(json, type=Config, dec_hook=from_str.dec_hook)
+            update = msgspec.convert(json, type=ConfigUpdate)
+            return Config() | update
 
     except ValueError as e:
         log.error("Could not read config: %s", e)
@@ -160,12 +59,12 @@ def read_config_from_toml(
 
 def read_config():
     if Path("./entangled.toml").exists():
-        return read_config_from_toml(Path("./entangled.toml")) or default
+        return read_config_from_toml(Path("./entangled.toml")) or Config()
     if Path("./pyproject.toml").exists():
         return (
-            read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or default
+            read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or Config()
         )
-    return default
+    return Config()
 
 
 class ConfigWrapper(threading.local):
@@ -185,10 +84,8 @@ class ConfigWrapper(threading.local):
     @contextmanager
     def __call__(self, **kwargs):
         backup = self.config
-        new_config = deepcopy(self.config)
-        for k, v in kwargs.items():
-            setattr(new_config, k, v)
-        self.config = new_config
+        self.config = (self.config if self.config is not None else Config()) \
+            | ConfigUpdate(**kwargs)
 
         yield
 
@@ -197,7 +94,7 @@ class ConfigWrapper(threading.local):
     def get_language(self, lang_name: str) -> Language | None:
         if self.config is None:
             raise ValueError("No config loaded.")
-        return self.config.language_index.get(lang_name, None)
+        return self.config.languages.get(lang_name, None)
 
 
 config = ConfigWrapper()

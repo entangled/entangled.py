@@ -28,7 +28,7 @@ hooks: dict[str, type[HookBase]] = {
 
 def get_hooks() -> list[HookBase]:
     active_hooks: list[HookBase] = []
-    for h in config.get.hooks:
+    for h in sorted(config.get.hooks, key=lambda h: hooks[h].priority()):
         if h in hooks | external_hooks:
             try:
                 hook_cfg = msgspec.convert(config.get.hook.get(h, {}), type=hooks[h].Config)
