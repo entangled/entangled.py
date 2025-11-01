@@ -1,9 +1,10 @@
 from typing import Any
 
 import msgspec
+from entangled.config.config_update import ConfigUpdate
 from entangled.config.version import Version
 from entangled.config.language import Language, Comment
-from entangled.config import config, Config, AnnotationMethod, default
+from entangled.config import config, Config, AnnotationMethod
 from entangled.commands import tangle
 
 from contextlib import chdir
@@ -20,7 +21,7 @@ def test_config_constructable():
         Language,
         {"name": "French", "identifiers": ["fr"], "comment": {"open": "excusez moi"}},
     ) == Language("French", ["fr"], Comment("excusez moi"))
-    cfg1 = construct(Config, {"version": "2.0", "annotation": "naked"})
+    cfg1 = Config() | construct(ConfigUpdate, {"version": "2.0", "annotation": "naked"})
     assert cfg1.version == Version(numbers=(2, 0))
     assert cfg1.annotation == AnnotationMethod.NAKED
 
@@ -102,7 +103,7 @@ def test_pyproject_toml(tmp_path):
         sleep(0.1)
         config.read(force=True)
 
-        assert config.get == default
+        assert config.get == Config()
 
         Path("pyproject.toml").write_text(config_in_pyproject)
         sleep(0.1)

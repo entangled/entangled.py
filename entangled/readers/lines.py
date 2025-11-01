@@ -13,7 +13,7 @@ def lines(text: str) -> Generator[str]:
         pos = next_pos + 1
 
     yield text[pos:]
-    
+
 
 @peekable
 def numbered_lines(filename: PurePath, text: str) -> Generator[InputToken]:
@@ -21,7 +21,5 @@ def numbered_lines(filename: PurePath, text: str) -> Generator[InputToken]:
     Iterate the lines in a file. Doesn't strip newlines. Works with both
     Windows and Unix line endings.
     """
-    location = TextLocation(filename)
-    for line in lines(text):
-        yield (location, line)
-        location.increment()
+    for n, line in enumerate(lines(text)):
+        yield (TextLocation(filename, n+1), line)

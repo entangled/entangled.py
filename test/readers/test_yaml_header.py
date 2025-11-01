@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from entangled.readers.yaml_header import read_yaml_header
-from entangled.readers.lines import lines
+from entangled.readers.lines import numbered_lines
 from entangled.errors.user import ParseError
 from entangled.readers.types import MarkdownStream
 
@@ -47,7 +47,7 @@ def get_yaml_header(input: str) -> object:
 
     def reader() -> MarkdownStream[object]:
          nonlocal result
-         result = yield from read_yaml_header(lines(path, input))
+         result = yield from read_yaml_header(numbered_lines(path, input))
          return
 
     def run():

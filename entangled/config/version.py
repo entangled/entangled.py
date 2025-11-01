@@ -4,7 +4,7 @@ from ..from_str import FromStr
 from typing import override
 
 
-@dataclass
+@dataclass(frozen=True)
 class Version(FromStr):
     numbers: tuple[int, ...]
 
