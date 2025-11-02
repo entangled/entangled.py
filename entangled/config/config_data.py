@@ -34,7 +34,6 @@ class Config:
             indicating markdown source locations.
         hooks: List of enabled hooks.
         hook: Sub-config of hooks.
-        loom: Sub-config of loom.
     """
     version: Version = Version((2, 0))
     languages: dict[str, Language] = field(default_factory=lambda: {
@@ -55,6 +54,9 @@ class Config:
     hooks: set[str] = field(default_factory=lambda: { "shebang" })
     hook: dict[str, object] = field(default_factory=dict)
     brei: Program = field(default_factory=Program)
+
+    def get_language(self, lang_id: str) -> Language | None:
+        return self.languages.get(lang_id, None)
 
     def __or__(self, update: ConfigUpdate) -> Config:
         if update.style is not None:

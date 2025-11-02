@@ -44,6 +44,7 @@ class CodeBlock:
     language: Language | None = None
     header: str | None = None
     mode: int | None = None
+    namespace: tuple[str, ...] | None = None
 
     @property
     def text(self) -> str:

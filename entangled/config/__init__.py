@@ -112,4 +112,4 @@ def get_input_files() -> list[Path]:
     return sorted(input_file_list)
 
 
-__all__ = ["config", "AnnotationMethod", "Markers"]
+__all__ = ["Config", "ConfigUpdate", "config", "AnnotationMethod", "Markers"]
