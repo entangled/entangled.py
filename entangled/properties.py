@@ -90,3 +90,12 @@ def get_attribute(props: list[Property], key: str) -> Any:  # pyright: ignore[re
         return next(p.value for p in props if isinstance(p, Attribute) and p.key == key)  # pyright: ignore[reportAny]
     except StopIteration:
         return None
+
+
+def get_attribute_string(props: list[Property], key: str) -> str | None:
+    x = get_attribute(props, key)
+    if x is None:
+        return None
+    if isinstance(x, str):
+        return x
+    raise TypeError()

@@ -7,14 +7,14 @@ import msgspec
 from ..config import Config, ConfigUpdate, config
 from ..document import PlainText
 from ..errors.user import ParseError
-from .types import InputStream, RawMarkdownStream
+from .types import InputStream, MarkdownStream
 from .delimiters import delimited_token_getter
 
 
 get_yaml_header_token = delimited_token_getter("---", "---")
 
 
-def read_yaml_header(input: InputStream) -> RawMarkdownStream[object]:
+def read_yaml_header(input: InputStream) -> MarkdownStream[object]:
     """
     Reads the YAML header that can be found at the top of a Markdown document.
     """

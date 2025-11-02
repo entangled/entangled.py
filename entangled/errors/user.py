@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, override
 from pathlib import Path
 
 from ..readers.text_location import TextLocation
@@ -74,3 +74,13 @@ class MissingReference(UserError):
 
     def __str__(self):
         return f"Missing reference `{self.ref_name}` at `{self.location}`"
+
+
+@dataclass
+class CodeAttributeError(UserError):
+    origin: TextLocation
+    msg: str
+
+    @override
+    def __str__(self) -> str:
+        return f"{self.origin}: Attribute error: {self.msg}"
