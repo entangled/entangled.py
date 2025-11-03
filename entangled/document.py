@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from textwrap import indent
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from typing import override
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -60,6 +62,39 @@ RawContent = PlainText | CodeBlock
 
 
 @dataclass
+class Namespace:
+    subspace: defaultdict[str, Namespace] = field(
+        default_factory=lambda: defaultdict(Namespace)
+    )
+    index: defaultdict[str, list[ReferenceId]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    aliases: dict[str, str] = field(default_factory=dict)
+
+    def get(self, namespace: tuple[str, ...], name: str) -> list[ReferenceId]:
+        dir = self
+        for i, s in enumerate(namespace):
+            if s not in self.subspace:
+                raise KeyError(f"no subspace `{s}` found in namespace `{"::".join(namespace[:i])}`")
+            dir = dir.subspace[s]
+
+        if name in dir.index:
+            return dir.index[name]
+
+        if name in dir.aliases:
+            return dir.get((), dir.aliases[name])
+
+        raise KeyError(f"no reference `{name}` found in namespace `{"::".join(namespace)}`")
+
+    def __getitem__(self, key: str | tuple[str, ...]) -> list[ReferenceId]:
+        match key:
+            case str():
+                return self.get((), key)
+            case tuple():
+                return self.get(key[:-1], key[-1])
+
+
+@dataclass
 class ReferenceMap:
     """
     Members:
@@ -69,16 +104,16 @@ class ReferenceMap:
     """
 
     map: dict[ReferenceId, CodeBlock] = field(default_factory=dict)
-    index: defaultdict[str, list[ReferenceId]] = field(
-        default_factory=lambda: defaultdict(list)
-    )
+    root: Namespace = field(default_factory=Namespace)
     targets: set[str] = field(default_factory=set)
-    alias: dict[str, str] = field(default_factory=dict)
 
-    def names(self) -> Iterable[str]:
-        return self.index.keys()
+    def by_name(self, n: str, namespace: tuple[str, ...] = ()) -> Generator[CodeBlock]:
+        name_path = n.split("::")
+        if len(name_path) == 1:
+            return (self.map[r] for r in self.root.get(namespace, name_path[0]))
+        else:
+            return (self.map[r] for r in self.root.get(name_path[:-1], name_path[-1]))
 
-    def by_name(self, n: str) -> Iterable[CodeBlock]:
         if n not in self.index and n not in self.alias:
             raise AttributeError(name=n, obj=self)
         if n not in self.index:

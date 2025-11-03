@@ -50,22 +50,26 @@ def dedent(source: str, indent: str) -> str:
     return "".join(line.removeprefix(indent) for line in lines(source))
 
 
-def code_block(config: Config, filename: PurePath) -> Reader[RawContent, bool]:
+def code_block(config: Config) -> Reader[RawContent, bool]:
     get_raw_token = delimited_token_getter(
         config.markers.open, config.markers.close, code_block_guard)
-    if config.namespace is None:
-        match config.namespace_default:
-            case NamespaceDefault.GLOBAL:
-                namespace = ()
-            case NamespaceDefault.PRIVATE:
-                namespace = (filename.as_posix(),)
-    else:
-        namespace = config.namespace
 
     def code_block_reader(input: InputStream) -> RawMarkdownStream[bool]:
+        if not input:
+            return False
+
         block = get_raw_token(input)
         if block is None:
             return False
+
+        if config.namespace is None:
+            match config.namespace_default:
+                case NamespaceDefault.GLOBAL:
+                    namespace = ()
+                case NamespaceDefault.PRIVATE:
+                    namespace = (block.origin.filename.as_posix(),)
+        else:
+            namespace = config.namespace
 
         indent = block.open_match["indent"]
         properties = read_properties(block.open_match["properties"])
@@ -95,9 +99,8 @@ def raw_markdown(config: Config, input: InputStream) -> RawMarkdownStream[None]:
     if not input:
         return
 
-    filename = input.peek()[0].filename
     ignore_block_reader = ignore_block(config)
-    code_block_reader = code_block(config, filename)
+    code_block_reader = code_block(config)
 
     while input:
         if (yield from ignore_block_reader(input)):
@@ -150,15 +153,22 @@ def process_token(hooks: list[HookBase], refs: ReferenceMap, token: RawContent) 
 
 def collect_plain_text[T](inp: Iterator[PlainText | T]) -> Generator[PlainText | T, None, None]:
     plain_content: list[str] = []
+
+    def flush():
+        nonlocal plain_content
+        if plain_content:
+            yield(PlainText("".join(plain_content)))
+            plain_content = []
+
     for token in inp:
         match token:
             case PlainText(t):
                 plain_content.append(t)
             case _:
-                if plain_content:
-                    yield(PlainText("".join(plain_content)))
-                    plain_content = []
+                yield from flush()
                 yield token
+
+    yield from flush()
 
 
 def markdown(refs: ReferenceMap, input: InputStream) -> Generator[Content, None, ReferenceMap]:
