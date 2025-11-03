@@ -37,7 +37,7 @@ class Config:
     """
     version: Version = Version((2, 0))
     languages: dict[str, Language] = field(default_factory=lambda: {
-        i: l for l in languages for i in l.identifiers
+        i: lang for lang in languages for i in lang.identifiers
     })
     markers: Markers = field(default_factory=lambda: default_markers)
 

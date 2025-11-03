@@ -1,15 +1,15 @@
 from collections.abc import Generator, Iterator
 from pathlib import PurePath
+from functools import partial
 
 from ..config.namespace_default import NamespaceDefault
 
 from ..document import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap
 from ..config import Config
 from ..errors.user import CodeAttributeError, IndentationError
-from ..properties import get_attribute_string, read_properties, get_classes
+from ..properties import get_attribute_string, read_properties, get_classes, get_id
 from ..utility import first
 from ..hooks import get_hooks, HookBase
-from ..properties import get_id
 
 from .types import InputStream, Reader, RawMarkdownStream
 from .lines import lines
@@ -78,8 +78,8 @@ def code_block(config: Config, filename: PurePath) -> Reader[RawContent, bool]:
         yield CodeBlock(
             properties,
             indent,
-            block.open_line,
-            block.close_line,
+            block.open_line.removeprefix(indent),
+            block.close_line.removeprefix(indent),
             source,
             block.origin,
             language,
@@ -109,7 +109,7 @@ def raw_markdown(config: Config, input: InputStream) -> RawMarkdownStream[None]:
         yield PlainText(line)
 
 
-def process(hooks: list[HookBase], refs: ReferenceMap, code_block: CodeBlock) -> ReferenceId:
+def process_code_block(hooks: list[HookBase], refs: ReferenceMap, code_block: CodeBlock) -> ReferenceId:
     for h in hooks:
         h.on_read(code_block)
 
@@ -140,24 +140,34 @@ def process(hooks: list[HookBase], refs: ReferenceMap, code_block: CodeBlock) ->
     return ref
 
 
-def refine(hooks: list[HookBase], refs: ReferenceMap, raw: Iterator[RawContent]) -> Generator[Content, None, ReferenceMap]:
+def process_token(hooks: list[HookBase], refs: ReferenceMap, token: RawContent) -> Content:
+    match token:
+        case CodeBlock():
+            return process_code_block(hooks, refs, token)
+        case _:
+            return token
+
+
+def collect_plain_text[T](inp: Iterator[PlainText | T]) -> Generator[PlainText | T, None, None]:
     plain_content: list[str] = []
-    for token in raw:
+    for token in inp:
         match token:
             case PlainText(t):
                 plain_content.append(t)
-            case CodeBlock():
+            case _:
                 if plain_content:
-                    yield PlainText("".join(plain_content))
+                    yield(PlainText("".join(plain_content)))
                     plain_content = []
-                    yield process(hooks, refs, token)
-
-    return refs
+                yield token
 
 
 def markdown(refs: ReferenceMap, input: InputStream) -> Generator[Content, None, ReferenceMap]:
     header = yield from read_yaml_header(input)
     config = get_config(header)
     hooks = get_hooks(config)
-    refs = yield from refine(hooks, refs, raw_markdown(config, input))
+
+    yield from map(
+        partial(process_token, hooks, refs),
+        collect_plain_text(raw_markdown(config, input)))
+
     return refs

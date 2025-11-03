@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-import functools
+from typing import cast
 
 from .text_location import TextLocation
 from .peekable import Peekable
@@ -18,3 +18,15 @@ def map_reader[Out, T, U](f: Callable[[T], U], reader: Reader[Out, T]) -> Reader
         x = yield from reader(input)
         return f(x)
     return mapped
+
+
+def run_generator[O, R](g: Generator[O, None, R]) -> tuple[list[O], R]:
+    result: R | None = None
+
+    def h() -> Generator[O]:
+        nonlocal result
+        result = yield from g
+
+    out = list(h())
+
+    return out, cast(R, result)
