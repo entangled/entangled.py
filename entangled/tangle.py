@@ -126,9 +126,6 @@ def tangle_ref(
     if annotation is None:
         annotation = config.get.annotation
 
-    if ref_name in refs.alias:
-        ref_name = refs.alias[ref_name]
-
     if ref_name not in refs:
         raise KeyError(ref_name)
     v = _visited or Visitor()

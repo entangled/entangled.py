@@ -138,7 +138,7 @@ def process_code_block(hooks: list[HookBase], refs: ReferenceMap, code_block: Co
     if target_file is not None:
         refs.targets.add(target_file)
     if target_file is not None and block_id is not None:
-        refs.alias[target_file] = block_id
+        refs.root.make_sub(ref.namespace).alias[target_file] = block_id
 
     return ref
 
