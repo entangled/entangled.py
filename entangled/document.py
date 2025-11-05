@@ -100,7 +100,7 @@ class ReferenceMap:
         self.root.add(key)
 
     def __contains__(self, key: str) -> bool:
-        return key in self.root or key in self.alias
+        return key in self.root
 
     def get_codeblock(self, key: ReferenceId) -> CodeBlock:
         return self.map[key]

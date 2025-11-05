@@ -64,10 +64,10 @@ class Tangler(mawk.RuleSet):
         else:
             return []
 
-    @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w-]+)>>\s*$")
+    @mawk.on_match(r"^(?P<indent>\s*)<<(?P<refname>[\w:-]+)>>\s*$")
     def on_noweb(self, m: re.Match[str]) -> list[str]:
         try:
-            result, deps = tangle_ref(self.refs, m["refname"], type(self), self.visited)
+            result, deps = tangle_ref(self.refs, self.ref.namespace, m["refname"], type(self), self.visited)
 
         except KeyError:
             raise MissingReference(m["refname"], self.location)
@@ -119,6 +119,7 @@ tanglers = {
 
 def tangle_ref(
     refs: ReferenceMap,
+    namespace: tuple[str, ...],
     ref_name: str,
     annotation: type[Tangler] | AnnotationMethod | None = None,
     _visited: Visitor[str] | None = None,
@@ -126,25 +127,24 @@ def tangle_ref(
     if annotation is None:
         annotation = config.get.annotation
 
-    if ref_name not in refs:
+    if ref_name not in refs.root.sub(namespace):
         raise KeyError(ref_name)
     v = _visited or Visitor()
 
     if isinstance(annotation, AnnotationMethod):
         tangler = tanglers[annotation]
-    elif annotation is not None:
-        tangler = annotation
     else:
-        raise ValueError("impossible code path")
+        tangler = annotation
 
-    with v.visit(ref_name):
+    qual_name = "::".join(list(namespace) + [ref_name])
+    with v.visit(qual_name):
         init = True
         result: list[str] = []
         deps: set[PurePath] = set()
-        for ref in refs.index[ref_name]:
+        for ref in refs.root[ref_name]:
             t = tangler(refs, ref, init, v)
             result.append(t.tangle())
             deps.update(t.deps)
             init = False
 
-    return "\n".join(result), deps
+    return "".join(result), deps
