@@ -9,10 +9,9 @@ from entangled.errors.user import ParseError, IndentationError, CodeAttributeErr
 from entangled.model import Document, PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName
 from entangled.model.tangle import tangle_ref
 from entangled.readers.markdown import code_block, collect_plain_text, ignore_block, markdown, raw_markdown
-from entangled.readers.lines import numbered_lines
-from entangled.readers.peekable import Peekable
+from entangled.iterators import Peekable, run_generator
 from entangled.config import AnnotationMethod, Config, ConfigUpdate
-from entangled.readers.types import run_generator, Reader
+from entangled.readers import run_reader
 
 
 empty_stream = Peekable(iter([]))
@@ -30,10 +29,6 @@ test1 = """
 ```
 ~~~
 """.strip()
-
-
-def run_reader[O, T](reader: Reader[O, T], inp: str, filename: str = "-") -> tuple[list[O], T]:
-    return run_generator(reader(numbered_lines(PurePath(filename), inp)))
 
 
 def test_ignore_block():

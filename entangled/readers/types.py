@@ -1,8 +1,7 @@
 from collections.abc import Callable, Generator
-from typing import cast
 
 from ..text_location import TextLocation
-from .peekable import Peekable
+from ..iterators.peekable import Peekable
 from ..model import Content, RawContent
 
 
@@ -13,13 +12,3 @@ type RawMarkdownStream[Result] = Generator[RawContent, None, Result]
 type MarkdownStream[Result] = Generator[Content, None, Result]
 
 
-def run_generator[O, R](g: Generator[O, None, R]) -> tuple[list[O], R]:
-    result: R | None = None
-
-    def h() -> Generator[O]:
-        nonlocal result
-        result = yield from g
-
-    out = list(h())
-
-    return out, cast(R, result)

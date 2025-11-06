@@ -1,9 +1,8 @@
 from pathlib import PurePath
-import logging
 import pytest
 
 from entangled.readers.yaml_header import read_yaml_header, get_config
-from entangled.readers.lines import numbered_lines
+from entangled.iterators import numbered_lines
 from entangled.errors.user import ParseError, UserError
 from entangled.readers.types import MarkdownStream
 

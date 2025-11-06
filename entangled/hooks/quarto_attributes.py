@@ -17,7 +17,7 @@ log = logger()
 def split_yaml_header(language: Language, source: str) -> tuple[str, str, object]:
     """Split source into YAML header and body."""
     trigger: str = re.escape(language.comment.open) + r"\s*\|(.*)"
-    lines = source.splitlines()
+    lines = source.splitlines(keepends=True)
     header_lines: list[str] = []
     body_start: int = 0
 
@@ -29,7 +29,7 @@ def split_yaml_header(language: Language, source: str) -> tuple[str, str, object
         body_start = i
         break
 
-    return "\n".join(lines[:body_start]), "\n".join(lines[body_start:]), yaml.safe_load("\n".join(header_lines))
+    return "".join(lines[:body_start]), "".join(lines[body_start:]), yaml.safe_load("".join(header_lines))
 
 
 def amend_code_properties(code_block: CodeBlock):
@@ -71,7 +71,7 @@ def amend_code_properties(code_block: CodeBlock):
                  if k not in ("id", "classes"))
 
     code_block.source = body
-    code_block.open_line += "\n" + header
+    code_block.open_line += header
     code_block.properties.extend(props)
 
 

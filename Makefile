@@ -8,3 +8,16 @@ test:
 
 docs:
 	uv run mkdocs build
+
+define test_template =
+.PHONY: test-$(1)
+
+test-$(1):
+	uv run pytest test/$(1) --cov=entangled/$(1)
+	uv run coverage xml
+endef
+
+modules = readers io iterators model
+
+$(foreach mod,$(modules),$(eval $(call test_template,$(mod))))
+

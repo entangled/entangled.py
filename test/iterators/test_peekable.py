@@ -1,6 +1,6 @@
 from collections.abc import Generator
 import pytest
-from entangled.readers.peekable import Peekable, peekable
+from entangled.iterators.peekable import Peekable, peekable
 
 
 def test_peekable_class():

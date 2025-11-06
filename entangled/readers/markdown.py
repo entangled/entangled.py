@@ -4,16 +4,16 @@ from functools import partial
 from ..config.namespace_default import NamespaceDefault
 
 from ..model import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap, ReferenceName
+from ..model.properties import get_attribute_string, get_attribute, read_properties, get_classes, get_id
 from ..config import Config
 from ..errors.user import CodeAttributeError, IndentationError
-from ..model.properties import get_attribute_string, get_attribute, read_properties, get_classes, get_id
 from ..utility import first
 from ..hooks import get_hooks, HookBase
+from ..iterators.lines import lines
+from ..text_location import TextLocation
 
 from .types import InputStream, Reader, RawMarkdownStream
-from .lines import lines
 from .delimiters import delimited_token_getter
-from ..text_location import TextLocation
 from .yaml_header import read_yaml_header, get_config
 
 import re

@@ -9,7 +9,7 @@ from typing import override
 
 
 from ..config import AnnotationMethod
-from ..readers.lines import lines
+from ..iterators.lines import lines
 from ..errors.user import UserError
 from ..text_location import TextLocation
 
@@ -58,7 +58,7 @@ class Visitor[T]:
     @contextmanager
     def visit(self, x: T):
         if x in self._visited:
-            raise CyclicReference(str(x), list(map(str, self.in_order())))
+            raise CyclicReference(str(x), [str(r.name) for r in self.in_order()])
         self._visited[x] = len(self._visited)
         yield
         del self._visited[x]
@@ -84,16 +84,16 @@ def naked_tangler(refs: ReferenceMap) -> Tangler:
         if code_block.header and not skip_header:
             yield code_block.header
 
-        for line in lines(code_block.source):
-            if m := re.match(r"^(?P<indent>\s*)<<(?P<refname>[\w:-]+)>>\s*$", line.rstrip()):
-                ref_name = ReferenceName.from_str(m["refname"], code_block.namespace)
-                if not refs.has_name(ref_name):
-                    raise MissingReference(code_block.origin, ref_name)
-                for ref in refs.select_by_name(ref_name):
-                    with visitor.visit(ref):
+        with visitor.visit(ref):
+            for line in lines(code_block.source):
+                if m := re.match(r"^(?P<indent>\s*)<<(?P<refname>[\w:-]+)>>\s*$", line.rstrip()):
+                    ref_name = ReferenceName.from_str(m["refname"], code_block.namespace)
+                    if not refs.has_name(ref_name):
+                        raise MissingReference(code_block.origin, ref_name)
+                    for ref in refs.select_by_name(ref_name):
                         yield from indent(m["indent"], recur(recur, deps, ref, False))
-            else:
-                yield line
+                else:
+                    yield line
 
     return tangler
 

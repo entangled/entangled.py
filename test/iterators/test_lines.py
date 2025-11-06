@@ -1,6 +1,5 @@
 from pathlib import PurePath
-from entangled.readers.lines import lines, numbered_lines
-from entangled.readers.peekable import Peekable
+from entangled.iterators import lines, numbered_lines, Peekable
 from entangled.text_location import TextLocation
 
 

@@ -18,7 +18,10 @@ class ReferenceName:
 
     @override
     def __str__(self):
-        return "::".join(self.namespace) + "::" + self.name
+        if self.namespace:
+            return "::".join(self.namespace) + "::" + self.name
+        else:
+            return self.name
 
     @staticmethod
     def from_str(name: str, namespace: tuple[str, ...] = ()) -> ReferenceName:

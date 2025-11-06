@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, override
+from typing import Any, override
 from pathlib import Path
 
 from ..text_location import TextLocation
