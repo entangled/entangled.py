@@ -3,21 +3,20 @@ from collections import defaultdict
 from dataclasses import dataclass, fields
 import json
 from pathlib import Path
-from typing import Any, final, override
+from typing import final, override, cast
 
 from ..config import AnnotationMethod
 from ..io import Transaction
 
-from ..document import CodeBlock, ReferenceId, ReferenceMap
-from ..properties import Class, Property, get_attribute, get_classes
+from ..model import CodeBlock, ReferenceId, ReferenceMap, tangle_ref
+from ..model.properties import Class, Property, get_attribute, get_attribute_string, get_classes
 from .base import HookBase
 from ..logging import logger
-from ..tangle import tangle_ref
 
 log = logger()
 
 
-def ensure_list(strs: str | list[str]) -> list[str]:
+def ensure_list(strs: str | list[str] | object) -> list[str]:
     """Some options may be given either as a list or as a single string,
     where the string is supposed to have a whitespace separated list.
     This function converts from either to a list of strings.
@@ -25,9 +24,10 @@ def ensure_list(strs: str | list[str]) -> list[str]:
     if isinstance(strs, str):
         return strs.split()
     elif isinstance(strs, list):
-        return strs
+        assert all(isinstance(s, str) for s in strs)  # pyright: ignore[reportUnknownVariableType]
+        return cast(list[str], strs)
     else:
-        raise ValueError(f"Expected `str` or `list[str]`, got: {strs}")
+        raise ValueError(f"Expected string or list, got: {strs}")
 
 
 @final
@@ -44,8 +44,8 @@ class Hook(HookBase):
         ref: ReferenceId
 
         def to_brei_task(self, refs: ReferenceMap):
-            cb = refs.get_codeblock(self.ref)
-            if (path := get_attribute(cb.properties, "file")) is None:
+            cb = refs[self.ref]
+            if (path := get_attribute_string(cb.properties, "file")) is None:
                 script, _ = tangle_ref(refs, self.ref.name, AnnotationMethod.NAKED)
             else:
                 script = None
@@ -70,7 +70,7 @@ class Hook(HookBase):
 
     @override
     def pre_tangle(self, refs: ReferenceMap):
-        for ref, cb in refs.map.items():
+        for ref, cb in refs.items():
             if "task" not in get_classes(cb.properties):
                 continue
 
@@ -84,7 +84,7 @@ class Hook(HookBase):
                 case _:
                     continue
 
-            record: dict[str, Any] = {
+            record: dict[str, object] = {
                 f.name: get_attribute(cb.properties, f.name)
                 for f in fields(Hook.Recipe)
             }

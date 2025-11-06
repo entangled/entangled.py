@@ -1,13 +1,12 @@
 from collections.abc import Generator, Iterator
-from pathlib import PurePath
 from functools import partial
 
 from ..config.namespace_default import NamespaceDefault
 
-from ..document import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap
+from ..model import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap, ReferenceName
 from ..config import Config
 from ..errors.user import CodeAttributeError, IndentationError
-from ..properties import get_attribute_string, read_properties, get_classes, get_id
+from ..model.properties import get_attribute_string, read_properties, get_classes, get_id
 from ..utility import first
 from ..hooks import get_hooks, HookBase
 
@@ -132,11 +131,8 @@ def process_code_block(hooks: list[HookBase], refs: ReferenceMap, code_block: Co
     ref_name = block_id or target_file
     if ref_name is None:
         ref_name = f"unnamed-{code_block.origin}"
-    ref = refs.new_id(code_block.origin.filename, code_block.namespace, ref_name)
-
+    ref = refs.new_id(code_block.origin.filename, ReferenceName(code_block.namespace, ref_name))
     refs[ref] = code_block
-    if target_file is not None:
-        refs.targets[target_file] = "::".join(list(code_block.namespace) + [ref_name])
 
     return ref
 
@@ -169,13 +165,13 @@ def collect_plain_text[T](inp: Iterator[PlainText | T]) -> Generator[PlainText |
     yield from flush()
 
 
-def markdown(refs: ReferenceMap, input: InputStream) -> Generator[Content, None, ReferenceMap]:
+def markdown(config: Config, refs: ReferenceMap, input: InputStream) -> Generator[Content, None, Config]:
     header = yield from read_yaml_header(input)
-    config = get_config(header)
+    config = get_config(header, config)
     hooks = get_hooks(config)
 
     yield from map(
         partial(process_token, hooks, refs),
         collect_plain_text(raw_markdown(config, input)))
 
-    return refs
+    return config

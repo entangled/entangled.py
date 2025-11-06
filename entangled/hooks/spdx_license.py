@@ -1,6 +1,7 @@
 from typing import final, override
-from ..document import CodeBlock
+from ..model import CodeBlock
 from .base import HookBase
+
 
 @final
 class Hook(HookBase):

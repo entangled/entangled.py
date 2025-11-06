@@ -3,7 +3,7 @@ from typing import cast
 
 from .text_location import TextLocation
 from .peekable import Peekable
-from ..document import Content, RawContent
+from ..model import Content, RawContent
 
 
 type InputToken = tuple[TextLocation, str]

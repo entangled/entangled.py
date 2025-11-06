@@ -45,8 +45,8 @@ def reset():
             for h in hooks:
                 h.pre_tangle(refs)
 
-            for tgt in refs.targets:
-                result, deps = tangle_ref(refs, tgt, annotation_method)
+            for (tgt, ref_name) in refs.targets.items():
+                result, deps = tangle_ref(refs, ref_name, annotation_method)
                 mask = next(iter(refs.by_name(tgt))).mode
                 t.write(Path(tgt), result, list(map(Path, deps)), mask)
 

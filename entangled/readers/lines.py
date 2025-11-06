@@ -1,9 +1,11 @@
 from collections.abc import Generator
 from pathlib import PurePath
 
-from .types import InputToken
 from .text_location import TextLocation
 from .peekable import peekable
+
+
+type InputToken = tuple[TextLocation, str]
 
 
 def lines(text: str) -> Generator[str]:

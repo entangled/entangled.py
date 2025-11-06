@@ -3,6 +3,7 @@ from typing import Any, Callable, override
 from pathlib import Path
 
 from ..readers.text_location import TextLocation
+from ..model.reference_name import ReferenceName
 
 
 class UserError(Exception):
@@ -30,6 +31,15 @@ class HelpfulUserError(UserError):
 
     def __str__(self):
         return f"error: {self.msg}"
+
+
+@dataclass
+class MissingLanguageError(UserError):
+    origin: TextLocation
+
+    @override
+    def __str__(self):
+        return f"{self.origin}: Missing language for code block."
 
 
 @dataclass
@@ -69,7 +79,7 @@ class CyclicReference(UserError):
 
 @dataclass
 class MissingReference(UserError):
-    ref_name: str
+    ref_name: ReferenceName
     location: TextLocation
 
     def __str__(self):

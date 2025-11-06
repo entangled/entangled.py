@@ -5,8 +5,8 @@ import yaml
 
 from entangled.config.language import Language
 
-from ..properties import Attribute, Class, Id, Property
-from ..document import CodeBlock
+from ..model.properties import Attribute, Class, Id, Property
+from ..model import CodeBlock
 from .base import HookBase
 from ..logging import logger
 

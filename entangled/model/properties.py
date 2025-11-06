@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 
-from .parsing import (
+from ..parsing import (
     Parser,
     many,
     tokenize,

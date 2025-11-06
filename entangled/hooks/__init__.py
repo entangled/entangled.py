@@ -13,7 +13,7 @@ discovered_hooks = entry_points(group="entangled.hooks")
 
 
 external_hooks = {
-    name: discovered_hooks[name].load().Hook for name in discovered_hooks.names
+    name: discovered_hooks[name].load().Hook for name in discovered_hooks.names  # pyright: ignore[reportAny]
 }
 
 hooks: dict[str, type[HookBase]] = {

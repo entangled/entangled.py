@@ -88,7 +88,7 @@ class ConfigWrapper(threading.local):
         self.config = (self.config if self.config is not None else Config()) \
             | ConfigUpdate(version=__version__, **kwargs)
 
-        yield
+        yield self.config
 
         self.config = backup
 

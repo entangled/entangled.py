@@ -11,8 +11,8 @@ from pathlib import Path
 
 from ..logging import logger
 from ..io import Transaction
-from ..document import CodeBlock, ReferenceMap
-from ..properties import Class, get_attribute, get_id
+from ..model import CodeBlock, ReferenceMap
+from ..model.properties import Class, get_attribute, get_attribute_string, get_id
 
 
 log = logger()
@@ -63,7 +63,7 @@ class Hook(HookBase):
             return
 
         if session_name not in self.sessions.keys():
-            filename = get_attribute(code.properties, "session")
+            filename = get_attribute_string(code.properties, "session")
             if filename is None:
                 log.error(f"{code.origin}: REPL hook session opened without session attribute.")
                 return

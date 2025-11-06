@@ -2,12 +2,12 @@ from functools import partial
 from pathlib import PurePath
 
 from entangled.config.namespace_default import NamespaceDefault
-from entangled.document import PlainText, CodeBlock, ReferenceId, ReferenceMap
+from entangled.config.version import Version
+from entangled.model import Document, PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName, tangle_ref
 from entangled.readers.markdown import code_block, collect_plain_text, ignore_block, markdown, raw_markdown
 from entangled.readers.lines import numbered_lines
-from entangled.config import AnnotationMethod, Config, config
+from entangled.config import AnnotationMethod, Config, ConfigUpdate
 from entangled.readers.types import run_generator, Reader
-from entangled.tangle import tangle_ref
 
 
 test0 = """
@@ -93,15 +93,17 @@ def test_collect_plain_text():
 
 def test_markdown():
     refs = ReferenceMap()
-    ol, refs = run_reader(partial(markdown, refs), test0)
+    ol, _ = run_reader(partial(markdown, Config(), refs), test0)
     assert len(ol) == 1
     assert ol[0] == PlainText("abcdefg")
-    assert not refs.map
+    assert not refs
 
-    ol, refs = run_reader(partial(markdown, refs), test3)
+    ol, _ = run_reader(partial(markdown, Config(), refs), test3)
     assert isinstance(ol[-1], ReferenceId)
-    assert ol[-1].name == "test"
-    assert "test" in refs
+    assert ol[-1].name.name == "test"
+    assert refs
+    assert refs.has_name(ReferenceName.from_str("test"))
+    assert ol[-1] in refs
 
 
 test_ns_a = """
@@ -111,7 +113,7 @@ First input:
 # part a
 ```
 
-``` {.python #refers-to-a}
+``` {.python file=a.py}
 <<a>>
 ```
 """.strip()
@@ -123,38 +125,102 @@ Second input
 ``` {.python #a}
 # part b
 ```
+
+``` {.python file=b.py}
+<<a>>
+```
 """.strip()
 
 
 def test_global_namespace():
     refs = ReferenceMap()
+    config = Config() | ConfigUpdate(
+        version="2.4",
+        namespace_default=NamespaceDefault.GLOBAL,
+        annotation=AnnotationMethod.NAKED)
+    doca, _ = run_reader(partial(markdown, config, refs), test_ns_a, "a.md")
+    docb, _ = run_reader(partial(markdown, config, refs), test_ns_b, "b.md")
+    doc = Document(config, refs, { PurePath("a.md"): doca, PurePath("b.md"): docb })
 
-    with config(namespace_default=NamespaceDefault.GLOBAL):
-        _, refs = run_reader(partial(markdown, refs), test_ns_a, "a.md")
-        _, refs = run_reader(partial(markdown, refs), test_ns_b, "b.md")
-
-    cb = list(refs.by_name("a"))
+    cb = [refs[r] for r in refs.select_by_name(ReferenceName.from_str("a"))]
     assert len(cb) == 2
     assert cb[0].source.strip() == "# part a"
     assert cb[1].source.strip() == "# part b"
 
-    source, _ = tangle_ref(refs, "refers-to-a", AnnotationMethod.NAKED)
+    source, _ = doc.target_text(PurePath("a.py"))
     assert source.splitlines() == ["# part a", "# part b"]
 
 
 def test_private_namespace():
     refs = ReferenceMap()
+    config = Config() | ConfigUpdate(
+        version="2.4",
+        namespace_default=NamespaceDefault.PRIVATE,
+        annotation=AnnotationMethod.NAKED)
+    doca, _ = run_reader(partial(markdown, config, refs), test_ns_a, "a.md")
+    docb, _ = run_reader(partial(markdown, config, refs), test_ns_b, "b.md")
+    doc = Document(config, refs, { PurePath("a.md"): doca, PurePath("b.md"): docb })
 
-    with config(namespace_default=NamespaceDefault.PRIVATE):
-        _, refs = run_reader(partial(markdown, refs), test_ns_a, "a.md")
-        _, refs = run_reader(partial(markdown, refs), test_ns_b, "b.md")
-
-    print(refs.map)
-
-    cb = list(refs.by_name("a"))
-    assert len(cb) == 2
+    cb = [refs[r] for r in refs.select_by_name(ReferenceName.from_str("a.md::a"))]
+    assert len(cb) == 1
     assert cb[0].source.strip() == "# part a"
-    assert cb[1].source.strip() == "# part b"
 
-    source, _ = tangle_ref(refs, "a.md::refers-to-a", AnnotationMethod.NAKED)
+    cb = [refs[r] for r in refs.select_by_name(ReferenceName.from_str("b.md::a"))]
+    assert len(cb) == 1
+    assert cb[0].source.strip() == "# part b"
+
+    source, _ = doc.target_text(PurePath("a.py"))
     assert source.splitlines() == ["# part a"]
+
+    source, _ = doc.target_text(PurePath("b.py"))
+    assert source.splitlines() == ["# part b"]
+
+
+test_ns_yaml1 = """
+---
+entangled:
+    version: "2.4"
+    namespace: q
+---
+
+``` {.python #hello}
+print("hello")
+```
+""".strip()
+
+test_ns_yaml2 = """
+---
+entangled:
+    version: "2.4"
+    namespace: p
+---
+
+``` {.python #hello}
+print("world")
+```
+
+``` {.python #combined}
+<<q::hello>>
+<<hello>>
+```
+""".strip()
+
+def test_yaml_namespace():
+    refs = ReferenceMap()
+    doca, config = run_reader(partial(markdown, Config(), refs), test_ns_yaml1, "a.md")
+    assert config.namespace == ("q",)
+    docb, config = run_reader(partial(markdown, Config(), refs), test_ns_yaml2, "b.md")
+    assert config.namespace == ("p",)
+
+    refq = ReferenceName.from_str("q::hello")
+    assert refs.has_name(refq)
+    cb = [refs[r] for r in refs.select_by_name(refq)]
+    assert cb[0].source == "print(\"hello\")\n"
+
+    refp = ReferenceName.from_str("p::hello")
+    assert refs.has_name(refp)
+    cb = [refs[r] for r in refs.select_by_name(refp)]
+    assert cb[0].source == "print(\"world\")\n"
+
+    src, _ = tangle_ref(refs, ReferenceName.from_str("p::combined"), annotation=AnnotationMethod.NAKED)
+    assert src == "print(\"hello\")\nprint(\"world\")\n"

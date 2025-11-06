@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import override
 from msgspec import Struct
 
-from ..document import ReferenceMap, CodeBlock
+from ..model import ReferenceMap, CodeBlock
 from ..io import Transaction
 
 

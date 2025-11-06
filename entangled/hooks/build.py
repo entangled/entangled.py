@@ -8,15 +8,15 @@ directory.
 from __future__ import annotations
 from dataclasses import dataclass
 from msgspec import field
-from pathlib import Path
+from pathlib import Path, PurePath
 from subprocess import run, SubprocessError, DEVNULL
 import logging
 from typing import final, override
 
 from entangled.config.language import Language
 
-from ..properties import Property, get_attribute, get_classes
-from ..document import ReferenceId, ReferenceMap, CodeBlock
+from ..model.properties import Property, get_attribute, get_attribute_string, get_classes
+from ..model import ReferenceId, ReferenceMap, CodeBlock
 
 from .base import HookBase, PrerequisitesFailed
 
@@ -80,22 +80,21 @@ class Hook(HookBase):
     @override
     def pre_tangle(self, refs: ReferenceMap):
         """Add a CodeBlock's target attribute to the list of targets."""
-        for (ref, cb) in refs.map.items():
+        for (ref, cb) in refs.items():
             logging.debug("build hook: passing: %s", ref)
             if "build" not in get_classes(cb.properties):
                 continue
-            target = get_attribute(cb.properties, "target")
+            target = get_attribute_string(cb.properties, "target")
             if target is None:
                 continue
             if cb.language is None:
                 continue
 
             logging.debug("build hook: target: %s", target)
-            script_file_name = get_attribute(cb.properties, "file")
+            script_file_name = get_attribute_string(cb.properties, "file")
             if script_file_name is None:
-                script_file_name = f".entangled/build/{ref.name}".replace(":", "_")
-                refs.index[script_file_name].append(ref)
-                refs.targets.add(script_file_name)
+                script_file_name = f".entangled/build/{ref.name.name}".replace(":", "_")
+                refs.register_target(PurePath(script_file_name), ref.name)
 
             deps = [str(s) for s in (get_attribute(cb.properties, "deps") or "").split()]
             self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))

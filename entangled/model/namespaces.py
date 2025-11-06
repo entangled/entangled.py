@@ -3,9 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections import defaultdict
 
+from .reference_name import ReferenceName
+
 
 @dataclass
 class Namespace[T]:
+    """
+    A structure of nested namespaces containing objects of type `T`.
+    """
     sep: str = "::"
     subspace: defaultdict[str, Namespace[T]] = field(
         default_factory=lambda: defaultdict(Namespace)
@@ -26,28 +31,26 @@ class Namespace[T]:
             dir = dir.subspace[s]
         return dir
 
-    def get(self, namespace: tuple[str, ...], name: str) -> T:
-        dir = self.sub(namespace)
+    def get(self, name: ReferenceName) -> T:
+        dir = self.sub(name.namespace)
 
         if name in dir.index:
-            return dir.index[name]
+            return dir.index[name.name]
 
-        raise KeyError(f"no reference `{name}` found in namespace `{self.sep.join(namespace)}`")
+        raise KeyError(f"no reference `{name.name}` found in namespace `{self.sep.join(name.namespace)}`")
 
-    def __getitem__(self, key: str | tuple[str, ...]) -> T:
+    def __getitem__(self, key: str | ReferenceName) -> T:
         match key:
+            case ReferenceName():
+                return self.get(key)
+
             case str():
-                path = key.split(self.sep)
-                return self.get((*path[:-1],), path[-1])
-            case tuple():
-                return self.get(key[:-1], key[-1])
+                return self.get(ReferenceName.from_str(key))
 
-    def __setitem__(self, key: str, value: T):
-        path = key.split(self.sep)
-        dir = self.make_sub((*path[:-1],))
-        dir.index[key] = value
+    def __setitem__(self, key: ReferenceName, value: T):
+        dir = self.make_sub(key.namespace)
+        dir.index[key.name] = value
 
-    def __contains__(self, key: str) -> bool:
-        path = key.split(self.sep)
-        dir = self.sub((*path[:-1],))
-        return path[-1] in dir.index
+    def __contains__(self, key: ReferenceName) -> bool:
+        dir = self.sub(key.namespace)
+        return key.name in dir.index
