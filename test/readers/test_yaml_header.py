@@ -2,9 +2,9 @@ from pathlib import PurePath
 import logging
 import pytest
 
-from entangled.readers.yaml_header import read_yaml_header
+from entangled.readers.yaml_header import read_yaml_header, get_config
 from entangled.readers.lines import numbered_lines
-from entangled.errors.user import ParseError
+from entangled.errors.user import ParseError, UserError
 from entangled.readers.types import MarkdownStream
 
 
@@ -40,6 +40,18 @@ input_invalid_yaml = """---
 ---
 """
 
+input_not_an_object = """
+---
+[1, 2, 3]
+---
+""".strip()
+
+input_invalid = """
+---
+entangled:
+    no_version_given: 0
+---
+""".strip()
 
 def get_yaml_header(input: str) -> object:
     path = PurePath("-")
@@ -58,6 +70,7 @@ def get_yaml_header(input: str) -> object:
     return result
 
 
+
 def test_read_yaml_header():
     assert get_yaml_header(input_correct) == { "title": "hello" }
     assert get_yaml_header(input_no_header) is None
@@ -68,3 +81,10 @@ def test_read_yaml_header():
 
     with pytest.raises(ParseError):
         _ = get_yaml_header(input_non_terminating)
+
+    with pytest.raises(UserError):
+        _ = get_config(get_yaml_header(input_not_an_object))
+
+    with pytest.raises(UserError):
+        _ = get_config(get_yaml_header(input_invalid))
+

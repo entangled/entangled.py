@@ -8,8 +8,9 @@ from typing import final, override, cast
 from ..config import AnnotationMethod
 from ..io import Transaction
 
-from ..model import CodeBlock, ReferenceId, ReferenceMap, tangle_ref
+from ..model import CodeBlock, ReferenceId, ReferenceMap
 from ..model.properties import Class, Property, get_attribute, get_attribute_string, get_classes
+from ..model.tangle import tangle_ref
 from .base import HookBase
 from ..logging import logger
 

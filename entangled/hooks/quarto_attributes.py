@@ -16,7 +16,7 @@ log = logger()
 
 def split_yaml_header(language: Language, source: str) -> tuple[str, str, object]:
     """Split source into YAML header and body."""
-    trigger = re.escape(language.comment.open) + r"\s*\|(.*)"
+    trigger: str = re.escape(language.comment.open) + r"\s*\|(.*)"
     lines = source.splitlines()
     header_lines: list[str] = []
     body_start: int = 0

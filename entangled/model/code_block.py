@@ -1,13 +1,23 @@
 from dataclasses import dataclass
 
-from ..readers.text_location import TextLocation
+import os
+
+from ..text_location import TextLocation
 from ..readers.lines import lines
 from ..config.language import Language
 from .properties import Property
 
 
 def indent(prefix: str, text: str) -> str:
-    return "".join(prefix + line for line in lines(text))
+    def indent_line(line: str):
+        if line.strip() == "" and line.endswith(os.linesep):
+            return os.linesep
+        if line.strip() == "":
+            return ""
+
+        return prefix + line
+
+    return "".join(map(indent_line, lines(text)))
 
 
 @dataclass

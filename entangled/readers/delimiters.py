@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 import re
 
-from .text_location import TextLocation
+from ..text_location import TextLocation
 from .types import InputStream
 from ..errors.user import ParseError
 

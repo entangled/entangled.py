@@ -1,4 +1,4 @@
-from entangled.properties import read_properties, Id, Class, Attribute
+from entangled.model.properties import read_properties, Id, Class, Attribute
 
 
 def test_id():

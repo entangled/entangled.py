@@ -1,5 +1,5 @@
 from pathlib import PurePath
-from entangled.readers.text_location import TextLocation
+from entangled.text_location import TextLocation
 
 
 def test_text_location():

@@ -6,7 +6,7 @@ import msgspec
 
 from ..config import Config, ConfigUpdate, config
 from ..model import PlainText
-from ..errors.user import ParseError
+from ..errors.user import ParseError, HelpfulUserError
 from .types import InputStream, MarkdownStream
 from .delimiters import delimited_token_getter
 
@@ -48,9 +48,9 @@ def get_config(header: object, base_config: Config | None = None) -> Config:
             return base_config | msgspec.convert(header.get("entangled", None), ConfigUpdate)
         except msgspec.ValidationError as e:
             logging.error(e)
-            raise TypeError()
+            raise HelpfulUserError("unable to read config")
 
     elif header is None:
         return base_config
     else:
-        raise TypeError()
+        raise HelpfulUserError(f"expected an object for config, got {type(header)}: {header}")

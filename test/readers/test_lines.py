@@ -1,7 +1,7 @@
 from pathlib import PurePath
 from entangled.readers.lines import lines, numbered_lines
 from entangled.readers.peekable import Peekable
-from entangled.readers.text_location import TextLocation
+from entangled.text_location import TextLocation
 
 
 def test_lines():

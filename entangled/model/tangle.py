@@ -5,15 +5,47 @@ from pathlib import PurePath
 
 import re
 import os
+from typing import override
 
 
 from ..config import AnnotationMethod
 from ..readers.lines import lines
-from ..errors.user import CyclicReference, MissingLanguageError, MissingReference
+from ..errors.user import UserError
+from ..text_location import TextLocation
 
 from .reference_map import ReferenceMap
 from .reference_id import ReferenceId
 from .reference_name import ReferenceName
+
+
+@dataclass
+class CyclicReference(UserError):
+    ref_name: str
+    cycle: list[str]
+
+    @override
+    def __str__(self):
+        cycle_str = " -> ".join(self.cycle)
+        return f"Cyclic reference in <<{self.ref_name}>>: {cycle_str}"
+
+
+@dataclass
+class MissingReference(UserError):
+    origin: TextLocation
+    ref_name: ReferenceName
+
+    @override
+    def __str__(self):
+        return f"{self.origin}: Missing reference `{self.ref_name}`"
+
+
+@dataclass
+class MissingLanguageError(UserError):
+    origin: TextLocation
+
+    @override
+    def __str__(self):
+        return f"{self.origin}: Missing language for code block."
 
 
 @dataclass
@@ -56,7 +88,7 @@ def naked_tangler(refs: ReferenceMap) -> Tangler:
             if m := re.match(r"^(?P<indent>\s*)<<(?P<refname>[\w:-]+)>>\s*$", line.rstrip()):
                 ref_name = ReferenceName.from_str(m["refname"], code_block.namespace)
                 if not refs.has_name(ref_name):
-                    raise MissingReference(ref_name, code_block.origin)
+                    raise MissingReference(code_block.origin, ref_name)
                 for ref in refs.select_by_name(ref_name):
                     with visitor.visit(ref):
                         yield from indent(m["indent"], recur(recur, deps, ref, False))

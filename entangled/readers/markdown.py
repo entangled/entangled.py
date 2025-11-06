@@ -6,14 +6,14 @@ from ..config.namespace_default import NamespaceDefault
 from ..model import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap, ReferenceName
 from ..config import Config
 from ..errors.user import CodeAttributeError, IndentationError
-from ..model.properties import get_attribute_string, read_properties, get_classes, get_id
+from ..model.properties import get_attribute_string, get_attribute, read_properties, get_classes, get_id
 from ..utility import first
 from ..hooks import get_hooks, HookBase
 
 from .types import InputStream, Reader, RawMarkdownStream
 from .lines import lines
 from .delimiters import delimited_token_getter
-from .text_location import TextLocation
+from ..text_location import TextLocation
 from .yaml_header import read_yaml_header, get_config
 
 import re
@@ -45,8 +45,14 @@ def code_block_guard(origin: TextLocation, open_match: re.Match[str], close_matc
     return True
 
 
-def dedent(source: str, indent: str) -> str:
-    return "".join(line.removeprefix(indent) for line in lines(source))
+def dedent_line(location: TextLocation, indent: str, line: str):
+    if line.startswith(indent) or line.strip() == "":
+        return line.removeprefix(indent)
+    raise IndentationError(location)
+
+
+def dedent(location: TextLocation, source: str, indent: str) -> str:
+    return "".join(dedent_line(location, indent, line) for line in lines(source))
 
 
 def code_block(config: Config) -> Reader[RawContent, bool]:
@@ -76,7 +82,7 @@ def code_block(config: Config) -> Reader[RawContent, bool]:
         language = config.get_language(language_class) if language_class else None
         if language_class and not language:
             logging.warning(f"`{block.origin}`: language `{language_class}` unknown.")
-        source = dedent(block.content, indent)
+        source = dedent(block.origin, block.content, indent)
 
         yield CodeBlock(
             properties,
@@ -122,11 +128,13 @@ def process_code_block(hooks: list[HookBase], refs: ReferenceMap, code_block: Co
     except TypeError:
         raise CodeAttributeError(code_block.origin, "`file` attribute should have string type")
 
-    try:
-        if mode := get_attribute_string(code_block.properties, "mode"):
+    if mode := get_attribute(code_block.properties, "mode"):
+        if type(mode) is int:   # bool is a subtype of int, and we really want an int
+            code_block.mode = mode
+        elif isinstance(mode, str):
             code_block.mode = int(mode, 8)
-    except TypeError:
-        raise CodeAttributeError(code_block.origin, "`mode` attribute should have string type")
+        else:
+            raise CodeAttributeError(code_block.origin, "`mode` attribute should have string or integer type")
 
     ref_name = block_id or target_file
     if ref_name is None:

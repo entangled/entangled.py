@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from pathlib import PurePath
 
-from .text_location import TextLocation
+from ..text_location import TextLocation
 from .peekable import peekable
 
 
