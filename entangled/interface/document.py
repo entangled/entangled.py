@@ -2,19 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import PurePath
 
 from ..config.config_data import Config
-from .reference_id import ReferenceId
-from .reference_map import ReferenceMap
-from .code_block import CodeBlock
-from .tangle import tangle_ref
-
-
-@dataclass
-class PlainText:
-    content: str
-
-
-type RawContent = PlainText | CodeBlock
-type Content = PlainText | ReferenceId
+from ..model import ReferenceMap, ReferenceId, tangle_ref, PlainText, Content
 
 
 def content_to_text(r: ReferenceMap, c: Content) -> str:

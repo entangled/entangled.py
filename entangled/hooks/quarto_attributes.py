@@ -2,6 +2,7 @@ from __future__ import annotations
 import re
 from typing import final, override, cast
 import yaml
+from os import linesep as eol
 
 from entangled.config.language import Language
 
@@ -29,7 +30,9 @@ def split_yaml_header(language: Language, source: str) -> tuple[str, str, object
         body_start = i
         break
 
-    return "".join(lines[:body_start]), "".join(lines[body_start:]), yaml.safe_load("".join(header_lines))
+    return "".join(lines[:body_start]), \
+           "".join(lines[body_start:]), \
+           yaml.safe_load(eol.join(header_lines))
 
 
 def amend_code_properties(code_block: CodeBlock):

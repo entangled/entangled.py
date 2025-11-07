@@ -17,7 +17,12 @@ test-$(1):
 	uv run coverage xml
 endef
 
-modules = readers io iterators model
+modules = readers io iterators model interface
 
 $(foreach mod,$(modules),$(eval $(call test_template,$(mod))))
+
+.PHONY: test-modules
+
+test-modules:
+	uv run pytest $(modules:%=test/%) --cov=entangled -x
 

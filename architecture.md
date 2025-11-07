@@ -147,5 +147,5 @@ Here we have a `read_yaml_header` reader that emits `PlainText`, but also parses
 Test Coverage
 =============
 
-Unit tests for each module should cover 100% of that module. The `Makefile` contains test targets for every module that measure only the coverage on that module.
+Unit tests for each module should cover most of that module. The `Makefile` contains test targets for every module that measure only the coverage on that module.
 

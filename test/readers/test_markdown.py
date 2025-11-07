@@ -6,8 +6,8 @@ import logging
 
 from entangled.config.namespace_default import NamespaceDefault
 from entangled.errors.user import ParseError, IndentationError, CodeAttributeError
-from entangled.model import Document, PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName
-from entangled.model.tangle import tangle_ref
+from entangled.interface import Document
+from entangled.model import PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName, tangle_ref
 from entangled.readers.markdown import code_block, collect_plain_text, ignore_block, markdown, raw_markdown
 from entangled.iterators import Peekable, run_generator
 from entangled.config import AnnotationMethod, Config, ConfigUpdate

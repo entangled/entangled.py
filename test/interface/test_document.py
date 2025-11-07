@@ -2,8 +2,9 @@ from functools import partial
 from pathlib import PurePath
 
 from entangled.config import Config, ConfigUpdate, AnnotationMethod
-from entangled.model import Document, ReferenceMap
+from entangled.model import ReferenceMap
 from entangled.readers import markdown, run_reader
+from entangled.interface import Document
 
 
 md_source = """
