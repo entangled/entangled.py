@@ -24,3 +24,8 @@ class ReferenceId:
     @override
     def __hash__(self) -> int:
         return hash((self.name, self.file, self.ref_count))
+
+    @override
+    def __str__(self) -> str:
+        return f"{self.name}[{self.ref_count}]"
+

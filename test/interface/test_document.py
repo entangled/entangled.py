@@ -48,8 +48,8 @@ main = putStrLn $ show $ take 20 $ fibonacci 1 1
 
 
 hs_tgt_annotated = """
--- ~/~ begin <<fib.md#fib.hs>>[0]
--- ~/~ begin <<fib.md#fibonacci>>[0]
+-- ~/~ begin <<fib.md#fib.hs>>[init]
+-- ~/~ begin <<fib.md#fibonacci>>[init]
 fibonacci :: Int -> Int -> [Int]
 fibonacci a b = a : fibonacci b (a + b)
 -- ~/~ end

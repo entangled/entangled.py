@@ -294,6 +294,7 @@ source = { editable = "." }
 dependencies = [
     { name = "argh" },
     { name = "brei" },
+    { name = "click" },
     { name = "copier" },
     { name = "filelock" },
     { name = "mawk" },
@@ -303,6 +304,7 @@ dependencies = [
     { name = "repl-session" },
     { name = "rich" },
     { name = "rich-argparse" },
+    { name = "rich-click" },
     { name = "tomlkit" },
     { name = "watchdog" },
 ]
@@ -332,6 +334,7 @@ dev = [
 requires-dist = [
     { name = "argh", specifier = ">=0.30,<0.31" },
     { name = "brei", specifier = ">=0.2.3,<0.3" },
+    { name = "click", specifier = ">=8.3.0" },
     { name = "copier", specifier = ">=9,<10" },
     { name = "filelock", specifier = ">=3.12.0,<4" },
     { name = "mawk", specifier = ">=0.1.7,<0.2" },
@@ -341,6 +344,7 @@ requires-dist = [
     { name = "repl-session", specifier = ">=0.2.0" },
     { name = "rich", specifier = ">=13.3.5,<14" },
     { name = "rich-argparse", specifier = ">=1.4.0,<2" },
+    { name = "rich-click", specifier = ">=1.9.4" },
     { name = "tomlkit", specifier = ">=0.12.1,<0.13" },
     { name = "watchdog", specifier = ">=6.0.0" },
 ]
@@ -708,7 +712,7 @@ wheels = [
 
 [[package]]
 name = "msgspec"
-version = "0.19.1.dev24+gee7c6baac.d20251103"
+version = "0.19.1.dev24+gee7c6baac.d20251107"
 source = { git = "https://github.com/jcrist/msgspec#ee7c6baac6c07c6b6064672278e2f784305b4b43" }
 
 [[package]]
@@ -1208,6 +1212,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4c/f7/1c65e0245d4c7009a87ac92908294a66e7e7635eccf76a68550f40c6df80/rich_argparse-1.7.2.tar.gz", hash = "sha256:64fd2e948fc96e8a1a06e0e72c111c2ce7f3af74126d75c0f5f63926e7289cd1", size = 38500, upload-time = "2025-11-01T10:35:44.232Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/80/97b6f357ac458d9ad9872cc3183ca09ef7439ac89e030ea43053ba1294b6/rich_argparse-1.7.2-py3-none-any.whl", hash = "sha256:0559b1f47a19bbeb82bf15f95a057f99bcbbc98385532f57937f9fc57acc501a", size = 25476, upload-time = "2025-11-01T10:35:42.681Z" },
+]
+
+[[package]]
+name = "rich-click"
+version = "1.9.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bf/d8/f2c1b7e9a645ba40f756d7a5b195fc104729bc6b19061ba3ab385f342931/rich_click-1.9.4.tar.gz", hash = "sha256:af73dc68e85f3bebb80ce302a642b9fe3b65f3df0ceb42eb9a27c467c1b678c8", size = 73632, upload-time = "2025-10-25T01:08:49.142Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/6a/1f03adcb3cc7beb6f63aecc21565e9d515ccee653187fc4619cd0b42713b/rich_click-1.9.4-py3-none-any.whl", hash = "sha256:d70f39938bcecaf5543e8750828cbea94ef51853f7d0e174cda1e10543767389", size = 70245, upload-time = "2025-10-25T01:08:47.939Z" },
 ]
 
 [[package]]

@@ -58,7 +58,7 @@ def test_cycles():
     try:
         _ = tangle_ref(refs, ReferenceName((), "mars"), AnnotationMethod.NAKED)
     except CyclicReference as e:
-        assert e.cycle == ["mars", "phobos", "deimos"]
+        assert e.cycle == ["mars[0]", "phobos[0]", "deimos[0]"]
 
     result, _ = tangle_ref(refs, ReferenceName((), "helium"), AnnotationMethod.NAKED)
     assert result == "negative charge\nnegative charge\n"
