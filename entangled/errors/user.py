@@ -1,6 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, override, Callable
 from pathlib import Path
+
+import logging
+import sys
 
 from ..text_location import TextLocation
 
@@ -9,6 +12,8 @@ class UserError(Exception):
     def __str__(self) -> str:
         return "Unknown user error."
 
+    def handle(self):
+        pass
 
 @dataclass
 class ConfigError(UserError):
@@ -23,10 +28,17 @@ class ConfigError(UserError):
 class HelpfulUserError(UserError):
     """Raise a user error with a message."""
     msg: str
+    action: Callable[[], None] = lambda: None
 
     def __str__(self):
         return f"error: {self.msg}"
 
+    @override
+    def handle(self):
+        self.action()
+        logging.error(str(self))
+        sys.exit(-1)
+        
 
 @dataclass
 class FileError(UserError):

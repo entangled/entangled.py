@@ -13,7 +13,6 @@ from ..errors.user import ParseError, IndentationError
 @dataclass
 class Block:
     reference_id: ReferenceId
-    indent: str
     content: str
 
 
@@ -88,7 +87,7 @@ def read_block(namespace: tuple[str, ...], indent: str, input: InputStream) -> G
         else:
             if close_block_data.indent != block_data.indent:
                 raise IndentationError(pos)
-            yield Block(block_data.ref, block_data.indent, content)
+            yield Block(block_data.ref, content)
 
             if block_data.is_init:
                 extra_indent = block_data.indent.removeprefix(indent)

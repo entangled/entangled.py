@@ -103,11 +103,12 @@ config = ConfigWrapper()
 Config is read from `entangled.toml` file."""
 
 
-def get_input_files() -> list[Path]:
-    include_file_list = chain.from_iterable(map(Path(".").glob, config.get.watch_list))
+def get_input_files(cfg: Config | None = None) -> list[Path]:
+    cfg = cfg or config.get
+    include_file_list = chain.from_iterable(map(Path(".").glob, cfg.watch_list))
     input_file_list = [
         path for path in include_file_list
-        if not any(path.match(pat) for pat in config.get.ignore_list)
+        if not any(path.match(pat) for pat in cfg.ignore_list)
     ]
     return sorted(input_file_list)
 

@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
@@ -145,16 +146,16 @@ class Transaction:
     def update(self, path: Path):
         self.updates.append(path)
 
-    def write(self, path: Path, content: str, sources: list[Path], mode: int | None = None):
+    def write(self, path: Path, content: str, sources: Iterable[Path], mode: int | None = None):
         if path in self.passed:
             raise InternalError("Path is being written to twice", [path])
         self.passed.add(path)
         if path not in self.db:
             logging.debug("creating target `%s`", path)
-            self.actions.append(Create(path, content, mode, sources))
+            self.actions.append(Create(path, content, mode, list(sources)))
         elif not self.db.check(path, content):
             logging.debug("target `%s` changed", path)
-            self.actions.append(Write(path, content, mode, sources))
+            self.actions.append(Write(path, content, mode, list(sources)))
         else:
             logging.debug("target `%s` unchanged", path)
 

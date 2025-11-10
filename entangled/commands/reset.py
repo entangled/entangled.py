@@ -9,7 +9,7 @@ without actually writing out to source files.
 from ..io import TransactionMode, transaction
 from ..config import config, get_input_files
 from ..hooks import  get_hooks
-from ..document import ReferenceMap
+from ..model import ReferenceMap
 from ..errors.user import UserError
 
 import logging

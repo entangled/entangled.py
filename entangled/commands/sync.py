@@ -1,51 +1,62 @@
-from typing import Optional, Callable
-from itertools import chain
-from pathlib import Path
-
-import logging
+from enum import Enum
 
 from ..io import filedb, FileCache
-from ..config import config
-from .stitch import stitch, get_input_files
+from ..interface import Document
+from ..errors.user import UserError
 from .tangle import tangle
+from .stitch import stitch
+
+import logging
+import click
 
 
-def _stitch_then_tangle():
-    stitch()
-    tangle()
+class Action(Enum):
+    NOTHING = 0
+    TANGLE = 1
+    STITCH = 2
 
 
-def sync_action() -> Callable[[], None] | None:
-    input_file_list = get_input_files()
+def sync_action(doc: Document) -> Action:
+    input_file_list = doc.input_files()
     fs = FileCache()
 
     with filedb(readonly=True) as db:
         changed = set(db.changed_files(fs))
 
         if not all(f in db for f in input_file_list):
-            return tangle
+            return Action.TANGLE
 
         if not changed:
-            return None
+            return Action.NOTHING
 
         if changed.isdisjoint(db.managed_files):
-            logging.info("Tangling")
-            return tangle
+            return Action.TANGLE
 
         if changed.issubset(db.managed_files):
-            logging.info("Stitching")
-            return _stitch_then_tangle
+            return Action.STITCH
 
         logging.error("changed: %s", [str(p) for p in changed])
         logging.error(
             "Both markdown and code seem to have changed, don't know what to do now."
         )
-        return None
+        return Action.NOTHING
 
 
+@click.command()
 def sync():
     """Be smart wether to tangle or stich"""
-    config.read()
-    action = sync_action()
-    if action is not None:
-        action()
+    try:
+        doc = Document()
+        match sync_action(doc):
+            case Action.TANGLE:
+                logging.info("Tangling.")
+                tangle()
+            case Action.STITCH:
+                logging.info("Stitching.")
+                stitch()
+                tangle()
+            case Action.NOTHING:
+                pass
+    except UserError as e:
+        e.handle()
+

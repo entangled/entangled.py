@@ -1,4 +1,4 @@
-from .content import PlainText, Content, RawContent
+from .content import PlainText, Content, RawContent, content_to_text
 from .code_block import CodeBlock
 from .reference_name import ReferenceName
 from .reference_id import ReferenceId
@@ -13,5 +13,6 @@ __all__ = [
     "ReferenceName",
     "ReferenceId",
     "ReferenceMap",
-    "tangle_ref"
+    "tangle_ref",
+    "content_to_text"
 ]

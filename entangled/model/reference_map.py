@@ -58,6 +58,9 @@ class ReferenceMap(MutableMapping[ReferenceId, CodeBlock]):
     def register_target(self, target: PurePath, ref_name: ReferenceName):
         self._targets[target] = ref_name
 
+    def targets(self) -> Iterable[PurePath]:
+        return self._targets.keys()
+
     @override
     def __contains__(self, key: object) -> bool:
         return key in self._map

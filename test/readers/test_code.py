@@ -39,7 +39,6 @@ main = putStrLn $ show $ take 20 $ fibonacci 1 1
 def test_code_reader():
     blocks, _ = run_reader(read_top_level, hs_tgt_annotated)
     assert blocks[0].reference_id == ReferenceId(ReferenceName((), "fibonacci"), PurePath("fib.md"), 0)
-    assert blocks[0].indent == ""
     assert blocks[0].content == block0
     assert blocks[1].reference_id == ReferenceId(ReferenceName((), "fib.hs"), PurePath("fib.md"), 0)
     assert blocks[1].content == block1
@@ -74,7 +73,6 @@ only this:
 def test_ref_twice():
     blocks, _ = run_reader(read_top_level, code2)
     assert blocks[0].reference_id == ReferenceId(ReferenceName((), "a"), PurePath("a.md"), 0)
-    assert blocks[0].indent == "    "
     assert blocks[4].content == code2_apy
 
 
