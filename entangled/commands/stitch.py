@@ -1,11 +1,13 @@
-import click
+import rich_click as click
+
+from .main import main
 
 from ..interface import Document
 from ..io import transaction, TransactionMode
 from ..errors.user import UserError
 
 
-@click.command()
+@main.command()
 @click.option("-f", "--force", help="force overwrite on conflict")
 @click.option("-s", "--show", help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):

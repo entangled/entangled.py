@@ -1,4 +1,6 @@
-import click
+import rich_click as click
+
+from .main import main
 
 from ..config import AnnotationMethod
 from ..io import transaction, TransactionMode
@@ -7,10 +9,11 @@ from ..errors.user import UserError
 from ..interface import Document
 
 
-@click.command
-@click.option("-a", "--annotate", help="annotation method")
-@click.option("-f", "--force", help="force overwriting existing files")
-@click.option("-s", "--show", help="only show what would happen")
+@main.command()
+@click.option("-a", "--annotate", type=click.Choice(AnnotationMethod, case_sensitive=False),
+              help="annotation method")
+@click.option("-f", "--force", is_flag=True, help="force overwriting existing files")
+@click.option("-s", "--show", is_flag=True, help="only show what would happen")
 def tangle(*, annotate: AnnotationMethod | None = None, force: bool = False, show: bool = False):
     """Tangle codes from Markdown"""
     if show:

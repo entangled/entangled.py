@@ -32,7 +32,7 @@ def get_hooks(cfg: Config | None = None) -> list[HookBase]:
     for h in sorted(cfg.hooks, key=lambda h: hooks[h].priority()):
         if h in hooks | external_hooks:
             try:
-                hook_cfg = msgspec.convert(config.get.hook.get(h, {}), type=hooks[h].Config)
+                hook_cfg = msgspec.convert(cfg.hook.get(h, {}), type=hooks[h].Config)
                 hook_instance = hooks[h](hook_cfg)
                 hook_instance.check_prerequisites()
                 active_hooks.append(hook_instance)

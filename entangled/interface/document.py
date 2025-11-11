@@ -40,6 +40,7 @@ class Document:
 
     def load_source(self, t: Transaction, path: Path):
         reader = markdown(self.config, self.reference_map, numbered_lines(path, t.read(path)))
+        t.update(path)
         content, _ = run_generator(reader)
         self.content[path] = content
 
@@ -63,5 +64,6 @@ class Document:
 
     def stitch(self, t: Transaction):
         for path in self.content:
+            t.update(path)
             t.write(path, self.source_text(path), [])
 
