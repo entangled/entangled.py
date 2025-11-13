@@ -43,11 +43,13 @@ class Document:
         t.update(path)
         content, _ = run_generator(reader)
         self.content[path] = content
+        t.update(path)
 
     def load_code(self, t: Transaction, path: Path):
         reader = code(numbered_lines(path, t.read(path)))
         for block in reader:
             self.reference_map[block.reference_id].source = block.content
+        t.update(path)
 
     def load_all_code(self, t: Transaction):
         for tgt in self.reference_map.targets():
