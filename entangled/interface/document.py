@@ -23,8 +23,15 @@ class Document:
     def input_files(self):
         return get_input_files(self.config)
 
-    def source_text(self, path: Path) -> str:
-        return "".join(content_to_text(self.reference_map, c) for c in self.content[path])
+    def source_text(self, path: Path) -> tuple[str, set[PurePath]]:
+        deps = set()
+        text = ""
+        for content in self.content[path]:
+            t, d = content_to_text(self.reference_map, content)
+            if d is not None:
+                deps.add(d)
+            text += t
+        return text, deps
 
     def target_text(self, path: PurePath) -> tuple[str, set[PurePath]]:
         ref_name = self.reference_map.select_by_target(path)
@@ -66,6 +73,6 @@ class Document:
 
     def stitch(self, t: Transaction):
         for path in self.content:
-            t.update(path)
-            t.write(path, self.source_text(path), [])
+            text, deps = self.source_text(path)
+            t.write(path, text, map(Path, deps))
 

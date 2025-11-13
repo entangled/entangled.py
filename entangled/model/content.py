@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import PurePath
 from .code_block import CodeBlock
 from .reference_id import ReferenceId
 from .reference_map import ReferenceMap
@@ -13,7 +14,7 @@ type RawContent = PlainText | CodeBlock
 type Content = PlainText | ReferenceId
 
 
-def content_to_text(r: ReferenceMap, c: Content) -> str:
+def content_to_text(r: ReferenceMap, c: Content) -> tuple[str, PurePath | None]:
     """
     Reconstruct original plain text from a piece of content.
 
@@ -26,7 +27,8 @@ def content_to_text(r: ReferenceMap, c: Content) -> str:
     """
     match c:
         case PlainText(s):
-            return s
+            return s, None
         case ReferenceId():
-            return r[c].indented_text
+            code_block = r[c]
+            return code_block.indented_text, code_block.origin.filename
 
