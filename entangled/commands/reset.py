@@ -7,56 +7,42 @@ without actually writing out to source files.
 """
 
 from ..io import TransactionMode, transaction
-from ..config import config, get_input_files
 from ..hooks import  get_hooks
-from ..model import ReferenceMap
 from ..errors.user import UserError
+from ..interface import Document
+from .main import main
 
 import logging
-from pathlib import Path
 
 
+@main.command()
 def reset():
     """
     Resets the database. This performs a tangle without actually writing
     output to the files, but updating the database as if we were.
     """
-    config.read()
-
-    # these imports depend on config being read
-    from ..markdown_reader import read_markdown_file
-    from ..tangle import tangle_ref
-
-    input_file_list = get_input_files()
-
-    refs = ReferenceMap()
-    hooks = get_hooks()
-    logging.debug("tangling with hooks: %s", [h.__module__ for h in hooks])
-    mode = TransactionMode.RESETDB
-    annotation_method = config.get.annotation
-
+    
     try:
+        doc = Document()
+        mode = TransactionMode.RESETDB
+
         with transaction(mode) as t:
-            for path in input_file_list:
-                logging.debug("reading `%s`", path)
-                t.update(path)
-                _, _ = read_markdown_file(t, path, refs=refs, hooks=hooks)
+            doc.load(t)
+            annotation_method = doc.config.annotation
+            hooks = get_hooks(doc.config)
 
             for h in hooks:
-                h.pre_tangle(refs)
-
-            for (tgt, ref_name) in refs.targets.items():
-                result, deps = tangle_ref(refs, ref_name, annotation_method)
-                mask = next(iter(refs.by_name(tgt))).mode
-                t.write(Path(tgt), result, list(map(Path, deps)), mask)
+                h.pre_tangle(doc.reference_map)
+            
+            doc.tangle(t, annotation_method)
 
             for h in hooks:
-                h.on_tangle(t, refs)
+                h.on_tangle(t, doc.reference_map)
 
             t.clear_orphans()
 
         for h in hooks:
-            h.post_tangle(refs)
+            h.post_tangle(doc.reference_map)
 
     except UserError as e:
         logging.error(str(e))
