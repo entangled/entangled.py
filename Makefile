@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test man-pages
 
 test:
 	uv run coverage run --source=entangled -m pytest
@@ -25,4 +25,10 @@ $(foreach mod,$(modules),$(eval $(call test_template,$(mod))))
 
 test-modules:
 	uv run pytest $(modules:%=test/%) --cov=entangled -x
+
+man-pages: man/entangled.1
+
+man/entangled.1: docs/man-pages/english.md
+	mkdir -p $(@D)
+	pandoc -s -t man $< -o $@
 

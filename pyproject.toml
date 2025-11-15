@@ -1,6 +1,6 @@
 [project]
 name = "entangled-cli"
-version = "2.3.2"
+version = "2.4.0"
 description = "Literate Programming toolbox"
 authors = [{ name = "Johan Hidding", email = "j.hidding@esciencecenter.nl" }]
 requires-python = ">=3.12,<4"
@@ -58,6 +58,9 @@ include = ["entangled"]
 
 [tool.hatch.build.targets.wheel]
 include = ["entangled"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"man/entangled.1" = "man/man1/entangled.1"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,4 +1,4 @@
-% entangled(1) version {__version__} | User Commands
+% entangled(1) version 2.4 | User Commands
 
 NAME
 ====
@@ -37,7 +37,7 @@ Each command has its own arguments and flags that can be inspected using `entang
 
 `brei <target>`
 
-: Build one of the configured targets. Entangled has an integrated build system called `brei` (https://entangled.github.io/brei) that can be used to produce figures, or other artifacts. Targets and their dependencies can be specified in code blocks using the `brei` hook.
+: Build a Brei workflow target. See section [BREI](#BREI)
 
 `new <template> <project-path>`
 
@@ -333,7 +333,7 @@ HOOKS
 BREI
 ----
 
-Entangled has a small build engine (similar to GNU Make) embedded, called Brei. You may give it a list of tasks (specified in TOML) that may depend on one another. Brei will run these when dependencies are newer than the target. Execution is lazy and in parallel. Brei supports:
+Entangled has an integrated build system called Brei, that can be used to produce figures or other artifacts. Targets and their dependencies can be specified in code blocks using the `brei` hook. These tasks may depend on one another. Brei will run these when dependencies are newer than the target. Execution is lazy and in parallel. Brei supports:
 
 - Running tasks by passing a script to any configured interpreter, e.g. Bash, Python, Lua etc.
 - Redirecting `stdout` or `stdin` to or from files.
@@ -383,7 +383,7 @@ name = "all"
 requires = ["msg.txt"]
 ```
 
-### The `brei` hook
+### The Brei hook
 
 The following example uses both `brei` and `quatro_attributes` hooks. To add a Brei task, tag a code block with the `.task` class.
 
@@ -463,7 +463,7 @@ The `id` attribute is reserved for the code's identifier (normally indicated wit
 REPL (experimental)
 -------------------
 
-The `repl` hook enables running code blocks in REPL sessions. The hook extracts these code blocks into a separate JSON session file that can be evaluated using the `repl-session` tool (https://entangled.github.io/repl-session). The output needs to be processed by the documentation rendering system. The `mkdocs-entangled-plugin` package handles `repl` sessions and integrates the output into the rendered HTML.
+The `repl` hook enables running code blocks in REPL sessions. The hook extracts these code blocks into a separate JSON session file that can be evaluated using the `repl-session` tool [https://entangled.github.io/repl-session](https://entangled.github.io/repl-session). The output needs to be processed by the documentation rendering system. The `mkdocs-entangled-plugin` package handles `repl` sessions and integrates the output into the rendered HTML.
 
 SHEBANG
 -------
@@ -487,5 +487,5 @@ If a code block starts with a line containing the string "SPDX-License-Identifie
 BUGS
 ====
 
-Bugs can be reported at https://github.com/entangled/entangled.py/issues.
+Bugs can be reported at [github.com/entangled/entangled.py/issues](https://github.com/entangled/entangled.py/issues).
 

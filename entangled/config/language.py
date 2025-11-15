@@ -24,7 +24,7 @@ class Language(Struct):
 
 languages = [
     Language("Bash", ["sh", "bash"], Comment("#")),
-    Language("C", ["c", "cpp", "c++"], Comment("/*", "*/")),
+    Language("C", ["c", "cpp", "c++"], Comment("//")),
     Language("Python", ["python"], Comment("#")),
     Language("Rust", ["rust"], Comment("//")),
     Language("Haskell", ["haskell"], Comment("--")),
