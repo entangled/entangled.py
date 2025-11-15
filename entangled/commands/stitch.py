@@ -11,7 +11,7 @@ from ..errors.user import UserError
 @click.option("-f", "--force", help="force overwrite on conflict")
 @click.option("-s", "--show", help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):
-    """Stitch code changes back into the Markdown"""
+    """Stitch code changes back into the documentation."""
     if show:
         mode = TransactionMode.SHOW
     elif force:

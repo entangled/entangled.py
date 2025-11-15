@@ -1,18 +1,20 @@
 from pathlib import Path
 from collections.abc import Awaitable
 from typing import Any
-import argh  # type: ignore
 import asyncio
 import textwrap
 
 from ..config import config
 from brei import resolve_tasks, Phony
 from ..logging import logger
+from .main import main
+
+import click
 
 log = logger()
 
 
-async def main(target_strs: list[str], force_run: bool, throttle: int | None):
+async def brei_main(target_strs: list[str], force_run: bool, throttle: int | None):
     if not Path(".entangled").exists():
         Path(".entangled").mkdir()
 
@@ -33,10 +35,14 @@ async def main(target_strs: list[str], force_run: bool, throttle: int | None):
                 log.error(msg)
 
 
-@argh.arg("targets", nargs="+", help="name of target to run")
-@argh.arg("-B", "--force-run", help="rebuild all dependencies")
-@argh.arg("-j", "--throttle", help="limit number of concurrent jobs")
+@main.command()
+@click.argument("targets", nargs=-1)
+@click.option("-B", "--force-run", is_flag=True, help="rebuild all dependencies")
+@click.option("-j", "--throttle", is_flag=True, help="limit number of concurrent jobs")
 def brei(targets: list[str], *, force_run: bool = False, throttle: int | None = None):
-    """Build one of the configured targets."""
+    """Build one of the configured targets.
+
+    TARGETS     Names of the targets to run.
+    """
     config.read()
-    asyncio.run(main(targets, force_run, throttle))
+    asyncio.run(brei_main(targets, force_run, throttle))

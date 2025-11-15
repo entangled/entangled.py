@@ -10,6 +10,8 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.tree import Tree
 
+from .main import main
+
 
 def tree_from_files(files: Iterable[Path]):
     tree = Tree(label=".")
@@ -53,6 +55,8 @@ def rich_status():
     console.print(group)
 
 
+@main.command()
 def status():
+    """Print a status overview."""
     config.read()
     rich_status()

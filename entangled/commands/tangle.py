@@ -15,7 +15,7 @@ from ..interface import Document
 @click.option("-f", "--force", is_flag=True, help="force overwriting existing files")
 @click.option("-s", "--show", is_flag=True, help="only show what would happen")
 def tangle(*, annotate: AnnotationMethod | None = None, force: bool = False, show: bool = False):
-    """Tangle codes from Markdown"""
+    """Tangle codes from the documentation."""
     if show:
         mode = TransactionMode.SHOW
     elif force:

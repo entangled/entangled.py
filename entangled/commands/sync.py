@@ -3,11 +3,12 @@ from enum import Enum
 from ..io import filedb, FileCache
 from ..interface import Document
 from ..errors.user import UserError
+
 from .tangle import tangle
 from .stitch import stitch
+from .main import main
 
 import logging
-import click
 
 
 class Action(Enum):
@@ -42,7 +43,7 @@ def sync_action(doc: Document) -> Action:
         return Action.NOTHING
 
 
-@click.command()
+@main.command()
 def sync():
     """Be smart wether to tangle or stich"""
     try:

@@ -15,11 +15,11 @@ from .main import main
 import logging
 
 
-@main.command()
+@main.command(short_help="Reset the file database.")
 def reset():
     """
-    Resets the database. This performs a tangle without actually writing
-    output to the files, but updating the database as if we were.
+    Resets the file database. This performs a tangle without actually
+    writing output to the files, but updating the database as if we were.
     """
     
     try:

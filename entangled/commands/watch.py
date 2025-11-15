@@ -8,6 +8,8 @@ from .sync import sync
 from ..config import config
 from ..status import find_watch_dirs
 
+from .main import main
+
 
 class EventHandler(FileSystemEventHandler):
     def __init__(self):
@@ -60,6 +62,7 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
         observer.join()
 
 
+@main.command()
 def watch():
     """Keep a loop running, watching for changes."""
     config.read()
