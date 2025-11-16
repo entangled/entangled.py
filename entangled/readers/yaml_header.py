@@ -4,7 +4,7 @@ import logging
 import yaml
 import msgspec
 
-from ..config import Config, ConfigUpdate, config
+from ..config import Config, ConfigUpdate
 from ..model import PlainText
 from ..errors.user import ParseError, HelpfulUserError
 from .types import InputStream, MarkdownStream
@@ -30,7 +30,7 @@ def read_yaml_header(input: InputStream) -> MarkdownStream[object]:
         raise ParseError(delimited_token.origin, str(e))
 
 
-def get_config(header: object, base_config: Config | None = None) -> Config:
+def get_config(header: object) -> ConfigUpdate | None:
     """
     Get the `entangled` component from the unstructured header data,
     and convert it to a `Config` object.
@@ -40,17 +40,15 @@ def get_config(header: object, base_config: Config | None = None) -> Config:
     other than an object/dictionary or the conversion to `Config` failed,
     a `TypeError` is raised.
     """
-    base_config = base_config or config.get
-
     if isinstance(header, dict):
         header = cast(dict[str, object], header)
         try:
-            return base_config | msgspec.convert(header.get("entangled", None), ConfigUpdate)
+            return msgspec.convert(header.get("entangled", None), ConfigUpdate)
         except msgspec.ValidationError as e:
             logging.error(e)
             raise HelpfulUserError("unable to read config")
 
     elif header is None:
-        return base_config
+        return None
     else:
         raise HelpfulUserError(f"expected an object for config, got {type(header)}: {header}")

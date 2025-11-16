@@ -10,6 +10,6 @@ def test_content_to_text():
     code_block = CodeBlock(properties=[], indent="", open_line="", source="x", close_line="", origin=TextLocation(PurePath(""), 0))
     refs[ref] = code_block
 
-    assert content_to_text(refs, ref) == "x"
-    assert content_to_text(refs, PlainText("y")) == "y"
+    assert content_to_text(refs, ref)[0] == "x"
+    assert content_to_text(refs, PlainText("y"))[0] == "y"
 

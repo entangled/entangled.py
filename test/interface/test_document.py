@@ -66,7 +66,7 @@ def test_document():
     content, config = run_reader(partial(markdown, Config(), refs), md_source, path.as_posix())
 
     doc = Document(config, refs, { path: content })
-    assert doc.source_text(path) == md_source
+    assert doc.source_text(path)[0] == md_source
     
     fib_hs, _ = doc.target_text(PurePath("fib.hs"))
     assert fib_hs == hs_tgt

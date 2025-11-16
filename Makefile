@@ -17,7 +17,7 @@ test-$(1):
 	uv run coverage xml
 endef
 
-modules = readers io iterators model interface
+modules = readers io iterators model interface config
 
 $(foreach mod,$(modules),$(eval $(call test_template,$(mod))))
 

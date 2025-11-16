@@ -58,7 +58,10 @@ class Config:
     def get_language(self, lang_id: str) -> Language | None:
         return self.languages.get(lang_id, None)
 
-    def __or__(self, update: ConfigUpdate) -> Config:
+    def __or__(self, update: ConfigUpdate | None) -> Config:
+        if update is None:
+            return self
+
         if update.style is not None:
             x = self | prefab_config[update.style]
         else:

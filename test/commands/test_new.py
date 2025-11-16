@@ -11,12 +11,12 @@ from entangled.errors.user import HelpfulUserError
 
 def test_print_available_templates() -> None:
     """Test if official template settings can be read"""
-    new(template="", project_path="", list_templates=True)
+    new.callback(template="", project_path="", list_templates=True)
 
 
 def test_pretend_template_copy() -> None:
     """Test dry run"""
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path="_",
         data="project_name=my_project",
@@ -27,7 +27,7 @@ def test_pretend_template_copy() -> None:
 
 def test_multiple_data() -> None:
     """Test `-d/--data` syntax"""
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path="_",
         data="project_name=my_project;key=value;",
@@ -38,7 +38,7 @@ def test_multiple_data() -> None:
 
 def test_minimal_template_copy(tmp_path) -> None:
     """Test if initializing a new project with a minimal template works"""
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path=str(tmp_path),
         data="project_name=my_project",
@@ -48,7 +48,7 @@ def test_minimal_template_copy(tmp_path) -> None:
 
 def test_untrusted_template_pass(tmp_path) -> None:
     """Test if initializing a new project with an untrusted template fails"""
-    new(
+    new.callback(
         template="./test/templates/minimal_unsafe",
         project_path=str(tmp_path),
         data="project_name=my_project",
@@ -60,7 +60,7 @@ def test_untrusted_template_pass(tmp_path) -> None:
 def test_untrusted_template_fail(tmp_path) -> None:
     """Test if initializing a new project with an untrusted template fails"""
     with pytest.raises(HelpfulUserError, match="Template uses potentially unsafe"):
-        new(
+        new.callback(
             template="./test/templates/minimal_unsafe",
             project_path=str(tmp_path),
             data="project_name=my_project",
@@ -70,13 +70,13 @@ def test_untrusted_template_fail(tmp_path) -> None:
 
 def test_overwrite_template(tmp_path) -> None:
     """Force overwrite a project with different data"""
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path=str(tmp_path),
         data="project_name=my_project",
         defaults=True,
     )
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path=str(tmp_path),
         data="project_name=my_other_project",
@@ -91,7 +91,7 @@ def test_default_answers_file(tmp_path) -> None:
     f: IO
     with open(default_answers_file, "w") as f:
         f.write("project_name: default_project")
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path=str(tmp_path),
         defaults=True,
@@ -105,7 +105,7 @@ def test_custom_answers_file(tmp_path) -> None:
     f: IO
     with open(my_answers_file, "w") as f:
         f.write("project_name: my_project")
-    new(
+    new.callback(
         template="./test/templates/minimal",
         project_path=str(tmp_path),
         answers_file=my_answers_file_name,

@@ -175,7 +175,7 @@ def collect_plain_text[T](inp: Iterator[PlainText | T]) -> Generator[PlainText |
 
 def markdown(config: Config, refs: ReferenceMap, input: InputStream) -> Generator[Content, None, Config]:
     header = yield from read_yaml_header(input)
-    config = get_config(header, config)
+    config |= get_config(header)
     hooks = get_hooks(config)
 
     yield from map(

@@ -15,7 +15,7 @@ class Document:
     content: dict[Path, list[Content]] = field(default_factory=dict)
 
     def __post_init__(self):
-        self.load_config()
+        self.config |= self.load_config()
 
     def load_config(self):
         self.config = read_config()

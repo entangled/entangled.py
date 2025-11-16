@@ -131,7 +131,7 @@ This code block is indented:
     ```
 
 Note the lack of indentation due to a blank line.
-""".strip()
+""".lstrip()
 
 
 test_indent_error1 = """
@@ -169,7 +169,8 @@ def test_indentation():
 
     assert isinstance(ol[1], ReferenceId)
     assert refs[ol[1]].indent == "    "
-    assert doc.source_text(PurePath("a.md")) == test_indent1
+
+    assert doc.source_text(PurePath("a.md"))[0] == test_indent1
 
     with pytest.raises(IndentationError):
         _ = run_reader(partial(markdown, Config(), refs), test_indent_error1)

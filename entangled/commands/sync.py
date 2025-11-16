@@ -51,11 +51,11 @@ def sync():
         match sync_action(doc):
             case Action.TANGLE:
                 logging.info("Tangling.")
-                tangle()
+                tangle.callback()
             case Action.STITCH:
                 logging.info("Stitching.")
-                stitch()
-                tangle()
+                stitch.callback()
+                tangle.callback()
             case Action.NOTHING:
                 pass
     except UserError as e:

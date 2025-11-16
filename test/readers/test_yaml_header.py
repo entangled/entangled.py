@@ -52,6 +52,7 @@ entangled:
 ---
 """.strip()
 
+
 def get_yaml_header(input: str) -> object:
     path = PurePath("-")
     result = None

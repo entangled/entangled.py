@@ -20,13 +20,15 @@ from .config_data import Config
 from .config_update import ConfigUpdate
 from ..logging import logger
 from ..version import __version__
+from ..errors.user import HelpfulUserError
+
 
 log = logger()
 
 
 def read_config_from_toml(
     path: Path, section: str | None = None
-) -> Config | None:
+) -> ConfigUpdate | None:
     """Read a config from given `path` in given `section`. The path should refer to
     a TOML file that should decode to a `Config` object. If `section` is given, only
     that section is decoded to a `Config` object. The `section` string may contain
@@ -47,64 +49,27 @@ def read_config_from_toml(
                 for s in section.split("."):
                     json = json[s]  # pyright: ignore[reportAny]
             update = msgspec.convert(json, type=ConfigUpdate)
-            return Config() | update
+            return update
 
-    except ValueError as e:
-        log.error("Could not read config: %s", e)
-        return None
+    except (msgspec.ValidationError, tomllib.TOMLDecodeError) as e:
+        raise HelpfulUserError(f"Could not read config: {e}")
     except KeyError as e:
         log.debug("%s", str(e))
         log.debug("The config file %s should contain a section %s", path, section)
         return None
 
 
-def read_config():
+def read_config() -> ConfigUpdate | None:
     if Path("./entangled.toml").exists():
-        return read_config_from_toml(Path("./entangled.toml")) or Config()
+        return read_config_from_toml(Path("./entangled.toml"))
     if Path("./pyproject.toml").exists():
         return (
-            read_config_from_toml(Path("./pyproject.toml"), "tool.entangled") or Config()
+            read_config_from_toml(Path("./pyproject.toml"), "tool.entangled")
         )
-    return Config()
+    return None
 
 
-class ConfigWrapper(threading.local):
-    def __init__(self, config: Config | None = None):
-        self.config: Config | None = config
-
-    def read(self, force: bool = False):
-        if self.config is None or force:
-            self.config = read_config()
-
-    @property
-    def get(self) -> Config:
-        if self.config is None:
-            raise ValueError("No config loaded.")
-        return self.config
-
-    @contextmanager
-    def __call__(self, **kwargs):
-        backup = self.config
-        self.config = (self.config if self.config is not None else Config()) \
-            | ConfigUpdate(version=__version__, **kwargs)
-
-        yield self.config
-
-        self.config = backup
-
-    def get_language(self, lang_name: str) -> Language | None:
-        if self.config is None:
-            raise ValueError("No config loaded.")
-        return self.config.languages.get(lang_name, None)
-
-
-config = ConfigWrapper()
-"""The `config.config` variable is changed when the `config` module is loaded.
-Config is read from `entangled.toml` file."""
-
-
-def get_input_files(cfg: Config | None = None) -> list[Path]:
-    cfg = cfg or config.get
+def get_input_files(cfg: Config) -> list[Path]:
     include_file_list = chain.from_iterable(map(Path(".").glob, cfg.watch_list))
     input_file_list = [
         path for path in include_file_list
@@ -113,4 +78,4 @@ def get_input_files(cfg: Config | None = None) -> list[Path]:
     return sorted(input_file_list)
 
 
-__all__ = ["Config", "ConfigUpdate", "config", "AnnotationMethod", "Markers"]
+__all__ = ["Config", "ConfigUpdate", "AnnotationMethod", "Markers"]

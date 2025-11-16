@@ -5,7 +5,6 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
 from .sync import sync
-from ..config import config
 from ..status import find_watch_dirs
 
 from .main import main
@@ -21,7 +20,6 @@ class EventHandler(FileSystemEventHandler):
     def on_any_event(self, event: FileSystemEvent):
         if event.event_type == "opened":
             return
-        config.read()
 
         if isinstance(event.src_path, bytes):
             path = Path(event.src_path.decode("utf-8"))
@@ -31,7 +29,7 @@ class EventHandler(FileSystemEventHandler):
         if path.absolute().is_relative_to(Path("./.entangled").absolute()):
             return
         if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
-            sync()
+            sync.callback()
             # os.sync()
         self.update_watched()
 
@@ -65,5 +63,4 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
 @main.command()
 def watch():
     """Keep a loop running, watching for changes."""
-    config.read()
     _watch()

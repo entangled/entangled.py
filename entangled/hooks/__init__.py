@@ -3,7 +3,7 @@ from importlib.metadata import entry_points
 
 from .base import HookBase, PrerequisitesFailed
 from . import build, task, quarto_attributes, shebang, spdx_license, repl
-from ..config import Config, config
+from ..config import Config
 from typing import TypeVar
 import msgspec
 
@@ -26,8 +26,7 @@ hooks: dict[str, type[HookBase]] = {
 }
 
 
-def get_hooks(cfg: Config | None = None) -> list[HookBase]:
-    cfg = cfg or config.get
+def get_hooks(cfg: Config) -> list[HookBase]:
     active_hooks: list[HookBase] = []
     for h in sorted(cfg.hooks, key=lambda h: hooks[h].priority()):
         if h in hooks | external_hooks:
