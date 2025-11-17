@@ -1,4 +1,4 @@
-/* ~/~ begin <<docs/index.md#src/prime_sieve.cpp>>[init] */
+// ~/~ begin <<docs/index.md#src/prime_sieve.cpp>>[init]
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -20,4 +20,4 @@ int main() {
     }
     return EXIT_SUCCESS;
 }
-/* ~/~ end */
+// ~/~ end

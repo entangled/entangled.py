@@ -4,7 +4,7 @@ from typing import Any
 import asyncio
 import textwrap
 
-from ..config import config
+from ..config import Config, read_config
 from brei import resolve_tasks, Phony
 from ..logging import logger
 from .main import main
@@ -18,7 +18,8 @@ async def brei_main(target_strs: list[str], force_run: bool, throttle: int | Non
     if not Path(".entangled").exists():
         Path(".entangled").mkdir()
 
-    db = await resolve_tasks(config.get.brei, Path(".entangled/brei_history"))
+    cfg = Config() | read_config()
+    db = await resolve_tasks(cfg.brei, Path(".entangled/brei_history"))
     if throttle:
         db.throttle = asyncio.Semaphore(throttle)
     db.force_run = force_run
@@ -44,5 +45,4 @@ def brei(targets: list[str], *, force_run: bool = False, throttle: int | None = 
 
     TARGETS     Names of the targets to run.
     """
-    config.read()
     asyncio.run(brei_main(targets, force_run, throttle))
