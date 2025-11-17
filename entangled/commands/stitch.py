@@ -8,8 +8,8 @@ from ..errors.user import UserError
 
 
 @main.command()
-@click.option("-f", "--force", help="force overwrite on conflict")
-@click.option("-s", "--show", help="only show, don't act")
+@click.option("-f", "--force", is_flag=True, help="force overwrite on conflict")
+@click.option("-s", "--show", is_flag=True, help="only show, don't act")
 def stitch(*, force: bool = False, show: bool = False):
     """Stitch code changes back into the documentation."""
     if show:

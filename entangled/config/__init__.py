@@ -49,6 +49,7 @@ def read_config_from_toml(
                 for s in section.split("."):
                     json = json[s]  # pyright: ignore[reportAny]
             update = msgspec.convert(json, type=ConfigUpdate)
+            log.debug("Read config from `%s`", path)
             return update
 
     except (msgspec.ValidationError, tomllib.TOMLDecodeError) as e:
@@ -70,11 +71,13 @@ def read_config() -> ConfigUpdate | None:
 
 
 def get_input_files(cfg: Config) -> list[Path]:
+    log.debug("watch list: %s; ignoring: %s", cfg.watch_list, cfg.ignore_list)
     include_file_list = chain.from_iterable(map(Path(".").glob, cfg.watch_list))
     input_file_list = [
         path for path in include_file_list
         if not any(path.match(pat) for pat in cfg.ignore_list)
     ]
+    log.debug("input file list %s", input_file_list)
     return sorted(input_file_list)
 
 
