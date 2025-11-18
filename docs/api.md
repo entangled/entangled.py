@@ -7,35 +7,21 @@ This is internal API documentation. This may be of use if you want to use Entang
         heading_level: 3
 
 ## Document structure
-::: entangled.document
+::: entangled.interface
     options:
         heading_level: 3
 
 ## Readers
-::: entangled.markdown_reader
+::: entangled.readers
     options:
         heading_level: 3
 
-::: entangled.code_reader
+## I/O
+::: entangled.io
     options:
         heading_level: 3
 
-## FileDB
-::: entangled.filedb
-    options:
-        heading_level: 3
-
-## Transactions
-::: entangled.transaction
-    options:
-        heading_level: 3
-
-## Parsing
-::: entangled.parsing
-    options:
-        heading_level: 3
-
-## Properties
-::: entangled.properties
+## Model
+::: entangled.model
     options:
         heading_level: 3

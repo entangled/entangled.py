@@ -75,7 +75,7 @@ def get_input_files(cfg: Config) -> list[Path]:
     include_file_list = chain.from_iterable(map(Path(".").glob, cfg.watch_list))
     input_file_list = [
         path for path in include_file_list
-        if not any(path.match(pat) for pat in cfg.ignore_list)
+        if not any(path.match(pat) for pat in cfg.ignore_list) and path.is_file()
     ]
     log.debug("input file list %s", input_file_list)
     return sorted(input_file_list)

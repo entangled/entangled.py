@@ -1,4 +1,4 @@
-from entangled.model import CodeBlock, ReferenceName, ReferenceId, ReferenceMap
+from entangled.model import CodeBlock, ReferenceName, ReferenceMap, Property, Attribute
 from entangled.model.reference_map import ReferenceMap
 from entangled.text_location import TextLocation
 from entangled.errors.internal import InternalError
@@ -8,8 +8,8 @@ from pathlib import PurePath
 
 import pytest
 
-def mock_code_block() -> CodeBlock:
-    return CodeBlock(properties=[], indent="", open_line="", close_line="", source="", origin=TextLocation(PurePath("-"), 0))
+def mock_code_block(properties: list[Property] | None = None) -> CodeBlock:
+    return CodeBlock(properties=properties or [], indent="", open_line="", close_line="", source="", origin=TextLocation(PurePath("-"), 0))
 
 def ref(name: str) -> ReferenceName:
     return ReferenceName((), name)
@@ -35,14 +35,15 @@ def test_reference_map():
     assert r3.ref_count == 0
     assert refs.select_by_name(ref("a")) == [r1, r2, r3]
 
+    assert list(refs.targets()) == []
     refs.register_target(PurePath("a.py"), ref("a"))
     assert refs.select_by_target(PurePath("a.py")) == ref("a")
 
-    cb2 = mock_code_block()
-    cb2.properties.append(Attribute("file", "b.py"))
+    cb2 = mock_code_block([Attribute("file", "b.py")])
     r4 = refs.new_id(PurePath("x.md"), ref("b"))
     refs[r4] = cb2
     assert refs.select_by_target(PurePath("b.py")) == ref("b")
+    assert sorted(refs.targets()) == [PurePath("a.py"), PurePath("b.py")]
 
     assert len(refs) == 4
     assert set(refs) == { r1, r2, r3, r4 }
@@ -52,7 +53,5 @@ def test_reference_map():
     assert len(refs) == 4
     del refs[r4]
     assert len(refs) == 3
-    assert r4 not in refs
-    
-    
+    assert r4 not in refs 
 

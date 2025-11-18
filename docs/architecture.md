@@ -14,7 +14,7 @@ Entangled is organised into several sub-modules with clearly defined responsibil
 
 Imports in Python need to be acyclical, as follows:
 
-```mermaid
+``` mermaid
 graph TD;
     iterators --> model;
     config --> hooks;

@@ -69,7 +69,7 @@ type Tangler = Callable[[Tangler, Deps, ReferenceId, bool, bool], Iterator[str]]
 
 
 def indent(prefix: str, g: Iterator[str]) -> Iterator[str]:
-    return map(lambda line: prefix + line, g)
+    return map(lambda line: "" if not line else prefix + line, g)
 
 
 def naked_tangler(refs: ReferenceMap) -> Tangler:

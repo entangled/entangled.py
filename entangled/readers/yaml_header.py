@@ -42,6 +42,8 @@ def get_config(header: object) -> ConfigUpdate | None:
     """
     if isinstance(header, dict):
         header = cast(dict[str, object], header)
+        if "entangled" not in header:
+            return None
         try:
             return msgspec.convert(header.get("entangled", None), ConfigUpdate)
         except msgspec.ValidationError as e:
