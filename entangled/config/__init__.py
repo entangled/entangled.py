@@ -15,6 +15,8 @@ from .annotation_method import AnnotationMethod
 from .markers import Markers
 from .config_data import Config
 from .config_update import ConfigUpdate
+from .namespace_default import NamespaceDefault
+
 from ..logging import logger
 from ..version import __version__
 from ..errors.user import HelpfulUserError
@@ -78,4 +80,4 @@ def get_input_files(cfg: Config) -> list[Path]:
     return sorted(input_file_list)
 
 
-__all__ = ["Config", "ConfigUpdate", "AnnotationMethod", "Markers"]
+__all__ = ["Config", "ConfigUpdate", "AnnotationMethod", "Markers", "NamespaceDefault"]

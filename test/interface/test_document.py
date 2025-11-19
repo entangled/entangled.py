@@ -1,13 +1,12 @@
-from functools import partial
-from pathlib import PurePath
+from pathlib import Path
 
-from entangled.config import Config, ConfigUpdate, AnnotationMethod
-from entangled.model import ReferenceMap
-from entangled.readers import markdown, run_reader
+from entangled.io import VirtualFS, transaction
+from entangled.config import ConfigUpdate, AnnotationMethod
 from entangled.interface import Document
 
 
-md_source = """
+fs = VirtualFS.from_dict({
+    "fib.md": """
 ---
 entangled:
     version: "2.4"
@@ -35,19 +34,19 @@ main = putStrLn $ show $ take 20 $ fibonacci 1 1
 ```
 
 Enjoy!
-""".lstrip()
+""".lstrip(),
 
 
-hs_tgt = """
+    "fib.hs": """
 fibonacci :: Int -> Int -> [Int]
 fibonacci a b = a : fibonacci b (a + b)
 
 main :: IO ()
 main = putStrLn $ show $ take 20 $ fibonacci 1 1
-""".lstrip()
+""".lstrip(),
 
 
-hs_tgt_annotated = """
+    "fib_annot.hs": """
 -- ~/~ begin <<fib.md#fib.hs>>[init]
 -- ~/~ begin <<fib.md#fibonacci>>[init]
 fibonacci :: Int -> Int -> [Int]
@@ -57,21 +56,22 @@ fibonacci a b = a : fibonacci b (a + b)
 main :: IO ()
 main = putStrLn $ show $ take 20 $ fibonacci 1 1
 -- ~/~ end
-""".lstrip()
+""".lstrip()})
 
 
 def test_document():
-    refs = ReferenceMap()
-    path = PurePath("fib.md")
-    content, config = run_reader(partial(markdown, Config(), refs), md_source, path.as_posix())
+    doc = Document()
 
-    doc = Document(config, refs, { path: content })
-    assert doc.source_text(path)[0] == md_source
-    
-    fib_hs, _ = doc.target_text(PurePath("fib.hs"))
-    assert fib_hs == hs_tgt
+    with transaction(fs=fs) as t:
+        path = Path("fib.md")
+        doc.load_source(t, path)
+        assert doc.source_text(path)[0] == fs[path].content
+        
+        doc.config |= ConfigUpdate(version="2.4", annotation=AnnotationMethod.NAKED)
+        fib_hs, _ = doc.target_text(Path("fib.hs"))
+        assert fib_hs == fs[Path("fib.hs")].content
 
-    doc.config |= ConfigUpdate(version="2.4", annotation=AnnotationMethod.STANDARD)
-    fib_hs, _ = doc.target_text(PurePath("fib.hs"))
-    assert fib_hs == hs_tgt_annotated
+        doc.config |= ConfigUpdate(version="2.4", annotation=AnnotationMethod.STANDARD)
+        fib_hs, _ = doc.target_text(Path("fib.hs"))
+        assert fib_hs == fs[Path("fib_annot.hs")].content
 
