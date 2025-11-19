@@ -4,8 +4,6 @@ defaults and config loaded from `entangled.toml` in the work directory.
 
 from __future__ import annotations
 
-import threading
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 from itertools import chain
@@ -14,7 +12,6 @@ import msgspec
 import tomllib
 
 from .annotation_method import AnnotationMethod
-from .language import Language
 from .markers import Markers
 from .config_data import Config
 from .config_update import ConfigUpdate

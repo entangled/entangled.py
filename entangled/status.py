@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from .io import filedb
 from .config import get_input_files, Config, read_config
 
-from itertools import chain
 from pathlib import Path
 
 

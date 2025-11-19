@@ -26,19 +26,29 @@ hooks: dict[str, type[HookBase]] = {
 }
 
 
+singletons: dict[str, HookBase] = {}
+
+
+def get_singleton(cfg: Config, h: str) -> HookBase:
+    if h not in singletons:
+        try:
+            hook_cfg = msgspec.convert(cfg.hook.get(h, {}), type=hooks[h].Config)
+            hook_instance = hooks[h](hook_cfg)
+            hook_instance.check_prerequisites()
+            singletons[h] = hook_instance
+        except PrerequisitesFailed as e:
+            logging.error("hook `%s`: %s", h, str(e))
+        except msgspec.ValidationError as e:
+            logging.error("hook `%s`: %s", h, str(e))
+
+    return singletons[h]
+
+
 def get_hooks(cfg: Config) -> list[HookBase]:
     active_hooks: list[HookBase] = []
     for h in sorted(cfg.hooks, key=lambda h: hooks[h].priority()):
         if h in hooks | external_hooks:
-            try:
-                hook_cfg = msgspec.convert(cfg.hook.get(h, {}), type=hooks[h].Config)
-                hook_instance = hooks[h](hook_cfg)
-                hook_instance.check_prerequisites()
-                active_hooks.append(hook_instance)
-            except PrerequisitesFailed as e:
-                logging.error("hook `%s`: %s", h, str(e))
-            except msgspec.ValidationError as e:
-                logging.error("hook `%s`: %s", h, str(e))
+            active_hooks.append(get_singleton(cfg, h))
         else:
             logging.error("no such hook available: `%s`", h)
 

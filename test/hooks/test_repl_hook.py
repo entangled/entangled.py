@@ -9,7 +9,7 @@ from contextlib import chdir
 def test_tangle_ref(data, tmp_path):
     copytree(data / "repl-hook", tmp_path / "repl-hook")
     with chdir(tmp_path / "repl-hook"):
-        run([sys.executable, "-m", "entangled.main", "tangle"])
+        run([sys.executable, "-m", "entangled.main", "-d", "tangle"])
         assert Path("expected.yml").exists()
         assert Path("test.json").exists()
 

@@ -44,7 +44,6 @@ class Document:
 
     def load_source(self, t: Transaction, path: Path):
         reader = markdown(self.config, self.reference_map, numbered_lines(path, t.read(path)))
-        t.update(path)
         content, _ = run_generator(reader)
         self.content[path] = content
         t.update(path)

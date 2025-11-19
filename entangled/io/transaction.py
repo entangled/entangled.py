@@ -13,7 +13,7 @@ from ..utility import cat_maybes
 from ..errors.internal import InternalError
 
 from .stat import Stat, hexdigest
-from .virtual import FileCache
+from .virtual import AbstractFileCache, FileCache, VirtualFS
 from .filedb import FileDB, filedb
 
 
@@ -32,24 +32,24 @@ class Action(metaclass=ABCMeta):
     target: Path
 
     @abstractmethod
-    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+    def conflict(self, fs: AbstractFileCache, db: FileDB) -> Conflict | None:
         """Indicate wether the action might have conflicts. This could be
         inconsistency in the modification times of files, or overwriting
         a file that is not managed by Entangled."""
         ...
 
     @abstractmethod
-    def add_to_db(self, fs: FileCache, db: FileDB):
+    def add_to_db(self, fs: AbstractFileCache, db: FileDB):
         """Only perform the corresponding database action."""
         ...
 
     @abstractmethod
-    def run(self, fs: FileCache):
+    def run(self, fs: AbstractFileCache):
         """Run the action, if `interact` is `True` then confirmation is
         asked in case of a conflict."""
         ...
 
-    def target_stat(self, fs: FileCache) -> Stat | None:
+    def target_stat(self, fs: AbstractFileCache) -> Stat | None:
         if self.target not in fs:
             return None
         return fs[self.target].stat
@@ -66,13 +66,13 @@ class WriterBase(Action, metaclass=ABCMeta):
         return hexdigest(self.content)
 
     @override
-    def run(self, fs: FileCache):
+    def run(self, fs: AbstractFileCache):
         fs.write(self.target, self.content, self.mode)
 
 
 class Create(WriterBase):
     @override
-    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+    def conflict(self, fs: AbstractFileCache, db: FileDB) -> Conflict | None:
         if self.target in fs:
             if (self.content_digest == fs[self.target].stat.hexdigest):
                 return None
@@ -80,7 +80,7 @@ class Create(WriterBase):
         return None
 
     @override
-    def add_to_db(self, fs: FileCache, db: FileDB):
+    def add_to_db(self, fs: AbstractFileCache, db: FileDB):
         return db.create_target(fs, self.target)
 
     @override
@@ -90,7 +90,7 @@ class Create(WriterBase):
 
 class Write(WriterBase):
     @override
-    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+    def conflict(self, fs: AbstractFileCache, db: FileDB) -> Conflict | None:
         if self.target not in fs:
             return None
         if fs[self.target].stat != db[self.target]:
@@ -102,7 +102,7 @@ class Write(WriterBase):
         return None
 
     @override
-    def add_to_db(self, fs: FileCache, db: FileDB):
+    def add_to_db(self, fs: AbstractFileCache, db: FileDB):
         db.update(fs, self.target)
 
     @override
@@ -112,17 +112,17 @@ class Write(WriterBase):
 
 class Delete(Action):
     @override
-    def conflict(self, fs: FileCache, db: FileDB) -> Conflict | None:
+    def conflict(self, fs: AbstractFileCache, db: FileDB) -> Conflict | None:
         if fs[self.target].stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
         return None
 
     @override
-    def add_to_db(self, fs: FileCache, db: FileDB):
+    def add_to_db(self, fs: AbstractFileCache, db: FileDB):
         del db[self.target]
 
     @override
-    def run(self, fs: FileCache):
+    def run(self, fs: AbstractFileCache):
         del fs[self.target]
 
     @override
@@ -138,7 +138,7 @@ class Transaction:
     manager function `transaction`.
     """
     db: FileDB
-    fs: FileCache = field(default_factory=FileCache)
+    fs: AbstractFileCache = field(default_factory=FileCache)
     updates: list[Path] = field(default_factory=list)
     actions: list[Action] = field(default_factory=list)
     passed: set[Path] = field(default_factory=set)
@@ -217,12 +217,17 @@ class TransactionMode(Enum):
 
 
 @contextmanager
-def transaction(mode: TransactionMode = TransactionMode.FAIL):
-    with filedb(writeonly = (mode == TransactionMode.RESETDB)) as db:
+def transaction(mode: TransactionMode = TransactionMode.FAIL, fs: AbstractFileCache | None = None):
+    if fs is None:
+        fs = FileCache()
+
+    with filedb(
+            writeonly = (mode == TransactionMode.RESETDB),
+            virtual = isinstance(fs, VirtualFS)) as db:
         if mode == TransactionMode.RESETDB:
             db.clear()
 
-        tr = Transaction(db)
+        tr = Transaction(db, fs)
 
         logging.debug("Open transaction")
         yield tr
