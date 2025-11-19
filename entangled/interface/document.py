@@ -6,16 +6,19 @@ from ..model import ReferenceMap, tangle_ref, Content, content_to_text
 from ..io import Transaction
 from ..readers import markdown, code
 from ..iterators import numbered_lines, run_generator
+from ..hooks import HookBase, get_hooks
 
 
 @dataclass
 class Document:
     config: Config = Config()
+    hooks: list[HookBase] = field(default_factory=list)
     reference_map: ReferenceMap = field(default_factory=ReferenceMap)
     content: dict[Path, list[Content]] = field(default_factory=dict)
 
     def __post_init__(self):
         self.config |= read_config()
+        self.hooks = get_hooks(self.config)
 
     def input_files(self):
         return get_input_files(self.config)
