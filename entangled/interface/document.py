@@ -8,6 +8,7 @@ from ..readers import code
 from ..iterators import numbered_lines, run_generator
 
 from .context import Context, markdown
+import logging
 
 
 @dataclass
@@ -55,6 +56,7 @@ class Document:
     def load_source(self, t: Transaction, path: Path) -> ConfigUpdate | None:
         reader = markdown(self.context, self.reference_map, numbered_lines(path, t.read(path)))
         content, update = run_generator(reader)
+        logging.debug("got config update: %s", update)
         self.content[path] = content
         t.update(path)
         return update
@@ -75,8 +77,17 @@ class Document:
             self.load_source(t, p)
 
     def tangle(self, t: Transaction, annotation: AnnotationMethod | None = None):
+        if annotation is None:
+            annotation = self.config.annotation
+
+        for h in self.context.hooks:
+            h.pre_tangle(self.reference_map)
+
         for tgt in self.reference_map.targets():
             self.write_target(t, Path(tgt), annotation)
+
+        for h in self.context.hooks:
+            h.on_tangle(t, self.reference_map)
 
     def stitch(self, t: Transaction):
         for path in self.content:

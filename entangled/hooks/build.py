@@ -13,8 +13,8 @@ from subprocess import run, SubprocessError, DEVNULL
 import logging
 from typing import final, override
 
-from entangled.config.language import Language
-
+from ..config.language import Language
+from ..io import Transaction
 from ..model.properties import Property, get_attribute, get_attribute_string, get_classes
 from ..model import ReferenceId, ReferenceMap, CodeBlock
 
@@ -100,12 +100,12 @@ class Hook(HookBase):
             self.recipes.append(Hook.Recipe(target, deps, cb.language, script_file_name))
 
     @override
-    def post_tangle(self, refs: ReferenceMap):
+    def on_tangle(self, t: Transaction, refs: ReferenceMap):
         """After all code is tangled: retrieve the build scripts and run it."""
         targets = " ".join([r.target for r in self.recipes])
         makefile = preamble.format(
             targets=targets,
             rules="\n\n".join(r.to_makefile(self.config) for r in self.recipes),
         )
-        Path(".entangled/build").mkdir(exist_ok=True, parents=True)
-        _ = Path(".entangled/build/Makefile").write_text(makefile)
+        t.write(Path(".entangled/build/Makefile"), makefile, [])
+

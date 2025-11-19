@@ -27,15 +27,7 @@ def tangle(*, annotate: AnnotationMethod | None = None, force: bool = False, sho
 
         with transaction(mode) as t:
             doc.load(t)
-
-            for h in doc.context.hooks:
-                h.pre_tangle(doc.reference_map)
-
             doc.tangle(t, annotate)
-
-            for h in doc.context.hooks:
-                h.on_tangle(t, doc.reference_map)
-
             t.clear_orphans()
 
         for h in doc.context.hooks:

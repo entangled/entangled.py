@@ -27,20 +27,8 @@ def reset():
 
         with transaction(mode) as t:
             doc.load(t)
-            annotation_method = doc.config.annotation
-
-            for h in doc.context.hooks:
-                h.pre_tangle(doc.reference_map)
-            
-            doc.tangle(t, annotation_method)
-
-            for h in doc.context.hooks:
-                h.on_tangle(t, doc.reference_map)
-
+            doc.tangle(t)
             t.clear_orphans()
-
-        for h in doc.context.hooks:
-            h.post_tangle(doc.reference_map)
 
     except UserError as e:
         logging.error(str(e))

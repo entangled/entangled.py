@@ -91,5 +91,4 @@ class Hook(HookBase):
 
     @override
     def on_read(self, code: CodeBlock):
-        log.debug("quarto filter: %s", code)
         amend_code_properties(code)

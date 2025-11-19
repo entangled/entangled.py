@@ -8,7 +8,7 @@ from ..readers.yaml_header import get_config
 from ..readers import read_yaml_header, process_token, collect_plain_text, raw_markdown, InputStream
 
 from functools import partial
-
+import logging
 
 @dataclass
 class Context:
@@ -18,6 +18,7 @@ class Context:
     def __post_init__(self):
         for h in self.config.hooks:
             if h not in self._hooks:
+                logging.debug("context: loading hook %s", h)
                 hook = create_hook(self.config, h)
                 if hook is None:
                     continue
