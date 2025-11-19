@@ -1,7 +1,8 @@
 from entangled.config import Config, AnnotationMethod
-from entangled.readers import markdown, run_reader
+from entangled.readers import run_reader
 from entangled.model import ReferenceMap, ReferenceName, ReferenceId, tangle_ref
 from entangled.model.tangle import MissingLanguageError, MissingReference
+from entangled.interface import Context, markdown
 
 from pathlib import PurePath
 from functools import partial
@@ -88,7 +89,7 @@ def ref(name: str, num: int = 0) -> ReferenceId:
 
 def test_nested_indent():
     refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), input1_md)
+    _ = run_reader(partial(markdown, Context(), refs), input1_md)
     n1, _ = tangle_ref(refs, ReferenceName((), "f"), AnnotationMethod.NAKED)
     assert n1 == naked_tangle_1
     n1_annot, _ = tangle_ref(refs, ReferenceName((), "f"), AnnotationMethod.STANDARD)
@@ -99,7 +100,7 @@ def test_nested_indent():
 def test_missing_language():
     # this should never happen, but the data model allows for it
     refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), input1_md)
+    _ = run_reader(partial(markdown, Context(), refs), input1_md)
     code_block = refs[ref("f-condition")]
     code_block.language = None
 
@@ -111,7 +112,7 @@ def test_missing_language():
 
 def test_sequence():
     refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), input1_md)
+    _ = run_reader(partial(markdown, Context(), refs), input1_md)
     g1, _ = tangle_ref(refs, ReferenceName((), "g"), AnnotationMethod.NAKED)
     assert g1 == "print('a')\nprint('b')\nprint('c')\n"
     g2, _ = tangle_ref(refs, ReferenceName((), "main"), AnnotationMethod.NAKED)
@@ -123,7 +124,7 @@ def test_sequence():
 
 def test_absent_ref():
     refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), input1_md)
+    _ = run_reader(partial(markdown, Context(), refs), input1_md)
 
     with pytest.raises(KeyError):
         _ = tangle_ref(refs, ReferenceName((), "z"))

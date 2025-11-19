@@ -1,24 +1,31 @@
 from dataclasses import dataclass, field
 from pathlib import PurePath, Path
 
-from ..config import Config, get_input_files, read_config, AnnotationMethod
+from ..config import Config, ConfigUpdate, get_input_files, read_config, AnnotationMethod
 from ..model import ReferenceMap, tangle_ref, Content, content_to_text
 from ..io import Transaction
-from ..readers import markdown, code
+from ..readers import code
 from ..iterators import numbered_lines, run_generator
-from ..hooks import HookBase, get_hooks
+
+from .context import Context, markdown
 
 
 @dataclass
 class Document:
-    config: Config = Config()
-    hooks: list[HookBase] = field(default_factory=list)
+    context: Context = field(default_factory=Context)
     reference_map: ReferenceMap = field(default_factory=ReferenceMap)
     content: dict[Path, list[Content]] = field(default_factory=dict)
 
+    @property
+    def config(self):
+        return self.context.config
+
+    @config.setter
+    def config(self, new_config: Config) -> None:
+        self.context.config = new_config
+
     def __post_init__(self):
         self.config |= read_config()
-        self.hooks = get_hooks(self.config)
 
     def input_files(self):
         return get_input_files(self.config)
@@ -45,11 +52,12 @@ class Document:
         text, deps = tangle_ref(self.reference_map, ref_name, annotation)
         t.write(path, text, map(Path, deps), main_block.mode)
 
-    def load_source(self, t: Transaction, path: Path):
-        reader = markdown(self.config, self.reference_map, numbered_lines(path, t.read(path)))
-        content, _ = run_generator(reader)
+    def load_source(self, t: Transaction, path: Path) -> ConfigUpdate | None:
+        reader = markdown(self.context, self.reference_map, numbered_lines(path, t.read(path)))
+        content, update = run_generator(reader)
         self.content[path] = content
         t.update(path)
+        return update
 
     def load_code(self, t: Transaction, path: Path):
         reader = code(numbered_lines(path, t.read(path)))

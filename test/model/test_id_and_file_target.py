@@ -1,12 +1,13 @@
-from entangled.config import AnnotationMethod, Config
-from entangled.readers import markdown, run_reader
-from entangled.model import tangle_ref, ReferenceMap, ReferenceName
+from entangled.interface import Document
+from entangled.io import VirtualFS, transaction
+from entangled.config import AnnotationMethod
+from entangled.model import tangle_ref, ReferenceName
 
-from functools import partial
-from pathlib import PurePath
+from pathlib import PurePath, Path
 
 
-md_in = """
+fs = VirtualFS.from_dict({
+    "input.md": """
 ``` {.rust file=test1.rs #blockid1}
 fn main() {
     println!("Hello, World!");
@@ -34,7 +35,7 @@ fn main() {
     println!("42! = {}", fac(42));
 }
 ```
-"""
+"""})
 
 result1_out = result2_out = """
 fn main() {
@@ -56,8 +57,11 @@ fn main() {
 """
 
 def test_id_and_file_target():
-    refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), md_in)
+    doc = Document()
+    with transaction(fs=fs) as t:
+        doc.load_source(t, Path("input.md"))
+
+    refs = doc.reference_map
 
     content1, _ = tangle_ref(refs, ReferenceName((), "blockid1"), AnnotationMethod.NAKED)
     assert content1.strip() == result1_out.strip()

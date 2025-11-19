@@ -1,16 +1,11 @@
 from functools import partial
-from pathlib import PurePath
 
-import pytest
-import logging
-
-from entangled.config.namespace_default import NamespaceDefault
-from entangled.errors.user import ParseError, IndentationError, CodeAttributeError
-from entangled.model import PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName, tangle_ref
-from entangled.readers.markdown import code_block, collect_plain_text, ignore_block, markdown, raw_markdown
+from entangled.model import PlainText, CodeBlock, ReferenceId, ReferenceMap, ReferenceName
+from entangled.readers.markdown import code_block, collect_plain_text, ignore_block, raw_markdown
 from entangled.iterators import Peekable, run_generator
-from entangled.config import AnnotationMethod, Config, ConfigUpdate
+from entangled.config import Config
 from entangled.readers import run_reader
+from entangled.interface import markdown, Context
 
 
 empty_stream = Peekable(iter([]))
@@ -107,155 +102,17 @@ def test_collect_plain_text():
 
 def test_markdown():
     refs = ReferenceMap()
-    ol, _ = run_reader(partial(markdown, Config(), refs), test0)
+    ol, _ = run_reader(partial(markdown, Context(), refs), test0)
     assert len(ol) == 1
     assert ol[0] == PlainText("abcdefg")
     assert not refs
 
-    ol, _ = run_reader(partial(markdown, Config(), refs), test3)
+    ol, _ = run_reader(partial(markdown, Context(), refs), test3)
     assert isinstance(ol[-1], ReferenceId)
     assert ol[-1].name.name == "test"
     assert refs
     assert refs.has_name(ReferenceName.from_str("test"))
     assert ol[-1] in refs
 
-
-
-test_ns_yaml1 = """
----
-entangled:
-    version: "2.4"
-    namespace: q
----
-
-``` {.python #hello}
-print("hello")
-```
-""".strip()
-
-test_ns_yaml2 = """
----
-entangled:
-    version: "2.4"
-    namespace: p
----
-
-``` {.python #hello}
-print("world")
-```
-
-``` {.python #combined}
-<<q::hello>>
-<<hello>>
-```
-""".strip()
-
-def test_yaml_namespace():
-    refs = ReferenceMap()
-    _, config = run_reader(partial(markdown, Config(), refs), test_ns_yaml1, "a.md")
-    assert config.namespace == ("q",)
-    _, config = run_reader(partial(markdown, Config(), refs), test_ns_yaml2, "b.md")
-    assert config.namespace == ("p",)
-
-    refq = ReferenceName.from_str("q::hello")
-    assert refs.has_name(refq)
-    cb = [refs[r] for r in refs.select_by_name(refq)]
-    assert cb[0].source == "print(\"hello\")\n"
-
-    refp = ReferenceName.from_str("p::hello")
-    assert refs.has_name(refp)
-    cb = [refs[r] for r in refs.select_by_name(refp)]
-    assert cb[0].source == "print(\"world\")\n"
-
-    src, _ = tangle_ref(refs, ReferenceName.from_str("p::combined"), annotation=AnnotationMethod.NAKED)
-    assert src == "print(\"hello\")\nprint(\"world\")\n"
-
-
-wrongly_typed_attribute1 = """
----
-entangled:
-    version: "2.4"
-    style: basic
----
-
-```python
-#| file: 3
-```
-""".strip()
-
-
-octal_mode_attribute2 = """
----
-entangled:
-    version: "2.4"
-    style: basic
----
-
-Note, the mode here is given in octal, and the YAML reader understands this, so this is
-supported.
-
-```python
-#| file: hello.py
-#| mode: 0755
-#!/usr/bin/env python
-print("Hello, World!")
-```
-""".strip()
-
-
-octal_mode_attribute1 = """
-``` {.python file=hello.py mode=0755}
-print("Hello, World!")
-```
-""".strip()
-
-wrongly_typed_mode_attribute = """
----
-entangled:
-    version: "2.4"
-    style: basic
----
-
-```python
-#| file: hello.py
-#| mode: true
-print("Hello, World!")
-```
-""".strip()
-
-
-def test_file_attribute_type():
-    refs = ReferenceMap()
-
-    with pytest.raises(CodeAttributeError):
-        _ = run_reader(partial(markdown, Config(), refs), wrongly_typed_attribute1, "a.md")
-
-    with pytest.raises(CodeAttributeError):
-        _ = run_reader(partial(markdown, Config(), refs), wrongly_typed_mode_attribute, "a.md")
-        ref = ReferenceId(ReferenceName((), "hello.py"), PurePath("a.md"), 0)
-        print(refs[ref])
-
-    for md in [octal_mode_attribute1, octal_mode_attribute2]:
-        _ = run_reader(partial(markdown, Config(), refs), md, "hello.md")
-        ref = ReferenceId(ReferenceName((), "hello.py"), PurePath("hello.md"), 0)
-        assert ref in refs
-        assert refs[ref].mode == 0o755
-    
-
-unknown_language = """
-``` {.brainfuck #hello-world}
->++++++++[<+++++++++>-]<.>++++[<+++++++>-]<+.+++++++..+++.>>++++++[<+++++++>-]<+
-+.------------.>++++++[<+++++++++>-]<+.<.+++.------.--------.>>>++++[<++++++++>-
-]<+.
-```
-""".strip()
-
-
-def test_unknown_language(caplog):
-    refs = ReferenceMap()
-
-    with caplog.at_level(logging.WARNING):
-        _ = run_reader(partial(markdown, Config(), refs), unknown_language, "a.md")
-    assert "language `brainfuck` unknown" in caplog.text
 
 

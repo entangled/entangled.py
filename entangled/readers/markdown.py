@@ -8,9 +8,9 @@ from ..model.properties import get_attribute_string, get_attribute, read_propert
 from ..config import Config
 from ..errors.user import CodeAttributeError, IndentationError
 from ..utility import first
-from ..hooks import get_hooks, HookBase
 from ..iterators.lines import lines
 from ..text_location import TextLocation
+from ..hooks import HookBase
 
 from .types import InputStream, Reader, RawMarkdownStream
 from .delimiters import delimited_token_getter
@@ -172,14 +172,3 @@ def collect_plain_text[T](inp: Iterator[PlainText | T]) -> Generator[PlainText |
 
     yield from flush()
 
-
-def markdown(config: Config, refs: ReferenceMap, input: InputStream) -> Generator[Content, None, Config]:
-    header = yield from read_yaml_header(input)
-    config |= get_config(header)
-    hooks = get_hooks(config)
-
-    yield from map(
-        partial(process_token, hooks, refs),
-        collect_plain_text(raw_markdown(config, input)))
-
-    return config

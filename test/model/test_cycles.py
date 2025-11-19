@@ -1,13 +1,16 @@
-from functools import partial
 import pytest
 
-from entangled.model import ReferenceMap, ReferenceName
+from entangled.interface import Document
+from entangled.io import VirtualFS, transaction
+from entangled.model import ReferenceName
 from entangled.model.tangle import tangle_ref, CyclicReference
-from entangled.readers import markdown, run_reader
-from entangled.config import Config, AnnotationMethod
+from entangled.config import AnnotationMethod
+
+from pathlib import Path
 
 
-md_source = """
+fs = VirtualFS.from_dict({
+    "input.md": """
 This should raise a `CyclicReference` error.
 
 ``` {.python #hello}
@@ -40,14 +43,16 @@ What should not throw an error is doubling a reference:
 ``` {.python #electron}
 negative charge
 ```
-"""
-
+"""})
 
 
 @pytest.mark.timeout(5)
 def test_cycles():
-    refs = ReferenceMap()
-    _ = run_reader(partial(markdown, Config(), refs), md_source)
+    doc = Document()
+    with transaction(fs=fs) as t:
+        doc.load_source(t, Path("input.md"))
+
+    refs = doc.reference_map
 
     with pytest.raises(CyclicReference):
         _ = tangle_ref(refs, ReferenceName((), "hello"), AnnotationMethod.NAKED)

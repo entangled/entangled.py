@@ -49,7 +49,8 @@ class ConfigUpdate(Struct):
 prefab_config: dict[DocumentStyle, ConfigUpdate] = {
     DocumentStyle.DEFAULT: ConfigUpdate(
         version = "2.0",
-        markers = default_markers
+        markers = default_markers,
+        hooks = ["shebang"]
     ),
     DocumentStyle.BASIC: ConfigUpdate(
         version = "2.4",

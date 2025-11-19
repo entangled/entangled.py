@@ -11,7 +11,6 @@ AbstractHook = TypeVar("AbstractHook", bound=HookBase)
 
 discovered_hooks = entry_points(group="entangled.hooks")
 
-
 external_hooks = {
     name: discovered_hooks[name].load().Hook for name in discovered_hooks.names  # pyright: ignore[reportAny]
 }
@@ -23,36 +22,25 @@ hooks: dict[str, type[HookBase]] = {
     "shebang": shebang.Hook,
     "spdx_license": spdx_license.Hook,
     "quarto_attributes": quarto_attributes.Hook,
-}
+} | external_hooks
 
 
-singletons: dict[str, HookBase] = {}
+def create_hook(cfg: Config, h: str) -> HookBase | None:
+    if h not in hooks:
+        logging.error("hook `%s` not found", h)
+        return None
+
+    try:
+        hook_cfg = msgspec.convert(cfg.hook.get(h, {}), type=hooks[h].Config)
+        hook_instance = hooks[h](hook_cfg)
+        hook_instance.check_prerequisites()
+        return hook_instance
+    except PrerequisitesFailed as e:
+        logging.error("hook `%s`: %s", h, str(e))
+    except msgspec.ValidationError as e:
+        logging.error("hook `%s`: %s", h, str(e))
+
+    return None
 
 
-def get_singleton(cfg: Config, h: str) -> HookBase:
-    if h not in singletons:
-        try:
-            hook_cfg = msgspec.convert(cfg.hook.get(h, {}), type=hooks[h].Config)
-            hook_instance = hooks[h](hook_cfg)
-            hook_instance.check_prerequisites()
-            singletons[h] = hook_instance
-        except PrerequisitesFailed as e:
-            logging.error("hook `%s`: %s", h, str(e))
-        except msgspec.ValidationError as e:
-            logging.error("hook `%s`: %s", h, str(e))
-
-    return singletons[h]
-
-
-def get_hooks(cfg: Config) -> list[HookBase]:
-    active_hooks: list[HookBase] = []
-    for h in sorted(cfg.hooks, key=lambda h: hooks[h].priority()):
-        if h in hooks | external_hooks:
-            active_hooks.append(get_singleton(cfg, h))
-        else:
-            logging.error("no such hook available: `%s`", h)
-
-    return active_hooks
-
-
-__all__ = ["hooks", "PrerequisitesFailed", "get_hooks", "HookBase"]
+__all__ = ["hooks", "PrerequisitesFailed", "create_hook", "HookBase"]

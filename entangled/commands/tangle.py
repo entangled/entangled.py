@@ -4,7 +4,6 @@ from .main import main
 
 from ..config import AnnotationMethod
 from ..io import transaction, TransactionMode
-from ..hooks import get_hooks
 from ..errors.user import UserError
 from ..interface import Document
 
@@ -28,19 +27,18 @@ def tangle(*, annotate: AnnotationMethod | None = None, force: bool = False, sho
 
         with transaction(mode) as t:
             doc.load(t)
-            hooks = get_hooks(doc.config)
 
-            for h in hooks:
+            for h in doc.context.hooks:
                 h.pre_tangle(doc.reference_map)
 
             doc.tangle(t, annotate)
 
-            for h in hooks:
+            for h in doc.context.hooks:
                 h.on_tangle(t, doc.reference_map)
 
             t.clear_orphans()
 
-        for h in hooks:
+        for h in doc.context.hooks:
             h.post_tangle(doc.reference_map)
 
     except UserError as e:
