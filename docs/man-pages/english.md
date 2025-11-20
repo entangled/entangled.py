@@ -489,3 +489,8 @@ BUGS
 
 Bugs can be reported at [github.com/entangled/entangled.py/issues](https://github.com/entangled/entangled.py/issues).
 
+AUTHORS
+=======
+
+Entangled was written by Johan Hidding, with contributions by Ole Mussmann, Reggie Cushing, Olga Lyashevska and several others.
+
