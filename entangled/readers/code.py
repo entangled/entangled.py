@@ -65,8 +65,8 @@ def read_block(namespace: tuple[str, ...], indent: str, input: InputStream) -> G
     if not input:
         return None
 
-    pos, line = input.peek()
-    if (block_data := open_block(line)) is None:
+    pos, line1 = input.peek()
+    if (block_data := open_block(line1)) is None:
         return None
     _ = next(input)
     if block_data.indent < indent:

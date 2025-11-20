@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 import os
 
@@ -11,7 +12,7 @@ from .properties import Property
 def indent(prefix: str, text: str) -> str:
     def indent_line(line: str):
         if line.endswith(os.linesep):
-            eol = os.linesep
+            eol: Literal["\n", "\r\n", ""] = os.linesep
         else:
             eol = ""
             if line.strip() == "":

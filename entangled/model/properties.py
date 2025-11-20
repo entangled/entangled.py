@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any, cast, override
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typeguard import check_type
 
 
 from ..parsing import (
@@ -99,3 +100,13 @@ def get_attribute_string(props: list[Property], key: str) -> str | None:
     if isinstance(x, str):
         return x
     raise TypeError()
+
+
+def get_typed_attribute[T](dtype: type[T], props: list[Property], key: str) -> T | None:
+    x = get_attribute(props, key)
+    if x is None:
+        return None
+    if isinstance(x, str) and dtype == list[str]:
+        return cast(T, x.split(","))
+    return check_type(x, dtype)
+

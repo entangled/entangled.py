@@ -1,15 +1,15 @@
 from __future__ import annotations
 from collections import defaultdict
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import final, override, cast
+from typing import final, override
 
 from ..config import AnnotationMethod
 from ..io import Transaction
 
-from ..model import CodeBlock, ReferenceId, ReferenceMap
-from ..model.properties import Class, Property, get_attribute, get_attribute_string, get_classes
+from ..model import ReferenceId, ReferenceMap
+from ..model.properties import Class, get_attribute_string, get_classes, get_typed_attribute
 from ..model.tangle import tangle_ref
 from .base import HookBase
 from ..logging import logger
@@ -17,32 +17,18 @@ from ..logging import logger
 log = logger()
 
 
-def ensure_list(strs: str | list[str] | object) -> list[str]:
-    """Some options may be given either as a list or as a single string,
-    where the string is supposed to have a whitespace separated list.
-    This function converts from either to a list of strings.
-    """
-    if isinstance(strs, str):
-        return strs.split()
-    elif isinstance(strs, list):
-        assert all(isinstance(s, str) for s in strs)  # pyright: ignore[reportUnknownVariableType]
-        return cast(list[str], strs)
-    else:
-        raise ValueError(f"Expected string or list, got: {strs}")
-
-
 @final
 class Hook(HookBase):
     @dataclass
     class Recipe:
-        description: str | None
-        creates: list[str] | None
-        requires: list[str] | None
-        runner: str | None
-        stdout: str | None
-        stdin: str | None
-        collect: str | None
         ref: ReferenceId
+        description: str | None = None
+        creates: list[str] | None = None
+        requires: list[str] | None = None
+        runner: str | None = None
+        stdout: str | None = None
+        stdin: str | None = None
+        collect: str | None = None
 
         def to_brei_task(self, refs: ReferenceMap):
             cb = refs[self.ref]
@@ -85,18 +71,16 @@ class Hook(HookBase):
                 case _:
                     continue
 
-            record: dict[str, object] = {
-                f.name: get_attribute(cb.properties, f.name)
-                for f in fields(Hook.Recipe)
-            }
-
-            record["runner"] = record["runner"] or runner
-            record["creates"] = ensure_list(record["creates"]) if record["creates"] else None
-            record["requires"] = ensure_list(record["requires"]) if record["requires"] else None
-            record["ref"] = ref
-
-            log.debug(f"task: {record}")
-            recipe = Hook.Recipe(**record)
+            recipe = Hook.Recipe(
+                ref=ref,
+                description=get_typed_attribute(str, cb.properties, "description"),
+                creates=get_typed_attribute(list[str], cb.properties, "creates"),
+                requires=get_typed_attribute(list[str], cb.properties, "requires"),
+                runner=get_typed_attribute(str, cb.properties, "runner") or runner,
+                stdout=get_typed_attribute(str, cb.properties, "stdout"),
+                stdin=get_typed_attribute(str, cb.properties, "stdin"),
+                collect=get_typed_attribute(str, cb.properties, "collect")
+            )
             self.recipes.append(recipe)
             if recipe.collect:
                 targets = recipe.creates or []

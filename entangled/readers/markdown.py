@@ -70,7 +70,7 @@ def code_block(config: Config) -> Reader[RawContent, bool]:
         if config.namespace is None:
             match config.namespace_default:
                 case NamespaceDefault.GLOBAL:
-                    namespace = ()
+                    namespace: tuple[str, ...] = ()
                 case NamespaceDefault.PRIVATE:
                     namespace = (block.origin.filename.as_posix(),)
         else:
