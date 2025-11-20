@@ -2,6 +2,8 @@
 A virtual file system layer to cache file reads and stats.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import override
 from dataclasses import dataclass, field
