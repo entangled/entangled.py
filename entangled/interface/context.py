@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 
 from ..config import Config, ConfigUpdate
 from ..hooks import HookBase, create_hook
@@ -33,6 +33,10 @@ class Context:
     def hooks(self) -> list[HookBase]:
         return sorted((self._hooks[h] for h in self.config.hooks),
                       key=lambda h: h.priority())
+
+    @property
+    def all_hooks(self) -> Iterable[HookBase]:
+        return self._hooks.values()
 
 
 def markdown(context: Context, refs: ReferenceMap, input: InputStream) -> Generator[Content, None, ConfigUpdate | None]:

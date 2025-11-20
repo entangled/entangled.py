@@ -6,9 +6,12 @@ from ..model import ReferenceMap, tangle_ref, Content, content_to_text
 from ..io import Transaction
 from ..readers import code
 from ..iterators import numbered_lines, run_generator
+from ..logging import logger
 
 from .context import Context, markdown
-import logging
+
+
+log = logger()
 
 
 @dataclass
@@ -56,7 +59,7 @@ class Document:
     def load_source(self, t: Transaction, path: Path) -> ConfigUpdate | None:
         reader = markdown(self.context, self.reference_map, numbered_lines(path, t.read(path)))
         content, update = run_generator(reader)
-        logging.debug("got config update: %s", update)
+        log.debug("got config update: %s", update)
         self.content[path] = content
         t.update(path)
         return update
@@ -73,20 +76,26 @@ class Document:
                 self.load_code(t, Path(tgt))
 
     def load(self, t: Transaction):
-        for p in get_input_files(self.config):
-            self.load_source(t, p)
+        files = get_input_files(self.config)
+        if len(files) == 1:
+            log.debug(f"single input file `{files[0]}`")
+            self.context |= self.load_source(t, files[0])
+        else:
+            log.debug("multiple input files")
+            for p in files:
+                self.load_source(t, p)
 
     def tangle(self, t: Transaction, annotation: AnnotationMethod | None = None):
         if annotation is None:
             annotation = self.config.annotation
 
-        for h in self.context.hooks:
+        for h in self.context.all_hooks:
             h.pre_tangle(self.reference_map)
 
         for tgt in self.reference_map.targets():
             self.write_target(t, Path(tgt), annotation)
 
-        for h in self.context.hooks:
+        for h in self.context.all_hooks:
             h.on_tangle(t, self.reference_map)
 
     def stitch(self, t: Transaction):

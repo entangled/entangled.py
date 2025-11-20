@@ -46,7 +46,7 @@ def tangle(doc: Document):
         doc.load(t)
         doc.tangle(t)
         t.clear_orphans()
-        for h in doc.context.hooks:
+        for h in doc.context.all_hooks:
             h.post_tangle(doc.reference_map)
 
 
@@ -57,7 +57,7 @@ def stitch(doc: Document):
         doc.stitch(t)
     with transaction() as t:
         doc.tangle(t)
-        for h in doc.context.hooks:
+        for h in doc.context.all_hooks:
             h.post_tangle(doc.reference_map)
         
 

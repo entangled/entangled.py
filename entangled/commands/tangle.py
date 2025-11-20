@@ -30,7 +30,7 @@ def tangle(*, annotate: AnnotationMethod | None = None, force: bool = False, sho
             doc.tangle(t, annotate)
             t.clear_orphans()
 
-        for h in doc.context.hooks:
+        for h in doc.context.all_hooks:
             h.post_tangle(doc.reference_map)
 
     except UserError as e:
