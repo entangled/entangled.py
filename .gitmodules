@@ -1,3 +1,0 @@
-[submodule "test/templates/mkdocs"]
-	path = test/templates/mkdocs
-	url = git@github.com:entangled/template-mkdocs
