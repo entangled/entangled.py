@@ -1,51 +1,38 @@
 from __future__ import annotations
 from collections import defaultdict
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, final, override
+from typing import final, override
 
 from ..config import AnnotationMethod
 from ..io import Transaction
 
-from ..document import CodeBlock, ReferenceId, ReferenceMap
-from ..properties import Class, Property, get_attribute, get_classes
+from ..model import ReferenceId, ReferenceMap
+from ..model.properties import Class, get_attribute_string, get_classes, get_typed_attribute
+from ..model.tangle import tangle_ref
 from .base import HookBase
 from ..logging import logger
-from ..tangle import tangle_ref
 
 log = logger()
-
-
-def ensure_list(strs: str | list[str]) -> list[str]:
-    """Some options may be given either as a list or as a single string,
-    where the string is supposed to have a whitespace separated list.
-    This function converts from either to a list of strings.
-    """
-    if isinstance(strs, str):
-        return strs.split()
-    elif isinstance(strs, list):
-        return strs
-    else:
-        raise ValueError(f"Expected `str` or `list[str]`, got: {strs}")
 
 
 @final
 class Hook(HookBase):
     @dataclass
     class Recipe:
-        description: str | None
-        creates: list[str] | None
-        requires: list[str] | None
-        runner: str | None
-        stdout: str | None
-        stdin: str | None
-        collect: str | None
         ref: ReferenceId
+        description: str | None = None
+        creates: list[str] | None = None
+        requires: list[str] | None = None
+        runner: str | None = None
+        stdout: str | None = None
+        stdin: str | None = None
+        collect: str | None = None
 
         def to_brei_task(self, refs: ReferenceMap):
-            cb = refs.get_codeblock(self.ref)
-            if (path := get_attribute(cb.properties, "file")) is None:
+            cb = refs[self.ref]
+            if (path := get_attribute_string(cb.properties, "file")) is None:
                 script, _ = tangle_ref(refs, self.ref.name, AnnotationMethod.NAKED)
             else:
                 script = None
@@ -70,7 +57,7 @@ class Hook(HookBase):
 
     @override
     def pre_tangle(self, refs: ReferenceMap):
-        for ref, cb in refs.map.items():
+        for ref, cb in refs.items():
             if "task" not in get_classes(cb.properties):
                 continue
 
@@ -84,18 +71,16 @@ class Hook(HookBase):
                 case _:
                     continue
 
-            record: dict[str, Any] = {
-                f.name: get_attribute(cb.properties, f.name)
-                for f in fields(Hook.Recipe)
-            }
-
-            record["runner"] = record["runner"] or runner
-            record["creates"] = ensure_list(record["creates"]) if record["creates"] else None
-            record["requires"] = ensure_list(record["requires"]) if record["requires"] else None
-            record["ref"] = ref
-
-            log.debug(f"task: {record}")
-            recipe = Hook.Recipe(**record)
+            recipe = Hook.Recipe(
+                ref=ref,
+                description=get_typed_attribute(str, cb.properties, "description"),
+                creates=get_typed_attribute(list[str], cb.properties, "creates"),
+                requires=get_typed_attribute(list[str], cb.properties, "requires"),
+                runner=get_typed_attribute(str, cb.properties, "runner") or runner,
+                stdout=get_typed_attribute(str, cb.properties, "stdout"),
+                stdin=get_typed_attribute(str, cb.properties, "stdin"),
+                collect=get_typed_attribute(str, cb.properties, "collect")
+            )
             self.recipes.append(recipe)
             if recipe.collect:
                 targets = recipe.creates or []

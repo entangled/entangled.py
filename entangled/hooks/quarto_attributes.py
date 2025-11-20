@@ -1,13 +1,13 @@
 from __future__ import annotations
 import re
-import textwrap
-from typing import Any, final, override
+from typing import final, override, cast
 import yaml
+from os import linesep as eol
 
 from entangled.config.language import Language
 
-from ..properties import Attribute, Class, Id, Property
-from ..document import CodeBlock
+from ..model.properties import Attribute, Class, Id, Property
+from ..model import CodeBlock
 from .base import HookBase
 from ..logging import logger
 
@@ -17,8 +17,8 @@ log = logger()
 
 def split_yaml_header(language: Language, source: str) -> tuple[str, str, object]:
     """Split source into YAML header and body."""
-    trigger = re.escape(language.comment.open) + r"\s*\|(.*)"
-    lines = source.splitlines()
+    trigger: str = re.escape(language.comment.open) + r"\s*\|(.*)"
+    lines = source.splitlines(keepends=True)
     header_lines: list[str] = []
     body_start: int = 0
 
@@ -30,7 +30,9 @@ def split_yaml_header(language: Language, source: str) -> tuple[str, str, object
         body_start = i
         break
 
-    return "\n".join(lines[:body_start]), "\n".join(lines[body_start:]), yaml.safe_load("\n".join(header_lines))
+    return "".join(lines[:body_start]), \
+           "".join(lines[body_start:]), \
+           yaml.safe_load(eol.join(header_lines))
 
 
 def amend_code_properties(code_block: CodeBlock):
@@ -51,26 +53,28 @@ def amend_code_properties(code_block: CodeBlock):
         log.warning(f"tried to parse:\n{header}")
         return
 
-    if "id" in attrs.keys():
-        if not isinstance(attrs["id"], str):
+    attrs = cast(dict[str, object], attrs)
+    code_id = attrs.get("id", None)
+    if code_id is not None:
+        if not isinstance(code_id, str):
             log.warning(f"{code_block.origin}: Quarto id does not evaluate to string; skipping")
             log.warning(f"tried to parse:\n{header}")
             return
-        props.append(Id(attrs["id"]))
+        props.append(Id(code_id))
 
-    if "classes" in attrs.keys():
-        classes = attrs["classes"]
+    classes = attrs.get("classes", None)
+    if isinstance(classes, list):
         if not all(isinstance(c, str) for c in classes):
             log.warning(f"{code_block.origin}: Quarto classes do not evaluate to strings; skipping")
             log.warning(f"tried to parse:\n{header}")
             return
-        props.extend(Class(c) for c in classes)
+        props.extend(Class(cast(str, c)) for c in classes)
 
     props.extend(Attribute(str(k), v) for k, v in attrs.items()
                  if k not in ("id", "classes"))
 
     code_block.source = body
-    code_block.open_line += "\n" + header
+    code_block.open_line += header
     code_block.properties.extend(props)
 
 
@@ -81,6 +85,10 @@ class Hook(HookBase):
         self.config = config
 
     @override
+    @staticmethod
+    def priority():
+        return 10
+
+    @override
     def on_read(self, code: CodeBlock):
-        log.debug("quarto filter: %s", code)
         amend_code_properties(code)

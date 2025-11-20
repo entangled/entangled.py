@@ -1,13 +1,11 @@
-import argh  # type: ignore
-from argh.utils import get_subparsers
-import argparse
+import click
 
 from pathlib import Path
-from rich_argparse import RichHelpFormatter
 from rich.console import Console
 from rich.table import Table
 
 from ..errors.user import HelpfulUserError
+from .main import main
 
 description = """Create a new entangled project from a template.
 
@@ -42,61 +40,52 @@ def print_help() -> None:
     For this we first have to create a parser and attach this `new` function
     to it. Then we have a parser object that we can `print_help()` from.
     """
-    parser = argparse.ArgumentParser(formatter_class=RichHelpFormatter)
-    argh.add_commands(parser, [new], func_kwargs={"formatter_class": RichHelpFormatter})
-    get_subparsers(parser).choices["new"].print_help()
+    ctx = click.get_current_context()
+    click.echo(ctx.get_help())
+    ctx.exit()
 
 
-@argh.arg(
-    "-a",
-    "--answers-file",
+@main.command(
+    epilog="This command, and the options provided are a front-end for `copier`. " +
+           "See https://copier.readthedocs.io/en/stable/ for more information."
+)
+@click.option(
+    "-a", "--answers-file",
     help="Update using this path (relative to [project_path]) to find the answers file for `copier`",
 )
-@argh.arg(
-    "-d",
-    "--data",
+@click.option(
+    "-d", "--data",
     help='"VARIABLE1=VALUE1;VARIABLE1=VALUE2" Make VARIABLEs available as VALUEs when rendering the template; make sure to use quotation marks for multiple variables/values',
 )
-@argh.arg(
-    "-D",
-    "--defaults",
+@click.option(
+    "-D", "--defaults", is_flag=True,
     help="Use default answers to questions, which might be null if not specified; overwrites when combined with -d!",
 )
-@argh.arg(
-    "-p",
-    "--pretend",
+@click.option(
+    "-p", "--pretend", is_flag=True,
     help="Run but do not make any changes",
 )
-@argh.arg(
-    "-o",
-    "--overwrite",
+@click.option(
+    "-o", "--overwrite", is_flag=True,
     help="Overwrite files that already exist, without asking.",
 )
-@argh.arg(
-    "-l",
-    "--list-templates",
+@click.option(
+    "-l", "--list-templates", is_flag=True,
     help="List all official templates and exit",
 )
-@argh.arg(
-    "-t",
-    "--trust",
+@click.option(
+    "-t", "--trust", is_flag=True,
     help='Allow templates with unsafe features (Jinja extensions, migrations, tasks); "True" for officially supported templates',
 )
-@argh.arg(
-    "template",
-    # default=None,
-    nargs="?",
-    help="Template handle or URL; initialize a new project from this template",
+@click.argument(
+    "template"
 )
-@argh.arg(
-    "project-path",
-    # default=None,
-    nargs="?",
-    help="Initialize a new project at this path",
+@click.argument(
+    "project-path"
 )
 def new(
-    template: str | None,
-    project_path: Path | None, *,
+    template: str,
+    project_path: Path, *,
     answers_file: str | None = None,
     data: str = "",
     defaults: bool = False,
@@ -105,7 +94,12 @@ def new(
     list_templates: bool = False,
     trust: bool = False,
 ) -> None:
-    """Create a new entangled project from a template."""
+    """Create a new entangled project from a template.
+
+    TEMPLATE      Template handle or URL; initialize a new project from this template.
+
+    PROJECT_PATH  Initialize a new project at this path.
+    """
 
     from ..config.templates import templates as AVAILABLE_TEMPLATES
     from ..config.templates import Template

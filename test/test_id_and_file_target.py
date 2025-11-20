@@ -1,5 +1,11 @@
-from entangled.markdown_reader import read_markdown_string
-from entangled.tangle import tangle_ref, AnnotationMethod
+from entangled.config import AnnotationMethod, Config
+from entangled.interface import Context, markdown
+from entangled.readers import run_reader
+from entangled.model import tangle_ref, ReferenceMap, ReferenceName
+
+from functools import partial
+from pathlib import PurePath
+
 
 md_in = """
 ``` {.rust file=test1.rs #blockid1}
@@ -51,19 +57,17 @@ fn main() {
 """
 
 def test_id_and_file_target():
-    refs, _ = read_markdown_string(md_in)
+    refs = ReferenceMap()
+    _ = run_reader(partial(markdown, Context(), refs), md_in)
 
-    content1, _ = tangle_ref(refs, "blockid1", AnnotationMethod.NAKED)
+    content1, _ = tangle_ref(refs, ReferenceName((), "blockid1"), AnnotationMethod.NAKED)
     assert content1.strip() == result1_out.strip()
-    content2, _ = tangle_ref(refs, "blockid2", AnnotationMethod.NAKED)
+    content2, _ = tangle_ref(refs, ReferenceName((), "blockid2"), AnnotationMethod.NAKED)
     assert content2.strip() == result2_out.strip()
-    content3, _ = tangle_ref(refs, "blockid3", AnnotationMethod.NAKED)
+    content3, _ = tangle_ref(refs, ReferenceName((), "blockid3"), AnnotationMethod.NAKED)
     assert content3.strip() == result3_out.strip()
 
-    assert refs.targets == {"test1.rs", "test2.rs", "test3.rs"}
+    assert sorted(refs.targets()) == [PurePath(f"test{i}.rs") for i in range(1, 4)]
     for i in range(1, 4):
-        ref = f"test{i}.rs"
-        bid = f"blockid{i}"
-        c, _ = tangle_ref(refs, ref, AnnotationMethod.NAKED)
-        d, _ = tangle_ref(refs, ref, AnnotationMethod.NAKED)
-        assert c == d
+        assert refs.select_by_target(PurePath(f"test{i}.rs")) == ReferenceName((), f"blockid{i}")
+

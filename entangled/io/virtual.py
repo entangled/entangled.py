@@ -2,13 +2,18 @@
 A virtual file system layer to cache file reads and stats.
 """
 
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import override
 from dataclasses import dataclass, field
 from pathlib import Path
+from datetime import datetime
 
 import os
 import tempfile
 
-from .stat import hexdigest, stat, FileData
+from .stat import hexdigest, stat, FileData, Stat
 
 
 def assure_final_newline(s: str) -> str:
@@ -35,8 +40,54 @@ def atomic_write(target: Path, content: str, mode: int | None):
     os.replace(f.name, target)
 
 
+class AbstractFileCache(ABC):
+    @abstractmethod
+    def __getitem__(self, key: Path) -> FileData:
+        ...
+
+    @abstractmethod
+    def __contains__(self, key: Path) -> bool:
+        ...
+
+    @abstractmethod
+    def __delitem__(self, key: Path):
+        ...
+
+    @abstractmethod
+    def write(self, key: Path, content: str, mode: int | None = None):
+        ...
+
+    def reset(self):
+        pass
+
+
 @dataclass
-class FileCache:
+class VirtualFS(AbstractFileCache):
+    _data: dict[Path, FileData] = field(default_factory=dict)
+
+    def __getitem__(self, key: Path) -> FileData:
+        return self._data[key]
+
+    def __contains__(self, key: Path) -> bool:
+        return key in self._data
+
+    def __delitem__(self, key: Path):
+        del self._data[key]
+
+    @override
+    def write(self, key: Path, content: str, mode: int | None = None):
+        self._data[key] = FileData(key, content, Stat(datetime.now(), hexdigest(content)))
+
+    @staticmethod
+    def from_dict(dir: dict[str, str]) -> VirtualFS:
+        result = VirtualFS()
+        for filename, content in dir.items():
+            result.write(Path(filename), content)
+        return result
+
+
+@dataclass
+class FileCache(AbstractFileCache):
     """
     A virtualization layer between the file system and the rest of Entangled. This is to
     give file IO a cleaner semantics, and also to cache reading file contents and computing
@@ -46,6 +97,7 @@ class FileCache:
     """
     _data: dict[Path, FileData] = field(default_factory=dict)
 
+    @override
     def __getitem__(self, key: Path) -> FileData:
         """
         Get `FileData` belonging to given `Path`. The data is cached inbetween calls.
@@ -57,12 +109,14 @@ class FileCache:
             self._data[key] = s
         return self._data[key]
 
+    @override
     def __contains__(self, key: Path) -> bool:
         """
         Check that a file exists.
         """
         return key.exists()
 
+    @override
     def __delitem__(self, key: Path):
         """
         Remove a file. If its parent directories are empty, these are also
@@ -76,22 +130,24 @@ class FileCache:
         if key in self._data:
             del self._data[key]
 
-    def write(self, key: Path, new_content: str, mode: int | None = None):
+    @override
+    def write(self, key: Path, content: str, mode: int | None = None):
         """
-        Write contents to a file. If `new_content` has the same digest as the known
+        Write contents to a file. If `content` has the same digest as the known
         contents, nothing is done. The entry is removed from the cache afterward.
 
         Nothing is done to prevent overwriting an existing file.
         """
         if key in self:
-            new_digest = hexdigest(new_content)
+            new_digest = hexdigest(content)
             if new_digest == self[key].stat.hexdigest:
                 return
             del self._data[key]
 
         key.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(key, new_content, mode)
+        atomic_write(key, content, mode)
 
+    @override
     def reset(self):
         """
         Reset the cache. Doesn't perform any IO.

@@ -16,7 +16,7 @@ from entangled.errors.user import HelpfulUserError
 
 from ..version import __version__
 from ..utility import normal_relative, ensure_parent
-from .virtual import FileCache
+from .virtual import AbstractFileCache
 from .stat import Stat, hexdigest
 
 
@@ -49,16 +49,16 @@ class FileDB(Struct):
         the markdown, so is considered to be managed."""
         return {Path(p) for p in self.targets}
 
-    def changed_files(self, fs: FileCache) -> Generator[Path]:
+    def changed_files(self, fs: AbstractFileCache) -> Generator[Path]:
         return (Path(p) for p, known_stat in self.files.items()
                 if fs[Path(p)].stat != known_stat)
 
-    def create_target(self, fs: FileCache, path: Path):
+    def create_target(self, fs: AbstractFileCache, path: Path):
         path = normal_relative(path)
         self.update(fs, path)
         self.targets.add(path.as_posix())
 
-    def update(self, fs: FileCache, path: Path):
+    def update(self, fs: AbstractFileCache, path: Path):
         path = normal_relative(path)
         self.files[path.as_posix()] = fs[path].stat
 
@@ -115,7 +115,11 @@ def write_filedb(db: FileDB):
 
 
 @contextmanager
-def filedb(readonly: bool = False, writeonly: bool = False):
+def filedb(readonly: bool = False, writeonly: bool = False, virtual: bool = False):
+    if virtual:
+        yield new_db()
+        return
+
     lock = FileLock(ensure_parent(FILEDB_LOCK_PATH))
     with lock:
         db = read_filedb() if not writeonly else new_db()

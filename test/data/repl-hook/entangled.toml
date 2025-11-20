@@ -1,10 +1,7 @@
 version = "2.0"
 watch_list = ["README.md"]
-hooks = ["quarto_attributes", "repl"]
-
-[markers]
-open="^(?P<indent>\\s*)```(?P<properties>.*)$"
-close="^(?P<indent>\\s*)```\\s*$"
+style = "basic"
+hooks = ["repl"]
 
 [hook.repl.config.Python]
 command = "python -q"

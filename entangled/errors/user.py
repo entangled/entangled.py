@@ -1,6 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, override, Callable
 from pathlib import Path
+
+import logging
+import sys
 
 from ..text_location import TextLocation
 
@@ -9,6 +12,8 @@ class UserError(Exception):
     def __str__(self) -> str:
         return "Unknown user error."
 
+    def handle(self):
+        pass
 
 @dataclass
 class ConfigError(UserError):
@@ -21,16 +26,19 @@ class ConfigError(UserError):
 
 @dataclass
 class HelpfulUserError(UserError):
-    """Raise a user error and supply an optional function `func` for context.
-
-    Make sure to also execute e.func() in your error handling."""
-
+    """Raise a user error with a message."""
     msg: str
-    func: Callable[[], Any] = lambda: None
+    action: Callable[[], None] = lambda: None
 
     def __str__(self):
         return f"error: {self.msg}"
 
+    @override
+    def handle(self):
+        self.action()
+        logging.error(str(self))
+        sys.exit(-1)
+        
 
 @dataclass
 class FileError(UserError):
@@ -58,19 +66,10 @@ class ParseError(UserError):
 
 
 @dataclass
-class CyclicReference(UserError):
-    ref_name: str
-    cycle: list[str]
+class CodeAttributeError(UserError):
+    origin: TextLocation
+    msg: str
 
-    def __str__(self):
-        cycle_str = " -> ".join(self.cycle)
-        return f"Cyclic reference in <<{self.ref_name}>>: {cycle_str}"
-
-
-@dataclass
-class MissingReference(UserError):
-    ref_name: str
-    location: TextLocation
-
-    def __str__(self):
-        return f"Missing reference `{self.ref_name}` at `{self.location}`"
+    @override
+    def __str__(self) -> str:
+        return f"{self.origin}: Attribute error: {self.msg}"

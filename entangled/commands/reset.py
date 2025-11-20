@@ -7,56 +7,28 @@ without actually writing out to source files.
 """
 
 from ..io import TransactionMode, transaction
-from ..config import config, get_input_files
-from ..hooks import  get_hooks
-from ..document import ReferenceMap
 from ..errors.user import UserError
+from ..interface import Document
+from .main import main
 
 import logging
-from pathlib import Path
 
 
+@main.command(short_help="Reset the file database.")
 def reset():
     """
-    Resets the database. This performs a tangle without actually writing
-    output to the files, but updating the database as if we were.
+    Resets the file database. This performs a tangle without actually
+    writing output to the files, but updating the database as if we were.
     """
-    config.read()
-
-    # these imports depend on config being read
-    from ..markdown_reader import read_markdown_file
-    from ..tangle import tangle_ref
-
-    input_file_list = get_input_files()
-
-    refs = ReferenceMap()
-    hooks = get_hooks()
-    logging.debug("tangling with hooks: %s", [h.__module__ for h in hooks])
-    mode = TransactionMode.RESETDB
-    annotation_method = config.get.annotation
-
+    
     try:
+        doc = Document()
+        mode = TransactionMode.RESETDB
+
         with transaction(mode) as t:
-            for path in input_file_list:
-                logging.debug("reading `%s`", path)
-                t.update(path)
-                _, _ = read_markdown_file(t, path, refs=refs, hooks=hooks)
-
-            for h in hooks:
-                h.pre_tangle(refs)
-
-            for tgt in refs.targets:
-                result, deps = tangle_ref(refs, tgt, annotation_method)
-                mask = next(iter(refs.by_name(tgt))).mode
-                t.write(Path(tgt), result, list(map(Path, deps)), mask)
-
-            for h in hooks:
-                h.on_tangle(t, refs)
-
+            doc.load(t)
+            doc.tangle(t)
             t.clear_orphans()
-
-        for h in hooks:
-            h.post_tangle(refs)
 
     except UserError as e:
         logging.error(str(e))

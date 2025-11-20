@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections.abc import Iterable
-from ..status import list_input_files, list_dependent_files
-from ..config import config
+from ..status import list_dependent_files
+from ..config import Config, read_config, get_input_files
 from pathlib import Path
 
 from rich.console import Console, Group
@@ -9,6 +9,8 @@ from rich.columns import Columns
 from rich.table import Table
 from rich.panel import Panel
 from rich.tree import Tree
+
+from .main import main
 
 
 def tree_from_files(files: Iterable[Path]):
@@ -28,23 +30,24 @@ def files_panel(file_list: Iterable[Path], title: str) -> Panel:
 
 
 def rich_status():
+    cfg = Config() | read_config()
     config_table = Table()
     config_table.add_column("name")
     config_table.add_column("value")
     config_table.add_row(
-        "Watch list", ", ".join(f"'{pat}'" for pat in config.get.watch_list)
+        "Watch list", ", ".join(f"'{pat}'" for pat in cfg.watch_list)
     )
     config_table.add_row(
-        "Ignore list", ", ".join(f"'{pat}'" for pat in config.get.ignore_list)
+        "Ignore list", ", ".join(f"'{pat}'" for pat in cfg.ignore_list)
     )
-    config_table.add_row("Hooks enabled", ", ".join(config.get.hooks))
+    config_table.add_row("Hooks enabled", ", ".join(cfg.hooks))
 
     console = Console(color_system="auto")
     group = Group(
         Panel(config_table, title="config", border_style="dark_cyan"),
         Columns(
             [
-                files_panel(list_input_files(), "input files"),
+                files_panel(get_input_files(cfg), "input files"),
                 files_panel(list_dependent_files(), "dependent files"),
             ]
         ),
@@ -53,6 +56,7 @@ def rich_status():
     console.print(group)
 
 
+@main.command()
 def status():
-    config.read()
+    """Print a status overview."""
     rich_status()

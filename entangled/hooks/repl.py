@@ -11,8 +11,8 @@ from pathlib import Path
 
 from ..logging import logger
 from ..io import Transaction
-from ..document import CodeBlock, ReferenceMap
-from ..properties import Class, get_attribute, get_id
+from ..model import CodeBlock, ReferenceMap
+from ..model.properties import Class, get_attribute, get_attribute_string, get_id
 
 
 log = logger()
@@ -46,6 +46,7 @@ class Hook(HookBase):
         """Called when the Markdown is being read, before the assembling of
         the reference map."""
         session_name = get_id(code.properties)
+        log.debug("repl-session %s", session_name)
         if Class("repl") not in code.properties and session_name not in self.sessions.keys():
             return
 
@@ -63,7 +64,7 @@ class Hook(HookBase):
             return
 
         if session_name not in self.sessions.keys():
-            filename = get_attribute(code.properties, "session")
+            filename = get_attribute_string(code.properties, "session")
             if filename is None:
                 log.error(f"{code.origin}: REPL hook session opened without session attribute.")
                 return
@@ -73,13 +74,16 @@ class Hook(HookBase):
         mime_type = get_attribute(code.properties, "mime-type") or "text/plain"
         self.sessions[session_name].commands.append(ReplCommand(
             strip_comments(code.source, code.language), output_type=mime_type))
+        log.debug("repl-session: %s", self.sessions[session_name])
 
     @override
     def on_tangle(self, t: Transaction, refs: ReferenceMap):
         """Executed after other targets were tangled, but during the same
         transaction. If you want to write a file, consider doing so as part of
         the transaction."""
+        log.debug("repl-session on-tangle %s", list(self.sessions.keys()))
         for s in self.sessions.values():
+            log.debug("repl-session: %s", s.filename)
             rs_json = msgspec.json.encode(ReplSession(
                 config = self.config[s.language],
                 commands = s.commands))

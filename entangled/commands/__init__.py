@@ -1,19 +1,13 @@
-from .new import new
-from .status import status
+from .main import main
 from .stitch import stitch
-from .sync import sync
 from .tangle import tangle
+from .new import new
 from .reset import reset
+from .sync import sync
 from .watch import watch
+from .status import status
 from .brei import brei
 
 __all__ = [
-    "new",
-    "brei",
-    "reset",
-    "status",
-    "stitch",
-    "sync",
-    "tangle",
-    "watch",
+    "main", "stitch", "tangle", "new", "reset", "sync", "watch", "status", "brei"
 ]

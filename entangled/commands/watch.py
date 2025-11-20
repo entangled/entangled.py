@@ -4,9 +4,10 @@ from threading import Event
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
-from .sync import sync
-from ..config import config
 from ..status import find_watch_dirs
+
+from .sync import run_sync
+from .main import main
 
 
 class EventHandler(FileSystemEventHandler):
@@ -19,7 +20,6 @@ class EventHandler(FileSystemEventHandler):
     def on_any_event(self, event: FileSystemEvent):
         if event.event_type == "opened":
             return
-        config.read()
 
         if isinstance(event.src_path, bytes):
             path = Path(event.src_path.decode("utf-8"))
@@ -29,7 +29,7 @@ class EventHandler(FileSystemEventHandler):
         if path.absolute().is_relative_to(Path("./.entangled").absolute()):
             return
         if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
-            sync()
+            run_sync()
             # os.sync()
         self.update_watched()
 
@@ -42,7 +42,7 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
     def stop() -> bool:
         return _stop_event is not None and _stop_event.is_set()
 
-    sync()
+    run_sync()
 
     event_handler = EventHandler()
     observer = Observer()
@@ -60,7 +60,7 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
         observer.join()
 
 
+@main.command()
 def watch():
     """Keep a loop running, watching for changes."""
-    config.read()
     _watch()

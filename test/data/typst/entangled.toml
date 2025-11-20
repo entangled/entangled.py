@@ -1,7 +1,4 @@
 version="2.0"
 watch_list=["*.typ"]
-hooks=["quarto_attributes"]
+style="basic"
 
-[markers]
-open="^(?P<indent>\\s*)```(?P<properties>.*)$"
-close="^(?P<indent>\\s*)```\\s*$"
