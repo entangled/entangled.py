@@ -33,7 +33,7 @@ def test_code_block():
         origin=TextLocation(PurePath("-"), 1)
     )
 
-    expected = """```\nhello\n```\n"""
+    expected = f"```{eol}hello{eol}```{eol}"
     assert cb.text == expected
     assert cb.indented_text == indent(expected.rstrip(), "> ") + "\n"
 
