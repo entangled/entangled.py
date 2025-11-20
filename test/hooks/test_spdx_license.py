@@ -4,7 +4,8 @@ from entangled.model import ReferenceName, ReferenceId
 from entangled.io import VirtualFS, transaction
 
 from pathlib import PurePath, Path
-from os import linesep as eol
+
+eol = "\n"
 
 fs = VirtualFS.from_dict({
     "input.md": """

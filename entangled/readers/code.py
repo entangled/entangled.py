@@ -1,7 +1,6 @@
 from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import PurePath
-from os import linesep as eol
 
 import re
 
@@ -93,7 +92,7 @@ def read_block(namespace: tuple[str, ...], indent: str, input: InputStream) -> G
                 extra_indent = block_data.indent.removeprefix(indent)
                 ref = block_data.ref
                 ref_str = ref.name if ref.name.namespace == namespace else str(ref.name)
-                return f"{extra_indent}<<{ref_str}>>{eol}"
+                return f"{extra_indent}<<{ref_str}>>\n"
             else:
                 return ""
 
