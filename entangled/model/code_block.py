@@ -11,8 +11,10 @@ from .properties import Property
 
 def indent(prefix: str, text: str) -> str:
     def indent_line(line: str):
-        if line.endswith(os.linesep):
-            eol: Literal["\n", "\r\n", ""] = os.linesep
+        if line.endswith("\r\n"):
+            eol = "\r\n"
+        elif line.endswith("\n"):
+            eol = "\n"
         else:
             eol = ""
             if line.strip() == "":
