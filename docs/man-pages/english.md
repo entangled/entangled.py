@@ -72,7 +72,7 @@ WRITING PROGRAMS
 
 Entangled enables a **documentation first** approach to programming. To write programs using Entangled, you start by writing documentation and in Markdown and then add code blocks. The code blocks can be marked with attributes to indicate where code should be written.
 
-HELLO WORLD
+Hello World
 -----------
 
 The combined code-blocks in this example compose a compilable source code for "Hello World". For didactic reasons we don't always give the listing of an entire source file in one go. In stead, we use a system of references known as *noweb* (after Ramsey 1994).
@@ -117,7 +117,7 @@ return EXIT_SUCCESS;
 
 These blocks of code can be **tangled** into source files.
 
-DEFAULT SYNTAX
+Default Syntax
 --------------
 
 The standard syntax is aimed to work well together with Pandoc. Every code block is delimited with three back ticks. Added to the opening line is a sequence of space separated **code properties**. These properties align with the CSS attributes that would end up in the generated HTML. For those unfamiliar with CSS:
@@ -158,7 +158,7 @@ The first class in the code properties is always interpreted to give the **progr
   The identifier in a file block is optional. If it is left out, the identifier will silently be taken to be the file name.
 - An **ignored** block: anything not matching the previous two.
 
-TANGLED CODE
+Tangled Code
 ------------
 
 Entangled recognizes three parameters for every code block. These parameters are extracted from an opening line may be [configured using regular expressions](#MARKERS). Formally, every code block has three properties:
@@ -187,6 +187,36 @@ Entangled should tangle your code following these rules:
    println!("hello");
    // ~\~ end
    ~~~
+
+YAML Headers
+------------
+
+You may specify the configuration for Entangled in the YAML header of a Markdown document. This way, you can create notebooks that are entirely contained in a single Markdown file. A YAML header starts with three dashes on the first line and is closed the same. The header should contain an entry `entangled` with the same schema as the `entangled.toml` configuration described below. When you have multiple input files, it is better to put the configuration in `entangled.toml` and only use the YAML header for local overrides, like the use of namespaces.
+
+Example:
+
+~~~markdown
+---
+title: Example
+entangled:
+    version: "2.4"
+    style: basic
+---
+
+This example now uses the `basic` style for code blocks.
+
+```js
+#| file: hello.js
+console.log("Hello, World!");
+```
+~~~
+
+Namespaces
+----------
+
+In larger projects it may be desirable to scope code block names into namespaces. By default, Entangled reads all code blocks into the same global namespace, and code blocks with identical names are concatenated. There are two ways to change this behaviour. You can change the default behaviour to generate private namespaces for each input file, or you can assign a namespace to an input file in its YAML header.
+
+Namespaces can be nested and use a double colon `::` as a separator.
 
 CONFIGURATION
 =============
@@ -251,7 +281,7 @@ Configuration should match the following scheme:
 
 : (`Program`) create more Brei targets that are not listed in code blocks. The `Program` API is specified by the `brei` package.
 
-LANGUAGE
+Language
 --------
 
 We can configure how a language is treated by setting comment characters. For example:
@@ -282,7 +312,7 @@ comment = { open = "<!--", close = "-->" }
 
 : (`object[open: string, close: string = ""]`) how to write comments in this language.
 
-MARKERS
+Markers
 -------
 
 This configures how code blocks are detected.
@@ -300,7 +330,7 @@ STYLES
 
 There are two configuration styles available: `default` and `basic`.
 
-DEFAULT
+Default
 -------
 
 The default is to read code blocks with three back-tics and attributes grouped in curly braces. For example:
@@ -313,7 +343,7 @@ printf("Hello, World!");
 ```
 ~~~
 
-BASIC
+Basic
 -----
 
 The basic style is less expressive but has better compatability with most standard Markdown syntaxes like Github.In this style only the language identifier is given after three back-tics. Other attributes are passed using the `quarto_attributes` hook. For example:
@@ -330,7 +360,7 @@ printf("Hello, World!");
 HOOKS
 =====
 
-BREI
+Brei
 ----
 
 Entangled has an integrated build system called Brei, that can be used to produce figures or other artifacts. Targets and their dependencies can be specified in code blocks using the `brei` hook. These tasks may depend on one another. Brei will run these when dependencies are newer than the target. Execution is lazy and in parallel. Brei supports:
@@ -436,7 +466,7 @@ entangled brei figures
 
 You can use `${variable}` syntax inside Brei tasks just as you would in a stand-alone Brei script.
 
-QUARTO ATTRIBUTES
+Quarto Attributes
 -----------------
 
 Sometimes using the `build` hook (or the `brei` hook, see below), leads to long header lines. It is then better to specify attributes in a header section of your code. The Quarto project came up with a syntax, having the header be indicated by a comment with a vertical bar, e.g. `#|` or `//|` etc. The `quarto_attributes` hook reads those attributes and adds them to the properties of the code block.
@@ -460,12 +490,12 @@ Using these attributes it is possible to write in Entangled using completely sta
 
 The `id` attribute is reserved for the code's identifier (normally indicated with `#`) and the `classes` attribute can be used to indicate a list of classes in addition to the language class already given.
 
-REPL (experimental)
+REPL (Experimental)
 -------------------
 
 The `repl` hook enables running code blocks in REPL sessions. The hook extracts these code blocks into a separate JSON session file that can be evaluated using the `repl-session` tool [https://entangled.github.io/repl-session](https://entangled.github.io/repl-session). The output needs to be processed by the documentation rendering system. The `mkdocs-entangled-plugin` package handles `repl` sessions and integrates the output into the rendered HTML.
 
-SHEBANG
+Shebang
 -------
 
 If a code block starts with `#!...` on the first line. This line is brought to the top of the tangled file. Together with the use of a `mode` attribute, this enables coding executable scripts in Entangled. Example:
@@ -479,7 +509,7 @@ echo "Mooo!"
 ```
 ~~~
 
-SPDX_LICENSE
+SPDX License
 ------------
 
 If a code block starts with a line containing the string "SPDX-License-Identifier". That line is put above the first annotation comment, similar to the `shebang` hook.

@@ -7,7 +7,7 @@ from ..config import Config, ConfigUpdate
 from ..hooks import HookBase, create_hook
 from ..model import Content, ReferenceMap
 from ..readers.yaml_header import get_config
-from ..readers import read_yaml_header, process_token, collect_plain_text, raw_markdown, InputStream
+from ..readers import read_yaml_header, process_token, collect_plain_text, raw_markdown, InputStream, run_reader
 
 from functools import partial
 import logging
@@ -49,3 +49,8 @@ def markdown(context: Context, refs: ReferenceMap, input: InputStream) -> Genera
         collect_plain_text(raw_markdown(context.config, input)))
 
     return update
+
+
+def read_markdown(context: Context, refs: ReferenceMap, input: str) -> tuple[list[Content], ConfigUpdate | None]:
+    return run_reader(partial(markdown, context, refs), input)
+

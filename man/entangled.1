@@ -58,7 +58,7 @@ To write programs using Entangled, you start by writing documentation
 and in Markdown and then add code blocks.
 The code blocks can be marked with attributes to indicate where code
 should be written.
-.SS HELLO WORLD
+.SS Hello World
 The combined code\-blocks in this example compose a compilable source
 code for \[lq]Hello World\[rq].
 For didactic reasons we don\[cq]t always give the listing of an entire
@@ -108,7 +108,7 @@ order does matter!):
 .EE
 .PP
 These blocks of code can be \f[B]tangled\f[R] into source files.
-.SS DEFAULT SYNTAX
+.SS Default Syntax
 The standard syntax is aimed to work well together with Pandoc.
 Every code block is delimited with three back ticks.
 Added to the opening line is a sequence of space separated \f[B]code
@@ -178,7 +178,7 @@ name.
 .RE
 .IP \[bu] 2
 An \f[B]ignored\f[R] block: anything not matching the previous two.
-.SS TANGLED CODE
+.SS Tangled Code
 Entangled recognizes three parameters for every code block.
 These parameters are extracted from an opening line may be configured
 using regular expressions.
@@ -229,6 +229,48 @@ println!(\[dq]hello\[dq]);
 \f[I]// \[ti]\[rs]\[ti] end\f[R]
 .EE
 .RE
+.SS YAML Headers
+You may specify the configuration for Entangled in the YAML header of a
+Markdown document.
+This way, you can create notebooks that are entirely contained in a
+single Markdown file.
+A YAML header starts with three dashes on the first line and is closed
+the same.
+The header should contain an entry \f[CR]entangled\f[R] with the same
+schema as the \f[CR]entangled.toml\f[R] configuration described below.
+When you have multiple input files, it is better to put the
+configuration in \f[CR]entangled.toml\f[R] and only use the YAML header
+for local overrides, like the use of namespaces.
+.PP
+Example:
+.IP
+.EX
+\f[I]\-\-\-\f[R]
+\f[BI]title:\f[R]\f[I] Example\f[R]
+\f[BI]entangled:\f[R]
+\f[I]    version: \[dq]2.4\[dq]\f[R]
+\f[I]    style: basic\f[R]
+\f[I]\-\-\-\f[R]
+
+This example now uses the \f[BI]\[ga]basic\[ga]\f[R] style for code blocks.
+
+\f[BI]\[ga]\[ga]\[ga]js\f[R]
+#| file: hello.js
+console.log(\[dq]Hello, World!\[dq]);
+\f[BI]\[ga]\[ga]\[ga]\f[R]
+.EE
+.SS Namespaces
+In larger projects it may be desirable to scope code block names into
+namespaces.
+By default, Entangled reads all code blocks into the same global
+namespace, and code blocks with identical names are concatenated.
+There are two ways to change this behaviour.
+You can change the default behaviour to generate private namespaces for
+each input file, or you can assign a namespace to an input file in its
+YAML header.
+.PP
+Namespaces can be nested and use a double colon \f[CR]::\f[R] as a
+separator.
 .SH CONFIGURATION
 Global configuration is loaded from \f[CR]entangled.toml\f[R] in the
 current working directory, or from the YAML header of the Markdown file,
@@ -293,7 +335,7 @@ locally.
 (\f[CR]Program\f[R]) create more Brei targets that are not listed in
 code blocks.
 The \f[CR]Program\f[R] API is specified by the \f[CR]brei\f[R] package.
-.SS LANGUAGE
+.SS Language
 We can configure how a language is treated by setting comment
 characters.
 For example:
@@ -322,7 +364,7 @@ language classes for a code block using this language.
 \f[CR]comment\f[R]
 (\f[CR]object[open: string, close: string = \[dq]\[dq]]\f[R]) how to
 write comments in this language.
-.SS MARKERS
+.SS Markers
 This configures how code blocks are detected.
 .TP
 \f[CR]open\f[R]
@@ -341,7 +383,7 @@ This should contain a named pattern group \f[CR]indent\f[R].
 .SH STYLES
 There are two configuration styles available: \f[CR]default\f[R] and
 \f[CR]basic\f[R].
-.SS DEFAULT
+.SS Default
 The default is to read code blocks with three back\-tics and attributes
 grouped in curly braces.
 For example:
@@ -353,7 +395,7 @@ For example:
 \f[BI]printf(\[dq]Hello, World!\[dq]);\f[R]
 \f[BI]\[ga]\[ga]\[ga]\f[R]
 .EE
-.SS BASIC
+.SS Basic
 The basic style is less expressive but has better compatability with
 most standard Markdown syntaxes like Github.In this style only the
 language identifier is given after three back\-tics.
@@ -369,7 +411,7 @@ printf(\[dq]Hello, World!\[dq]);
 \f[BI]\[ga]\[ga]\[ga]\f[R]
 .EE
 .SH HOOKS
-.SS BREI
+.SS Brei
 Entangled has an integrated build system called Brei, that can be used
 to produce figures or other artifacts.
 Targets and their dependencies can be specified in code blocks using the
@@ -494,7 +536,7 @@ entangled brei figures
 .PP
 You can use \f[CR]${variable}\f[R] syntax inside Brei tasks just as you
 would in a stand\-alone Brei script.
-.SS QUARTO ATTRIBUTES
+.SS Quarto Attributes
 Sometimes using the \f[CR]build\f[R] hook (or the \f[CR]brei\f[R] hook,
 see below), leads to long header lines.
 It is then better to specify attributes in a header section of your
@@ -527,7 +569,7 @@ The \f[CR]id\f[R] attribute is reserved for the code\[cq]s identifier
 (normally indicated with \f[CR]#\f[R]) and the \f[CR]classes\f[R]
 attribute can be used to indicate a list of classes in addition to the
 language class already given.
-.SS REPL (experimental)
+.SS REPL (Experimental)
 The \f[CR]repl\f[R] hook enables running code blocks in REPL sessions.
 The hook extracts these code blocks into a separate JSON session file
 that can be evaluated using the \f[CR]repl\-session\f[R] tool \c
@@ -537,7 +579,7 @@ that can be evaluated using the \f[CR]repl\-session\f[R] tool \c
 The output needs to be processed by the documentation rendering system.
 The \f[CR]mkdocs\-entangled\-plugin\f[R] package handles \f[CR]repl\f[R]
 sessions and integrates the output into the rendered HTML.
-.SS SHEBANG
+.SS Shebang
 If a code block starts with \f[CR]#!...\f[R] on the first line.
 This line is brought to the top of the tangled file.
 Together with the use of a \f[CR]mode\f[R] attribute, this enables
@@ -552,7 +594,7 @@ Example:
 \f[BI]echo \[dq]Mooo!\[dq]\f[R]
 \f[BI]\[ga]\[ga]\[ga]\f[R]
 .EE
-.SS SPDX_LICENSE
+.SS SPDX License
 If a code block starts with a line containing the string
 \[lq]SPDX\-License\-Identifier\[rq].
 That line is put above the first annotation comment, similar to the
