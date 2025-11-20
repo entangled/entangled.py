@@ -52,9 +52,14 @@ def tangle(doc: Document):
 
 def stitch(doc: Document):
     with transaction() as t:
+        doc.load(t)
+        doc.load_all_code(t)
         doc.stitch(t)
-    tangle(doc)
-
+    with transaction() as t:
+        doc.tangle(t)
+        for h in doc.context.hooks:
+            h.post_tangle(doc.reference_map)
+        
 
 def run_sync():
     try:
