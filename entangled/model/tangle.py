@@ -119,9 +119,9 @@ def annotated_tangler(refs: ReferenceMap) -> Tangler:
         if code_block.header and not skip_header:
             yield code_block.header
         ref_count_str = "init" if first else str(ref.ref_count)
-        yield f"{open_comment} ~/~ begin <<{ref.file.as_posix()}#{ref.name}>>[{ref_count_str}]{close_comment}{os.linesep}"
+        yield f"{open_comment} ~/~ begin <<{ref.file.as_posix()}#{ref.name}>>[{ref_count_str}]{close_comment}\n"
         yield from naked(recur, deps, ref, True, first)
-        yield f"{open_comment} ~/~ end{close_comment}{os.linesep}"
+        yield f"{open_comment} ~/~ end{close_comment}\n"
 
     return tangler
 

@@ -3,8 +3,7 @@ from textwrap import indent
 from entangled.model.code_block import CodeBlock
 from entangled.text_location import TextLocation
 
-from os import linesep as eol
-
+eol = "\n"
 
 expected_2 = """
 +```
