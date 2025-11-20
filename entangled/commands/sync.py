@@ -1,11 +1,9 @@
 from enum import Enum
 
-from ..io import filedb, FileCache
+from ..io import filedb, FileCache, transaction
 from ..interface import Document
 from ..errors.user import UserError
 
-from .tangle import tangle
-from .stitch import stitch
 from .main import main
 
 import logging
@@ -43,21 +41,42 @@ def sync_action(doc: Document) -> Action:
         return Action.NOTHING
 
 
-@main.command()
-def sync():
-    """Be smart wether to tangle or stich"""
+def tangle(doc: Document):
+    with transaction() as t:
+        doc.load(t)
+        doc.tangle(t)
+        t.clear_orphans()
+        for h in doc.context.hooks:
+            h.post_tangle(doc.reference_map)
+
+
+def stitch(doc: Document):
+    with transaction() as t:
+        doc.stitch(t)
+    tangle(doc)
+
+
+def run_sync():
     try:
         doc = Document()
         match sync_action(doc):
             case Action.TANGLE:
                 logging.info("Tangling.")
-                tangle.callback()
+                tangle(doc)
+
             case Action.STITCH:
                 logging.info("Stitching.")
-                stitch.callback()
-                tangle.callback()
+                stitch(doc)
+
             case Action.NOTHING:
                 pass
+
     except UserError as e:
         e.handle()
+
+
+@main.command()
+def sync():
+    """Be smart wether to tangle or stich"""
+    run_sync()
 

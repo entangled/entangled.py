@@ -29,7 +29,8 @@ class Context:
 
     @property
     def hooks(self) -> list[HookBase]:
-        return [self._hooks[h] for h in self.config.hooks]
+        return sorted((self._hooks[h] for h in self.config.hooks),
+                      key=lambda h: h.priority())
 
 
 def markdown(context: Context, refs: ReferenceMap, input: InputStream) -> Generator[Content, None, ConfigUpdate | None]:

@@ -4,9 +4,9 @@ from threading import Event
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
-from .sync import sync
 from ..status import find_watch_dirs
 
+from .sync import run_sync
 from .main import main
 
 
@@ -29,7 +29,7 @@ class EventHandler(FileSystemEventHandler):
         if path.absolute().is_relative_to(Path("./.entangled").absolute()):
             return
         if any(path.absolute().is_relative_to(p.absolute()) for p in self.watched):
-            sync.callback()
+            run_sync()
             # os.sync()
         self.update_watched()
 
@@ -42,7 +42,7 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
     def stop() -> bool:
         return _stop_event is not None and _stop_event.is_set()
 
-    sync()
+    run_sync()
 
     event_handler = EventHandler()
     observer = Observer()
