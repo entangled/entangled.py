@@ -23,6 +23,7 @@ class Language(Struct):
 
 
 languages = [
+    Language("AWK", ["awk", "gawk", "mawk", "nawk"], Comment("#")),
     Language("Bash", ["sh", "bash"], Comment("#")),
     Language("C", ["c", "cpp", "c++"], Comment("//")),
     Language("Python", ["python"], Comment("#")),
