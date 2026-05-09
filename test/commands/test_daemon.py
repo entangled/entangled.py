@@ -38,6 +38,70 @@ def wait_for_stat_diff(md_stat, filename, timeout=5):
     return False
 
 
+NO_CRASH_MAIN_MD1 = """
+---
+entangled:
+    version: "2.4"
+    style: "basic"
+---
+
+We have a missing reference here.
+
+```python
+#| file: test.py
+<<test>>
+```
+""".lstrip()
+
+NO_CRASH_MAIN_MD2 = """
+---
+entangled:
+    version: "2.4"
+    style: "basic"
+---
+
+Now it is fixed.
+
+```python
+#| file: test.py
+<<test>>
+```
+
+```python
+#| id: test
+print("Hello, World")
+```
+""".lstrip()
+
+@pytest.mark.timeout(10)
+def test_no_crash(tmp_path: Path):
+    """
+    Test for issue #95; The watch process would crash on a UserError.
+    With the new behaviour the process should not do anything, print
+    a message, but keep running.
+    """
+    with chdir(tmp_path):
+        configure(debug=True)
+        stop = threading.Event()
+        start = threading.Event()
+        t = threading.Thread(target=_watch, args=(stop, start))
+        try:
+            t.start()
+            # Wait for watch to boot up
+            start.wait()
+
+            Path("main.md").write_text(NO_CRASH_MAIN_MD1)
+            time.sleep(0.1)
+            assert not Path("test.py").exists()
+            Path("main.md").write_text(NO_CRASH_MAIN_MD2)
+            assert wait_for_file("test.py")
+
+        finally:
+            stop.set()
+            t.join()
+            time.sleep(0.1)
+
+
 @pytest.mark.timeout(10)
 def test_daemon(tmp_path: Path):
     with chdir(tmp_path):
