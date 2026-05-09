@@ -6,6 +6,7 @@ from ..logging import logger
 
 from .sync import run_sync
 from .main import main
+from ..errors.user import UserError
 
 import watchfiles
 
@@ -38,7 +39,10 @@ def _watch(_stop_event: Event | None = None, _start_event: Event | None = None):
 
     for changes in watchfiles.watch(dirs, stop_event=_stop_event, watch_filter=watch_filter):
         log.debug(changes)
-        run_sync()
+        try:
+            run_sync()
+        except UserError as e:
+            logger().error(e, exc_info=False)
 
 
 @main.command()
