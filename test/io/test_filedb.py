@@ -50,3 +50,24 @@ def test_filedb(example_files: Path):
             assert list(db.changed_files(fs)) == [Path("d")]
             db.update(fs, Path("d"))
             assert list(db.changed_files(fs)) == []
+
+
+def test_changed_files_missing(tmp_path: Path):
+    """Regression test for issue #88: a tracked file that no longer exists on
+    disk (e.g. a source markdown file that was moved or renamed) should be
+    reported as changed rather than crashing with `FileNotFoundError`."""
+    with chdir(tmp_path):
+        with open("source", "w") as f:
+            _ = f.write("hello")
+
+        fs = FileCache()
+        with filedb(fs=fs) as db:
+            db.update(fs, Path("source"))
+            assert list(db.changed_files(fs)) == []
+
+        # the file is moved/removed while still tracked in the db
+        Path("source").unlink()
+        fs.reset()
+
+        with filedb(fs=fs) as db:
+            assert list(db.changed_files(fs)) == [Path("source")]
