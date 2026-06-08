@@ -93,12 +93,15 @@ class Write(WriterBase):
     def conflict(self, fs: AbstractFileCache, db: FileDB) -> Conflict | None:
         if self.target not in fs:
             return None
+        # If the file on disk matches the filedb record, it is exactly what
+        # Entangled wrote last time and was not edited outside of Entangled, so
+        # it is safe to overwrite. Comparing against the filedb is more reliable
+        # than comparing modification times against the current set of sources:
+        # the latter gives false positives when the dependency graph changes,
+        # e.g. when a target no longer depends on one of its former sources
+        # (see issue #96).
         if fs[self.target].stat != db[self.target]:
             return Conflict(self.target, "changed outside the control of Entangled")
-        if self.sources:
-            if all(fs[s].stat < fs[self.target].stat for s in self.sources):
-                return Conflict(self.target, "newer than all of its sources: " + ", ".join(
-                    f"`{s}`" for s in set(self.sources)))
         return None
 
     @override
