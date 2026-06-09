@@ -50,8 +50,11 @@ class FileDB(Struct):
         return {Path(p) for p in self.targets}
 
     def changed_files(self, fs: AbstractFileCache) -> Generator[Path]:
+        # A tracked file that no longer exists (e.g. a source that was moved or
+        # deleted) counts as changed. Without this guard `fs[Path(p)]` would
+        # raise `FileNotFoundError` and crash, see issue #88.
         return (Path(p) for p, known_stat in self.files.items()
-                if fs[Path(p)].stat != known_stat)
+                if Path(p) not in fs or fs[Path(p)].stat != known_stat)
 
     def create_target(self, fs: AbstractFileCache, path: Path):
         if path.is_absolute():
