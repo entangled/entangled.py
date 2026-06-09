@@ -1,6 +1,6 @@
 [project]
 name = "entangled-cli"
-version = "2.4.2"
+version = "2.4.3"
 description = "Literate Programming toolbox"
 authors = [{ name = "Johan Hidding", email = "j.hidding@esciencecenter.nl" }]
 requires-python = ">=3.13,<4"
