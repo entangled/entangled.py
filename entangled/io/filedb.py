@@ -112,7 +112,7 @@ def read_filedb(fs: AbstractFileCache | None = None) -> FileDB:
 
     db = msgspec.convert(raw, type=FileDB)
 
-    undead = list(filter(lambda p: not p.exists(), db))
+    undead = list(filter(lambda p: p not in fs, db))
     for path in undead:
         logging.warning(f"undead file `{path}` (found in db but not on drive)")
 

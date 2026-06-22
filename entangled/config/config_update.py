@@ -37,6 +37,7 @@ class ConfigUpdate(Struct):
     annotation_format: str | None = None
     annotation: AnnotationMethod | None = None
     use_line_directives: bool | None = None
+    tangle_path: str | None = None
 
     namespace_default: NamespaceDefault | None = None
     namespace: str | None = None

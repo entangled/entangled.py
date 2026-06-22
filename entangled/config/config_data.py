@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass, field
+from pathlib import Path
+
 from .version import Version
 from .language import Language, languages
 from .markers import Markers, default_markers
@@ -47,6 +49,7 @@ class Config:
     annotation_format: str | None = None
     annotation: AnnotationMethod = AnnotationMethod.STANDARD
     use_line_directives: bool = False
+    tangle_path: Path = Path()
 
     namespace_default: NamespaceDefault = NamespaceDefault.GLOBAL
     namespace: tuple[str, ...] | None = None
@@ -81,6 +84,7 @@ class Config:
         annotation = x.annotation if update.annotation is None else update.annotation
         use_line_directives = x.use_line_directives if update.use_line_directives is None \
             else update.use_line_directives
+        tangle_path = x.tangle_path if update.tangle_path is None else Path(update.tangle_path)
 
         namespace_default = x.namespace_default if update.namespace_default is None \
             else update.namespace_default
@@ -102,4 +106,4 @@ class Config:
         return Config(
             version, languages, markers, watch_list, ignore_list,
             annotation_format, annotation, use_line_directives,
-            namespace_default, namespace, hooks, hook, brei)
+            tangle_path, namespace_default, namespace, hooks, hook, brei)

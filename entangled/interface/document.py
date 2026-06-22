@@ -55,7 +55,7 @@ class Document:
         main_block = self.reference_map[refs[0]]
         annotation = self.config.annotation if annotation is None else annotation
         text, deps = tangle_ref(self.reference_map, ref_name, annotation)
-        t.write(path, text, map(Path, deps), main_block.mode)
+        t.write(self.config.tangle_path / path, text, map(Path, deps), main_block.mode)
 
     def load_source(self, t: Transaction, path: Path) -> ConfigUpdate | None:
         reader = markdown(self.context, self.reference_map, numbered_lines(path, t.read(path)))
@@ -68,15 +68,17 @@ class Document:
     def load_code(self, t: Transaction, path: Path):
         reader = code(numbered_lines(path, t.read(path)))
         for block in reader:
+            print(block)
             self.reference_map[block.reference_id].source = block.content
         t.update(path)
 
     def load_all_code(self, t: Transaction):
-        log.debug(f"Targets: {self.reference_map.targets()}")
-        for tgt in self.reference_map.targets():
+        targets = [self.config.tangle_path / Path(tgt) for tgt in self.reference_map.targets()]
+        log.debug(f"Targets: {targets}")
+        for tgt in targets:
             log.debug(f"Reading code: `{tgt}`")
             if Path(tgt) in t.fs:
-                self.load_code(t, Path(tgt))
+                self.load_code(t, tgt)
 
     def load(self, t: Transaction):
         files = get_input_files(t.fs, self.config)
