@@ -18,20 +18,22 @@ We’re trying to increase the visibility of Entangled. If you like Entangled, p
 
 ## Get started
 
-To install Entangled, all you need is a Python (version &ge;3.11) installation. If you use [`poetry`](https://python-poetry.org), and you start a new project,
+To install Entangled, all you need is a Python (version &ge;3.11) installation. If you use UV, and you start a new project,
 
 ```
-poetry init 
-poetry add entangled-cli
+uv init --bare
+uv add entangled-cli
 ```
 
-The `poetry init` command will create a `pyproject.toml` file and a virtual environment to install Python dependencies in. To activate the virtual environment, run `poetry shell` inside the project directory.
+The `uv init --bare` command will create a `pyproject.toml` file and a virtual environment to install Python dependencies in. To activate the virtual environment, run `. ./.venv/bin/activate` inside the project directory, or you can prepend commands with `uv run` to run them in the venv.
 
-Or, if you prefer plain old `pip`,
+Or, if you prefer plain old `pip`, or `pipx`,
 
 ```
-pip install entangled-cli
+pipx install entangled-cli
 ```
+
+Here, `pipx` creates a virtual environment for just the `entangled-cli` package.
 
 Or, if you prefer the nix package manager:
 
@@ -496,7 +498,9 @@ This is a rewrite of Entangled in Python. Older versions were written in Haskell
 
 ## Contributing
 
-If you have an idea for improving Entangled, please file an issue before creating a pull request. Code in this repository is formatted using `black` and type checked using `mypy`.
+If you have an idea for improving Entangled, please file an issue before creating a pull request. Code in this repository is type checked using `mypy`. Within reasonable limits we adhere to PEP-8 code standards.
+
+Some parts of Entangled were developed with AI assistance. When you submit a PR, in interest of careful review, please make sure that you've pruned for needles changes.
 
 ## License
 
