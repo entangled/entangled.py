@@ -13,7 +13,7 @@ Literate programming was introduced by Donald Knuth in 1984 and has since then f
 We’re trying to increase the visibility of Entangled. If you like Entangled, please consider adding this badge [![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/) to the appropriate location in your project:
 
 ```markdown
-[![Entangled badge](https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff)](https://entangled.github.io/)
+[![Entangled badge](https://img.shields.io/badge/entangled-Use%19the%20source!-%2300aeff)](https://entangled.github.io/)
 ```
 
 ## Get started
@@ -160,6 +160,13 @@ Be aware that these should be lists, not tables, so you will need to use double 
 name = "Java"
 identifiers = ["java"]
 comment = { open = "//" }
+```
+
+## Serving Rendered Pages
+Entangled v2.5 includes a auto-reloading web server. Suppose your documents are in `docs` and they are rendered to `site` with `make site`, you can run the live server like so:
+
+```shell
+entangled serve --watch docs --build 'entangled sync && make site' site
 ```
 
 ## Working in VSCode

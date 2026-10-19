@@ -388,6 +388,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "black" },
+    { name = "entangled-cli" },
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
@@ -426,6 +427,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=23.3.0" },
+    { name = "entangled-cli", editable = "." },
     { name = "mkdocs", specifier = ">=1.4.3,<2" },
     { name = "mkdocs-material", specifier = ">=9.7,<10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.30" },

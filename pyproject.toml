@@ -49,6 +49,7 @@ dev = [
         "types-PyYAML>=6.0.1,<7",
         "pytest-timeout>=2.4.0",
         "ty>=0.0.1a24",
+        "entangled-cli",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -69,3 +70,11 @@ testpaths = ["test"]
 
 [tool.mypy]
 packages = ["entangled"]
+
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
+[tool.uv.sources]
+entangled-cli = { workspace = true, editable = true }
