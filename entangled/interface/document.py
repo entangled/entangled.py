@@ -68,7 +68,6 @@ class Document:
     def load_code(self, t: Transaction, path: Path):
         reader = code(numbered_lines(path, t.read(path)))
         for block in reader:
-            print(block)
             self.reference_map[block.reference_id].source = block.content
         t.update(path)
 
@@ -101,6 +100,7 @@ class Document:
             self.write_target(t, Path(tgt), annotation)
 
         for h in self.context.all_hooks:
+            log.debug(f"on_tangle {h}")
             h.on_tangle(t, self.reference_map)
 
     def stitch(self, t: Transaction):
