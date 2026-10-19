@@ -32,8 +32,7 @@ entangled = "entangled.main:cli"
 [dependency-groups]
 dev = [
         "pytest>=9.0,<10",
-        "mypy>=1.18,<2",
-        "black>=23.3.0",
+        "mypy>=2.4.0",
         "pytest-cov>=4.0.0,<5",
         "mkdocs>=1.4.3,<2",
         "mkdocs-material>=9.7,<10",
@@ -48,8 +47,6 @@ dev = [
         "types-pexpect>=4.9.0.20250916",
         "types-PyYAML>=6.0.1,<7",
         "pytest-timeout>=2.4.0",
-        "ty>=0.0.1a24",
-        "entangled-cli",
 ]
 
 [tool.hatch.build.targets.sdist]
