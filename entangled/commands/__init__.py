@@ -7,7 +7,8 @@ from .sync import sync
 from .watch import watch
 from .status import status
 from .brei import brei
+from .serve import serve
 
 __all__ = [
-    "main", "stitch", "tangle", "new", "reset", "sync", "watch", "status", "brei"
+    "main", "stitch", "tangle", "new", "reset", "sync", "watch", "status", "brei", "serve"
 ]

@@ -514,6 +514,36 @@ SPDX License
 
 If a code block starts with a line containing the string "SPDX-License-Identifier". That line is put above the first annotation comment, similar to the `shebang` hook.
 
+SERVER
+======
+
+Entangled v2.5 includes a live-reloading web server for rendered documentation.
+
+`-p, --port`
+
+: Port to host on. Default: 8000.
+
+`-b, --bind`
+
+: Address to bind to. Default: 127.0.0.1
+
+`--build`
+
+: Shell command to trigger on changes. For example `'entangled sync && make site'`.
+
+`-w, --watch`
+
+: Directory to watch for changes.
+
+Example
+-------
+
+Suppose your documents are in `docs` and they are rendered to `site` with `make site`, you can run the live server like so:
+
+```bash
+entangled serve --watch docs --build 'entangled sync && make site' site
+```
+
 BUGS
 ====
 
@@ -523,4 +553,3 @@ AUTHORS
 =======
 
 Entangled was written by Johan Hidding, with contributions by Ole Mussmann, Reggie Cushing, Olga Lyashevska and several others.
-
