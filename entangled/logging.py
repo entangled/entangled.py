@@ -20,7 +20,7 @@ class WhitespaceStrippingConsole(Console):
         return "\n".join(line.rstrip() for line in rendered.splitlines()) + newline_char
 
 # Global rich console object
-console: Console = WhitespaceStrippingConsole()
+console: Console = WhitespaceStrippingConsole(stderr=True)
 
 def logger():
     return logging.getLogger("entangled")

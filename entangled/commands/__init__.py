@@ -8,7 +8,8 @@ from .watch import watch
 from .status import status
 from .brei import brei
 from .serve import serve
+from .weave import weave
 
 __all__ = [
-    "main", "stitch", "tangle", "new", "reset", "sync", "watch", "status", "brei", "serve"
+    "main", "stitch", "tangle", "new", "reset", "sync", "watch", "status", "brei", "serve", "weave"
 ]
