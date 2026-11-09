@@ -440,6 +440,21 @@ You can use `${variable}` syntax inside Brei tasks just as you would in a stand-
 
 Entangled has been used successfully with the following document generators. Note that some of these examples were built using older versions of Entangled, but they should work just the same.
 
+### Weaving
+
+The `entangled weave` command transforms a Markdown document into Markdown that renders well in a documentation tool, by applying one or more filters to the code blocks:
+
+```shell
+entangled weave --list-filters                          # show available filters
+entangled weave docs/index.md                           # apply the `label` filter, print to stdout
+entangled weave -f title docs/index.md -o out/index.md  # MkDocs/pymdownx style titles
+```
+
+- `label` wraps each named code block in a `<div class="entangled-code-block">` with a label showing its name or target file. This renders in most Markdown previews (GitHub, Pandoc, Python-Markdown with `md_in_html`).
+- `title` adds a `title` attribute to the code block header, as understood by `pymdownx.superfences`.
+
+Filters can be combined by repeating `-f`; they are applied in the given order. The same transformation is available from Python through `entangled.weave.transform_markdown`, so that documentation tools only need a thin adapter.
+
 ### Pandoc
 
 [Pandoc](https://pandoc.org/) is a very versatile tool for converting documents in any format. It specifically has very wide support for different forms of Markdown syntax out in the wild, including a filter system that lets you extend the workings of Pandoc. Those filters can be written in any language through an API, for instance Python filters can be written using `panflute`, but there is also native support for Lua.

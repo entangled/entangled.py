@@ -67,6 +67,10 @@ Each command has its own arguments and flags that can be inspected using `entang
 
 : Keep a loop running, watching for changes in the file system.
 
+`weave [-f filter]... [-o output] [input]`
+
+: Transform Markdown for rendering by documentation tools. Use `--list-filters` to see available filters.
+
 WRITING PROGRAMS
 ================
 
