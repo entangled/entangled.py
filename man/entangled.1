@@ -581,8 +581,19 @@ that can be evaluated using the \f[CR]repl\-session\f[R] tool \c
 .UE \c
 \&.
 The output needs to be processed by the documentation rendering system.
-The \f[CR]mkdocs\-entangled\-plugin\f[R] package handles \f[CR]repl\f[R]
-sessions and integrates the output into the rendered HTML.
+The \f[CR]repl\f[R] filter of \f[CR]entangled weave\f[R] inserts the
+results, read from the session file with its extension replaced by
+\f[CR].out.json\f[R], after each code block with the \f[CR]repl\f[R]
+class.
+The \f[CR]mkdocs\-entangled\-plugin\f[R] package also handles
+\f[CR]repl\f[R] sessions.
+.PP
+Each language in \f[CR][hook.repl.config]\f[R] holds a
+\f[CR]repl\-session\f[R] configuration.
+Set \f[CR]backend = \(dqjupyter\(dq\f[R] and
+\f[CR]kernel = \(dq<name>\(dq\f[R] to run the session in a Jupyter
+kernel; this needs the \f[CR]jupyter\f[R] extra:
+\f[CR]pip install entangled\-cli[jupyter]\f[R].
 .SS Shebang
 If a code block starts with \f[CR]#!...\f[R] on the first line.
 This line is brought to the top of the tangled file.

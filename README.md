@@ -452,6 +452,7 @@ entangled weave -f title docs/index.md -o out/index.md  # MkDocs/pymdownx style 
 
 - `label` wraps each named code block in a `<div class="entangled-code-block">` with a label showing its name or target file. This renders in most Markdown previews (GitHub, Pandoc, Python-Markdown with `md_in_html`).
 - `title` adds a `title` attribute to the code block header, as understood by `pymdownx.superfences`.
+- `repl` inserts the results of a REPL session (see the `repl` hook) after each code block with the `repl` class. The results are read from the session file with its extension replaced by `.out.json`, e.g. `repl-session < session.json > session.out.json`. Text output becomes a `{.text .output}` code block; with the Jupyter backend, rich output (Markdown, HTML, SVG, PNG/JPEG) is included as well, with images embedded as data URIs. Set a `mime-type` attribute on the code block to choose a representation.
 
 Filters can be combined by repeating `-f`; they are applied in the given order. The same transformation is available from Python through `entangled.weave.transform_markdown`, so that documentation tools only need a thin adapter.
 

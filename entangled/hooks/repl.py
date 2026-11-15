@@ -6,7 +6,7 @@ import msgspec
 
 from entangled.config.language import Language
 from .base import HookBase
-from repl_session import ReplConfig, ReplSession, ReplCommand
+from repl_session import JupyterConfig, ReplConfig, ReplSession, ReplCommand
 from msgspec import Struct
 from pathlib import Path
 
@@ -17,6 +17,15 @@ from ..model.properties import Class, get_attribute, get_attribute_string, get_i
 
 
 log = logger()
+
+type BackendConfig = ReplConfig | JupyterConfig
+
+
+def backend_config(cfg: dict[str, object]) -> BackendConfig:
+    """Convert a REPL config, defaulting to the `repl` (pexpect) backend when
+    no `backend` is given."""
+    return msgspec.convert({"backend": "repl"} | cfg, type=BackendConfig)
+
 
 class Session(Struct):
     filename: Path
@@ -35,7 +44,7 @@ def strip_comments(code: str, language: Language) -> str:
 @final
 class Hook(HookBase):
     class Config(HookBase.Config):
-        config: dict[str, ReplConfig] = msgspec.field(default_factory=dict)
+        config: dict[str, dict[str, object]] = msgspec.field(default_factory=dict)
 
     @dataclass
     class State(HookBase.State):
@@ -44,7 +53,8 @@ class Hook(HookBase):
     def __init__(self, config: Config, state: State):
         super().__init__(config, state)
         log.debug(f"REPL hook config: {config}")
-        self.config = config.config
+        self.config: dict[str, BackendConfig] = {
+            lang: backend_config(cfg) for lang, cfg in config.config.items()}
         self.sessions: dict[str, Session] = state.sessions
 
     @override

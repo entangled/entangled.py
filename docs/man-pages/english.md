@@ -497,7 +497,9 @@ The `id` attribute is reserved for the code's identifier (normally indicated wit
 REPL (Experimental)
 -------------------
 
-The `repl` hook enables running code blocks in REPL sessions. The hook extracts these code blocks into a separate JSON session file that can be evaluated using the `repl-session` tool [https://entangled.github.io/repl-session](https://entangled.github.io/repl-session). The output needs to be processed by the documentation rendering system. The `mkdocs-entangled-plugin` package handles `repl` sessions and integrates the output into the rendered HTML.
+The `repl` hook enables running code blocks in REPL sessions. The hook extracts these code blocks into a separate JSON session file that can be evaluated using the `repl-session` tool [https://entangled.github.io/repl-session](https://entangled.github.io/repl-session). The output needs to be processed by the documentation rendering system. The `repl` filter of `entangled weave` inserts the results, read from the session file with its extension replaced by `.out.json`, after each code block with the `repl` class. The `mkdocs-entangled-plugin` package also handles `repl` sessions.
+
+Each language in `[hook.repl.config]` holds a `repl-session` configuration. Set `backend = "jupyter"` and `kernel = "<name>"` to run the session in a Jupyter kernel; this needs the `jupyter` extra: `pip install entangled-cli[jupyter]`.
 
 Shebang
 -------
