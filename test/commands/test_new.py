@@ -1,9 +1,11 @@
+import click
 import pytest
 import unittest
 
 from os.path import join
 from typing import IO
 
+from entangled.commands import main
 from entangled.commands.new import new
 from entangled.config.templates import Template, templates
 from entangled.errors.user import HelpfulUserError
@@ -12,6 +14,18 @@ from entangled.errors.user import HelpfulUserError
 def test_print_available_templates() -> None:
     """Test if official template settings can be read"""
     new.callback(template="", project_path="", list_templates=True)
+
+
+def test_list_templates_without_arguments(capsys: pytest.CaptureFixture[str]) -> None:
+    """`entangled new -l` should not need a template and project path"""
+    main(args=["new", "-l"], standalone_mode=False)
+    out = capsys.readouterr().out
+    assert all(t.handle in out for t in templates)
+
+
+def test_missing_arguments() -> None:
+    with pytest.raises(click.UsageError):
+        main(args=["new", "minimal"], standalone_mode=False)
 
 
 def test_pretend_template_copy() -> None:
