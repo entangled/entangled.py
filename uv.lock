@@ -38,15 +38,6 @@ wheels = [
 ]
 
 [[package]]
-name = "argh"
-version = "0.30.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/56/12/353fc6b87bfaf98fe5a0c95e8cba03acd24ab0eea99d1307e1ab7a3809ba/argh-0.30.5.tar.gz", hash = "sha256:b37dfd617a09d19a4a7bcaed0e060b288bc7ac8dfdc0facf886a49a25ff33728", size = 63041, upload-time = "2023-12-25T22:05:32.15Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/51/99d9dfcb588e15b4d9630f98f84d4e766d03b47da52839395057dbbe2df4/argh-0.30.5-py3-none-any.whl", hash = "sha256:3844e955d160f0689a3cdca06a59dfcfbf1fcea70029d67d473f73503341e0d8", size = 44635, upload-time = "2023-12-25T22:05:29.35Z" },
-]
-
-[[package]]
 name = "ast-serialize"
 version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -160,16 +151,16 @@ wheels = [
 
 [[package]]
 name = "brei"
-version = "0.2.4"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "argh" },
+    { name = "click" },
     { name = "rich" },
-    { name = "rich-argparse" },
+    { name = "rich-click" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/52/97/503b9bc095501678cd6e10a940e042d36f2a77ee41b798e93477d142543d/brei-0.2.4.tar.gz", hash = "sha256:fb8a1f191a1c70a81a9df366c530e01938b8082e7198e898d4ea8eb53066fa92", size = 18853, upload-time = "2024-11-25T10:17:11.418Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/bb/951f692d4dc49aadc3fdd314671a089a6e1f03d50fb01d3b3cd784b23c07/brei-0.3.0.tar.gz", hash = "sha256:5204de56a75b1d22560e6496bcfb0c3d32e95b3f573aa302b860ae8004de45db", size = 286512, upload-time = "2026-11-15T22:10:44.111Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/6d/e5c216146c0654cbf7d4e0567a075e3f13f2700bc8812b9ec3a35bf1099b/brei-0.2.4-py3-none-any.whl", hash = "sha256:46967640f1aebe3c698456434a8ff0b2901860c4544778ab763803875e925155", size = 22436, upload-time = "2024-11-25T10:17:10.292Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/ee/3ec3b44e546f970d529a1fd350b5f23d118781d6f3c6f95582811f0cda92/brei-0.3.0-py3-none-any.whl", hash = "sha256:c4684935bfe07488cb8f8358b464e710969124b6e601c2d9d47d89f24c05956a", size = 22704, upload-time = "2026-11-15T22:10:42.849Z" },
 ]
 
 [[package]]
@@ -597,7 +588,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "brei", specifier = ">=0.2.3,<0.3" },
+    { name = "brei", specifier = ">=0.3.0,<0.4" },
     { name = "click", specifier = ">=8.3.0" },
     { name = "copier", specifier = ">=9,<10" },
     { name = "filelock", specifier = ">=3.12.0,<5" },
@@ -1841,15 +1832,15 @@ wheels = [
 
 [[package]]
 name = "rich"
-version = "13.9.4"
+version = "15.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ab/3a/0316b28d0761c6734d6bc14e770d85506c986c85ffb239e688eeaab2c2bc/rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098", size = 223149, upload-time = "2024-11-01T16:43:57.873Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90", size = 242424, upload-time = "2024-11-01T16:43:55.817Z" },
+    { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
 ]
 
 [[package]]
