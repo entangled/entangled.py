@@ -6,6 +6,7 @@ the first line of its docstring serves as description for `--list-filters`.
 from base64 import b64encode
 from functools import lru_cache
 from html import escape
+from io import StringIO
 from pathlib import Path
 from textwrap import indent
 import re
@@ -148,27 +149,22 @@ def command_outputs(command: ReplCommand) -> list[ReplOutput]:
     return [ReplOutput("result", {command.output_type: command.output})]
 
 
-@lru_cache
-def load_session_output(path: Path, mtime_ns: int | None) -> ReplSession | None:
-    """Read the output of a REPL session. The modification time is part of the
-    cache key, so a changed file is read again."""
-    if mtime_ns is None:
-        log.warning("REPL session output `%s` not found; run `repl-session` first.", path)
-        return None
-    try:
-        with path.open("r") as f:
-            return read_session(f)
-    except msgspec.MsgspecError as e:
-        log.warning("REPL session output `%s` could not be read: %s", path, e)
-        return None
+@lru_cache(maxsize=16)
+def decode_session(text: str) -> ReplSession:
+    """Decode the output of a REPL session. Every code block in the session
+    needs it, so we cache on the contents of the file; modification times
+    are too coarse to tell when a file was rewritten."""
+    return read_session(StringIO(text))
 
 
 def session_output(path: Path) -> ReplSession | None:
     try:
-        mtime_ns = path.stat().st_mtime_ns
+        return decode_session(path.read_text())
     except FileNotFoundError:
-        mtime_ns = None
-    return load_session_output(path, mtime_ns)
+        log.warning("REPL session output `%s` not found; run `repl-session` first.", path)
+    except msgspec.MsgspecError as e:
+        log.warning("REPL session output `%s` could not be read: %s", path, e)
+    return None
 
 
 def find_command(reference_map: ReferenceMap, r: ReferenceId) -> ReplCommand | None:
