@@ -543,7 +543,7 @@ wheels = [
 
 [[package]]
 name = "entangled-cli"
-version = "2.7.1"
+version = "2.7.2"
 source = { editable = "." }
 dependencies = [
     { name = "brei" },
