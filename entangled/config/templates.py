@@ -26,6 +26,13 @@ templates: list[Template] = [
         "Fast, simple project documentation for Python",
     ),
     Template(
+        "zensical",
+        "Zensical",
+        "gh:entangled/template-zensical",
+        "uv",
+        "Modern static site generator; REPL output from Jupyter kernels."
+    ),
+    Template(
         "pandoc",
         "Pandoc",
         "gh:entangled/template-pandoc",
