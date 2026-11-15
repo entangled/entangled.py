@@ -89,15 +89,16 @@ def test_tangle_blank_lines_with_white_space(tmp_path: Path):
 
 
 # Code lines with trailing white space, and a blank line with white space.
-TRAILING_MD = """
-```python
-#| file: d.py
-def f():
-    return 1\t
-
-x = f()
-```
-""".lstrip()
+# Written out line by line, so that a formatter can't strip it from this file.
+TRAILING_MD = "".join(line + "\n" for line in [
+    "```python",
+    "#| file: d.py",
+    "def f():  ",
+    "    return 1\t",
+    "    ",
+    "x = f()  ",
+    "```",
+])
 
 
 def strip_trailing(text: str) -> str:
