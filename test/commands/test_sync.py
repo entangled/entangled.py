@@ -88,15 +88,54 @@ def test_tangle_blank_lines_with_white_space(tmp_path: Path):
     assert (tmp_path / "c.py").read_text().splitlines()[2] == ""
 
 
-def test_white_space_edit_is_ignored(project: Path):
-    """Stripping trailing white space, as many editors do on save, is not a
-    change: nothing is stitched, and the file isn't rewritten."""
-    b = project / "b.py"
-    b.write_text(b.read_text().replace("    \n", "\n") + "  \n")
-    content = b.read_text()
+# Code lines with trailing white space, and a blank line with white space.
+TRAILING_MD = """
+```python
+#| file: d.py
+def f():
+    return 1\t
+
+x = f()
+```
+""".lstrip()
+
+
+def strip_trailing(text: str) -> str:
+    """What a formatter does: strip trailing white space on every line."""
+    return "".join(line.rstrip() + "\n" for line in text.splitlines())
+
+
+@pytest.fixture
+def trailing(tmp_path: Path):
+    (tmp_path / "entangled.toml").write_text(CONFIG)
+    (tmp_path / "doc.md").write_text(TRAILING_MD)
+    with chdir(tmp_path):
+        run_sync()
+        yield tmp_path
+
+
+def test_formatter_on_code_is_ignored(trailing: Path):
+    """Stripping trailing white space from a tangled file, as many editors do
+    on save, is not a change: nothing is stitched, and the file isn't
+    rewritten."""
+    d = trailing / "d.py"
+    assert d.read_text() != strip_trailing(d.read_text())
+    d.write_text(strip_trailing(d.read_text()))
     run_sync()
-    assert (project / "doc.md").read_text() == SHARED_MD
-    assert b.read_text() == content
+    assert (trailing / "doc.md").read_text() == TRAILING_MD
+    assert d.read_text() == strip_trailing(d.read_text())
+    assert "def f():\n" in d.read_text()
+
+
+def test_formatter_on_markdown_is_ignored(trailing: Path):
+    """Stripping trailing white space from the markdown is not a change
+    either: the tangled file isn't rewritten."""
+    md = trailing / "doc.md"
+    code = (trailing / "d.py").read_text()
+    md.write_text(strip_trailing(md.read_text()))
+    run_sync()
+    assert (trailing / "d.py").read_text() == code
+    assert md.read_text() == strip_trailing(TRAILING_MD)
 
 
 def test_hexdigest_ignores_trailing_white_space():
