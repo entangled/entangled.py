@@ -1,5 +1,6 @@
 import click
 
+from collections.abc import Callable
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -34,15 +35,15 @@ def print_available_templates() -> None:
     print("\nUsage: entangled new [handle] [project_path]\n")
 
 
-def print_help() -> None:
-    """Print help as if '-h' was used.
+def help_printer() -> Callable[[], None]:
+    """Return a function that prints help as if '-h' was used.
 
-    For this we first have to create a parser and attach this `new` function
-    to it. Then we have a parser object that we can `print_help()` from.
+    A `HelpfulUserError` is handled after the command has returned, when there
+    is no click context anymore, so we get the help text right away.
     """
-    ctx = click.get_current_context()
-    click.echo(ctx.get_help())
-    ctx.exit()
+    ctx = click.get_current_context(silent=True)
+    help_text = ctx.get_help() if ctx is not None else ""
+    return lambda: click.echo(help_text)
 
 
 @main.command(
@@ -77,15 +78,17 @@ def print_help() -> None:
     "-t", "--trust", is_flag=True,
     help='Allow templates with unsafe features (Jinja extensions, migrations, tasks); "True" for officially supported templates',
 )
+# The arguments are optional for click, so that `-l` works on its own; we
+# check for them ourselves.
 @click.argument(
-    "template"
+    "template", required=False
 )
 @click.argument(
-    "project-path"
+    "project-path", required=False
 )
 def new(
-    template: str,
-    project_path: Path, *,
+    template: str | None,
+    project_path: Path | None, *,
     answers_file: str | None = None,
     data: str = "",
     defaults: bool = False,
@@ -112,9 +115,7 @@ def new(
         return
 
     if not template or not project_path:
-        raise HelpfulUserError(
-            "Please supply both a [template] and a [project_path].\n", print_help
-        )
+        raise click.UsageError("Please supply both a TEMPLATE and a PROJECT_PATH.")
 
     copy_this_template: str = template
     trust_this_template: bool = trust
@@ -139,7 +140,7 @@ def new(
             raise HelpfulUserError(
                 "Invalid syntax for `-d/--data`. Please make sure "
                 "to closely follow the example below.\n",
-                print_help,
+                help_printer(),
             )
 
     try:
@@ -191,7 +192,7 @@ def new(
                 "Template data missing.\nPlease supply a valid answers file "
                 "with a path `relative` to the [project_path], or valid data "
                 "with -d/--data.\n",
-                print_help,
+                help_printer(),
             )
         else:
             raise HelpfulUserError(
