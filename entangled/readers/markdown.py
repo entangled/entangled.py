@@ -48,7 +48,11 @@ def code_block_guard(origin: TextLocation, open_match: re.Match[str], close_matc
 
 
 def dedent_line(location: TextLocation, indent: str, line: str):
-    if line.startswith(indent) or line.strip() == "":
+    # Blank lines lose all their white space, as they do when reading code
+    # back from a tangled file.
+    if line.strip() == "":
+        return line.lstrip(" \t")
+    if line.startswith(indent):
         return line.removeprefix(indent)
     raise IndentationError(location)
 

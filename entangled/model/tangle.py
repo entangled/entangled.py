@@ -75,7 +75,9 @@ type Tangler = Callable[[Tangler, Deps, ReferenceId, bool, bool], Iterator[str]]
 
 
 def indent(prefix: str, g: Iterator[str]) -> Iterator[str]:
-    return map(lambda line: "" if not line else prefix + line, g)
+    """Indent lines with `prefix`. Blank lines are not indented, so that they
+    don't get trailing white space."""
+    return map(lambda line: prefix + line if line.strip() else line.lstrip(" \t"), g)
 
 
 def naked_tangler(refs: ReferenceMap) -> Tangler:
