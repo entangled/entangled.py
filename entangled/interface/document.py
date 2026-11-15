@@ -27,7 +27,9 @@ class Document:
 
     @config.setter
     def config(self, new_config: Config) -> None:
-        self.context.config = new_config
+        # A new context creates the hooks enabled in `new_config`, sharing
+        # their state with the hooks used while reading each file.
+        self.context = Context(self.context.fs, new_config, self.context._hook_states)
 
     def __post_init__(self):
         self.config |= read_config(self.context.fs)
