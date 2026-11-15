@@ -12,10 +12,13 @@ import time
 
 
 def hexdigest(s: str) -> str:
-    """Creates a MD5 hash digest from a string. Before hashing, the string has
-    linefeed `\\r` characters and trailing newlines removed, and the string
-    is encoded as UTF-8."""
-    content = s.replace("\r", "").rstrip().encode()
+    """Creates a SHA-256 hash digest from a string. Before hashing, the string
+    has carriage return `\\r` characters, trailing white space on each line
+    and trailing newlines removed, and the string is encoded as UTF-8. This
+    way, changes in white space only, like the ones made by editors that
+    strip trailing white space on save, don't count as changes."""
+    lines = s.replace("\r", "").split("\n")
+    content = "\n".join(line.rstrip() for line in lines).rstrip().encode()
     return hashlib.sha256(content).hexdigest()
 
 

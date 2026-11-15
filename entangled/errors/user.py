@@ -73,3 +73,15 @@ class CodeAttributeError(UserError):
     @override
     def __str__(self) -> str:
         return f"{self.origin}: Attribute error: {self.msg}"
+
+
+@dataclass
+class StitchConflict(UserError):
+    reference: str
+    files: tuple[Path, Path]
+
+    @override
+    def __str__(self) -> str:
+        a, b = self.files
+        return (f"code block `{self.reference}` was changed differently in "
+                f"`{a}` and `{b}`; resolve this by hand")
