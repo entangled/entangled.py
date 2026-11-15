@@ -3,12 +3,25 @@ Filters for `entangled weave`. Each filter is registered by name in `filters`;
 the first line of its docstring serves as description for `--list-filters`.
 """
 
+from base64 import b64encode
+from functools import lru_cache
 from html import escape
+from pathlib import Path
+from textwrap import indent
 import re
 
+import msgspec
+
+from repl_session import ReplCommand, ReplOutput, ReplSession, read_session
+
+from ..hooks.repl import strip_comments
+from ..logging import logger
 from ..model import CodeBlock, Content, PlainText, ReferenceId, ReferenceMap
-from ..model.properties import Attribute, Class, Id
+from ..model.properties import Attribute, Class, Id, get_attribute_string
 from .base import ContentFilter, codeblock_filter
+
+
+log = logger()
 
 
 def block_title(code_block: CodeBlock) -> str | None:
@@ -79,8 +92,145 @@ def label(reference_map: ReferenceMap, r: ReferenceId) -> list[Content]:
     return [PlainText(header), r, PlainText(footer)]
 
 
+# Representations to pick from a MIME bundle, most preferred first.
+MIME_PRIORITY = [
+    "text/markdown", "text/html", "image/svg+xml", "image/png", "image/jpeg", "image/gif",
+    "text/plain",
+]
+
+
+def fenced(text: str, classes: list[str]) -> str:
+    """Put text in a fenced code block, with a fence longer than any backtick
+    run inside the text."""
+    longest = max((len(m) for m in re.findall(r"`+", text)), default=0)
+    fence = "`" * max(3, longest + 1)
+    attrs = " ".join(str(Class(c)) for c in classes)
+    return f"{fence} {{{attrs}}}\n{text}\n{fence}"
+
+
+def render_mime(mime: str, data: str, kind: str) -> str | None:
+    """Render a single representation as Markdown, or `None` if there is
+    nothing to show."""
+    match mime:
+        case "text/plain":
+            text = data.strip("\n")
+            if not text.strip():
+                return None
+            return fenced(text, ["text", "output"] + ([] if kind == "result" else [kind]))
+        case "text/markdown" | "text/html":
+            return data.strip("\n") or None
+        case "image/svg+xml":
+            return f"![](data:{mime};base64,{b64encode(data.encode()).decode()})"
+        case _ if mime.startswith("image/"):
+            return f"![](data:{mime};base64,{"".join(data.split())})"
+        case _:
+            return None
+
+
+def render_output(output: ReplOutput, output_type: str) -> str | None:
+    """Render the most preferred representation in an output's MIME bundle.
+    A `mime-type` set on the code block, other than the default `text/plain`,
+    takes precedence."""
+    preferred = [] if output_type == "text/plain" else [output_type]
+    for mime in [*preferred, *MIME_PRIORITY]:
+        if mime in output.data:
+            return render_mime(mime, output.data[mime], output.kind)
+    return None
+
+
+def command_outputs(command: ReplCommand) -> list[ReplOutput]:
+    """Outputs of a command; sessions from older versions of `repl-session`
+    only have the `output` field."""
+    if command.outputs is not None:
+        return command.outputs
+    if command.output is None:
+        return []
+    return [ReplOutput("result", {command.output_type: command.output})]
+
+
+@lru_cache
+def load_session_output(path: Path, mtime_ns: int | None) -> ReplSession | None:
+    """Read the output of a REPL session. The modification time is part of the
+    cache key, so a changed file is read again."""
+    if mtime_ns is None:
+        log.warning("REPL session output `%s` not found; run `repl-session` first.", path)
+        return None
+    try:
+        with path.open("r") as f:
+            return read_session(f)
+    except msgspec.MsgspecError as e:
+        log.warning("REPL session output `%s` could not be read: %s", path, e)
+        return None
+
+
+def session_output(path: Path) -> ReplSession | None:
+    try:
+        mtime_ns = path.stat().st_mtime_ns
+    except FileNotFoundError:
+        mtime_ns = None
+    return load_session_output(path, mtime_ns)
+
+
+def find_command(reference_map: ReferenceMap, r: ReferenceId) -> ReplCommand | None:
+    """Find the command for a code block in the output of its REPL session.
+    The session is opened by the first code block of the same name that has
+    the `repl` class and a `session` attribute; every code block of that name
+    from there on is a command in the session."""
+    refs = reference_map.select_by_name(r.name)
+    try:
+        start = next(i for i, ref in enumerate(refs)
+                     if Class("repl") in reference_map[ref].properties
+                     and get_attribute_string(reference_map[ref].properties, "session"))
+    except StopIteration:
+        return None
+
+    session_file = get_attribute_string(reference_map[refs[start]].properties, "session")
+    assert session_file is not None
+    session = session_output(Path(session_file).with_suffix(".out.json"))
+    if session is None:
+        return None
+
+    index = refs.index(r) - start
+    code_block = reference_map[r]
+    if not 0 <= index < len(session.commands):
+        log.warning("%s: no output for this code block in REPL session `%s`.",
+                    code_block.origin, session_file)
+        return None
+
+    command = session.commands[index]
+    if code_block.language is not None \
+            and command.command.strip() != strip_comments(code_block.source, code_block.language).strip():
+        log.warning("%s: REPL session `%s` is out of date; tangle and run `repl-session` again.",
+                    code_block.origin, session_file)
+        return None
+    return command
+
+
+@codeblock_filter
+def repl(reference_map: ReferenceMap, r: ReferenceId) -> list[Content]:
+    """Insert the output of REPL sessions (from the `repl` hook) after code blocks with the `repl` class."""
+    code_block = reference_map[r]
+    if Class("repl") not in code_block.properties:
+        return [r]
+
+    command = find_command(reference_map, r)
+    if command is None:
+        return [r]
+
+    rendered = [text for out in command_outputs(command)
+                if (text := render_output(out, command.output_type)) is not None]
+    if not rendered:
+        return [r]
+
+    # The closing fence may lack a newline at the end of a file.
+    eol = "" if code_block.close_line.endswith("\n") else "\n"
+    body = "".join(indent(f"\n{text}\n", code_block.indent) for text in rendered)
+    return [r, PlainText(eol + body)]
+
+
 filters: dict[str, ContentFilter] = {
     "label": label,
+    "repl": repl,
     "title": title,
 }
 
