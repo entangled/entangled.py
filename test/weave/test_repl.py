@@ -1,5 +1,6 @@
 from pathlib import Path
 from contextlib import chdir
+import os
 
 import msgspec
 import pytest
@@ -83,6 +84,19 @@ def test_repl_mime_type_and_legacy_output(tmp_path: Path):
         write_output(ReplCommand("6 * 7", output_type="text/html", outputs=[
             ReplOutput("result", {"text/plain": "42", "text/html": "<i>42</i>"})]))
         assert weave(text) == text + "\n\n<i>42</i>\n"
+
+
+def test_repl_rewritten_with_same_mtime(tmp_path: Path):
+    text = "``` {.python .repl #s session=s.json}\n6 * 7\n```"
+    with chdir(tmp_path):
+        write_output(ReplCommand("6 * 7", output="42"))
+        stat = Path("s.out.json").stat()
+        assert "\n42\n" in weave(text)
+
+        # File systems with coarse timestamps can give a rewritten file the same mtime.
+        write_output(ReplCommand("6 * 7", output="forty-two"))
+        os.utime("s.out.json", ns=(stat.st_atime_ns, stat.st_mtime_ns))
+        assert "\nforty-two\n" in weave(text)
 
 
 def test_repl_missing_or_stale(tmp_path: Path, caplog: pytest.LogCaptureFixture):
