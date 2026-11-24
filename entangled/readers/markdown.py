@@ -6,7 +6,7 @@ from ..config.namespace_default import NamespaceDefault
 from ..model import CodeBlock, Content, RawContent, PlainText, ReferenceId, ReferenceMap, ReferenceName
 from ..model.properties import get_attribute_string, get_attribute, read_properties, get_classes, get_id
 from ..config import Config
-from ..errors.user import CodeAttributeError, IndentationError
+from ..errors.user import CodeAttributeError, IndentationError, ParseError
 from ..utility import first
 from ..iterators.lines import lines
 from ..text_location import TextLocation
@@ -73,15 +73,7 @@ def code_block(config: Config) -> Reader[RawContent, bool]:
         if block is None:
             return False
 
-        if config.namespace is None:
-            match config.namespace_default:
-                case NamespaceDefault.GLOBAL:
-                    namespace: tuple[str, ...] = ()
-                case NamespaceDefault.PRIVATE:
-                    namespace = (block.origin.filename.as_posix(),)
-        else:
-            namespace = config.namespace
-
+        namespace = _namespace(config, block.origin)
         indent = block.open_match["indent"]
         properties = read_properties(block.open_match["properties"])
         language_class = first(get_classes(properties))
@@ -106,15 +98,100 @@ def code_block(config: Config) -> Reader[RawContent, bool]:
     return code_block_reader
 
 
+_DIV_OPEN_PATTERN = re.compile(r"^(?P<indent>\s*):{3,}\s*{(?P<properties>[^{}]*)}\s*:*\s*$")
+_DIV_ANY_OPEN_PATTERN = re.compile(r"^\s*:{3,}\s*\S")
+_DIV_CLOSE_PATTERN = re.compile(r"^(?P<indent>\s*):{3,}\s*$")
+_FENCE_PATTERN = re.compile(r"^\s*(?P<fence>`{3,}|~{3,})")
+
+
+def fenced_div(config: Config, div_class: str) -> Reader[RawContent, bool]:
+    """Reads a Pandoc fenced div (`::: {.cls ...}`) that has class
+    `div_class` into a `CodeBlock`. Nested divs and fenced code blocks
+    inside the div are kept as verbatim content, so they are not read as
+    code blocks of their own."""
+    markdown_language = config.get_language("markdown")
+
+    def fenced_div_reader(input: InputStream) -> RawMarkdownStream[bool]:
+        if not input:
+            return False
+
+        origin, open_line = input.peek()
+        open_match = _DIV_OPEN_PATTERN.match(open_line.rstrip())
+        if not open_match:
+            return False
+        properties = read_properties(open_match["properties"])
+        if div_class not in get_classes(properties):
+            return False
+        _ = next(input)
+
+        indent = open_match["indent"]
+        depth = 0
+        fence: str | None = None
+        content: list[str] = []
+
+        for _, line in input.iterator:
+            if fence is not None:
+                if line.strip().startswith(fence[0] * len(fence)) and \
+                        line.strip().strip(fence[0]) == "":
+                    fence = None
+                content.append(line)
+                continue
+
+            if m := _FENCE_PATTERN.match(line):
+                fence = m["fence"]
+                content.append(line)
+                continue
+
+            if m := _DIV_CLOSE_PATTERN.match(line.rstrip()):
+                if depth == 0:
+                    if len(m["indent"]) < len(indent):
+                        raise IndentationError(origin)
+                    yield CodeBlock(
+                        properties,
+                        indent,
+                        open_line.removeprefix(indent),
+                        line.removeprefix(indent),
+                        dedent(origin, "".join(content), indent),
+                        origin,
+                        markdown_language,
+                        namespace=_namespace(config, origin),
+                    )
+                    return True
+                depth -= 1
+            elif _DIV_ANY_OPEN_PATTERN.match(line):
+                depth += 1
+
+            content.append(line)
+
+        raise ParseError(origin, "unexpected end of file")
+
+    return fenced_div_reader
+
+
+def _namespace(config: Config, origin: TextLocation) -> tuple[str, ...]:
+    if config.namespace is not None:
+        return config.namespace
+    match config.namespace_default:
+        case NamespaceDefault.GLOBAL:
+            return ()
+        case NamespaceDefault.PRIVATE:
+            return (origin.filename.as_posix(),)
+
+
 def raw_markdown(config: Config, input: InputStream) -> RawMarkdownStream[None]:
     if not input:
         return
 
     ignore_block_reader = ignore_block(config)
     code_block_reader = code_block(config)
+    # Fenced divs are only read as blocks when the `docs` hook is enabled;
+    # otherwise they are plain Markdown and code inside them is tangled.
+    docs_div_reader = fenced_div(config, "docs") if "docs" in config.hooks else None
 
     while input:
         if (yield from ignore_block_reader(input)):
+            continue
+        if docs_div_reader and (yield from docs_div_reader(input)):
             continue
         if (yield from code_block_reader(input)):
             continue
