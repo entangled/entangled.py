@@ -2,7 +2,7 @@ import logging
 from importlib.metadata import entry_points
 
 from .base import HookBase, PrerequisitesFailed
-from . import build, task, quarto_attributes, shebang, spdx_license, repl
+from . import build, docs, task, quarto_attributes, shebang, spdx_license, repl
 from ..config import Config
 from typing import TypeVar
 import msgspec
@@ -17,6 +17,7 @@ external_hooks = {
 
 hooks: dict[str, type[HookBase]] = {
     "build": build.Hook,
+    "docs": docs.Hook,
     "brei": task.Hook,
     "repl": repl.Hook,
     "shebang": shebang.Hook,

@@ -38,6 +38,12 @@ class HookBase:
         the reference map."""
         pass
 
+    def post_read(self, refs: ReferenceMap):  # pyright: ignore[reportUnusedParameter]
+        """Called after all Markdown is read, both before tangling and before
+        stitching. This is the place to register targets that need to be
+        read back by `stitch`."""
+        pass
+
     def pre_tangle(self, refs: ReferenceMap):  # pyright: ignore[reportUnusedParameter]
         """Executed after reading Markdown, but before actually tangling files.
         This allows the opportunity to add more targets to the reference map.

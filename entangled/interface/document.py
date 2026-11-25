@@ -110,6 +110,9 @@ class Document:
             for p in files:
                 self.load_source(t, p)
 
+        for h in self.context.all_hooks:
+            h.post_read(self.reference_map)
+
     def tangle(self, t: Transaction, annotation: AnnotationMethod | None = None):
         if annotation is None:
             annotation = self.config.annotation

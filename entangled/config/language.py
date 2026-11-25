@@ -46,5 +46,6 @@ languages = [
     Language("Javascript", ["javascript", "js", "ecma"], Comment("//")),
     Language("Go", ["go", "golang"], Comment("//")),
     Language("R", ["r", "rlang"], Comment("#")),
-    Language("Nix", ["nix"], Comment("#"))
+    Language("Nix", ["nix"], Comment("#")),
+    Language("Markdown", ["markdown", "md"], Comment("<!--", "-->")),
 ]
