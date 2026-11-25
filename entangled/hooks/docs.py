@@ -150,14 +150,14 @@ class Hook(HookBase):
             targets[PurePath(target)].append(Snippet(
                 ref, None if section is None else str(section), _order(code), index))  # pyright: ignore[reportAny]
 
-        for target, snippets in targets.items():
-            name = ReferenceName(NAMESPACE, target.as_posix())
+        for target_path, snippets in targets.items():
+            name = ReferenceName(NAMESPACE, target_path.as_posix())
             for old in list(refs.select_by_name(name)):
                 del refs[old]
 
             first = refs[min(snippets, key=lambda s: s.index).ref]
-            refs[refs.new_id(target, name)] = CodeBlock(
-                properties=[Attribute("file", target.as_posix())],
+            refs[refs.new_id(target_path, name)] = CodeBlock(
+                properties=[Attribute("file", target_path.as_posix())],
                 indent="",
                 open_line="",
                 close_line="",
