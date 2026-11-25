@@ -221,7 +221,8 @@ def process_code_block(hooks: list[HookBase], refs: ReferenceMap, code_block: Co
 
     ref_name = block_id or target_file
     if ref_name is None:
-        ref_name = f"unnamed-{code_block.origin}"
+        origin = code_block.origin
+        ref_name = f"unnamed-{origin.filename.as_posix()}:{origin.line_number}"
     ref = refs.new_id(code_block.origin.filename, ReferenceName(code_block.namespace, ref_name))
 
     log.debug(f"Read codeblock `{ref}`")
